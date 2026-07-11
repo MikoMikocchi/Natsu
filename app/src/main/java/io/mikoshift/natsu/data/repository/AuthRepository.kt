@@ -6,8 +6,14 @@ import io.mikoshift.natsu.data.remote.AuthApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse
 import io.mikoshift.natsu.data.remote.dto.AuthResponse
+import io.mikoshift.natsu.data.remote.dto.ChangePasswordRequest
+import io.mikoshift.natsu.data.remote.dto.DeleteAccountRequest
+import io.mikoshift.natsu.data.remote.dto.DeviceSessionResponse
+import io.mikoshift.natsu.data.remote.dto.ForgotPasswordRequest
 import io.mikoshift.natsu.data.remote.dto.LoginRequest
+import io.mikoshift.natsu.data.remote.dto.MessageResponse
 import io.mikoshift.natsu.data.remote.dto.RegisterRequest
+import io.mikoshift.natsu.data.remote.dto.ResetPasswordRequest
 import io.mikoshift.natsu.data.remote.dto.UserResponse
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow
@@ -111,6 +117,113 @@ class AuthRepository(
         },
         onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
     )
+
+    suspend fun forgotPassword(email: String): Result<String> = runCatching {
+        unauthenticatedApi.forgotPassword(ForgotPasswordRequest(email = email))
+    }.fold(
+        onSuccess = { response -> mapMessageResponse(response) },
+        onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+    )
+
+    suspend fun resetPassword(
+        token: String,
+        password: String,
+        passwordConfirmation: String,
+    ): Result<String> = runCatching {
+        unauthenticatedApi.resetPassword(
+            ResetPasswordRequest(
+                token = token,
+                password = password,
+                passwordConfirmation = passwordConfirmation,
+            ),
+        )
+    }.fold(
+        onSuccess = { response -> mapMessageResponse(response) },
+        onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+    )
+
+    suspend fun changePassword(
+        currentPassword: String,
+        password: String,
+        passwordConfirmation: String,
+    ): Result<String> = runCatching {
+        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
+        authenticatedApi.changePassword(
+            authHeader,
+            ChangePasswordRequest(
+                currentPassword = currentPassword,
+                password = password,
+                passwordConfirmation = passwordConfirmation,
+            ),
+        )
+    }.fold(
+        onSuccess = { response -> mapMessageResponse(response) },
+        onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+    )
+
+    suspend fun deleteAccount(password: String): Result<Unit> {
+        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
+        val result = runCatching {
+            authenticatedApi.deleteAccount(authHeader, DeleteAccountRequest(password = password))
+        }.fold(
+            onSuccess = { response ->
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(mapErrorResponse(response))
+                }
+            },
+            onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+        )
+        if (result.isSuccess) {
+            tokenStore.clearSession()
+        }
+        return result
+    }
+
+    suspend fun getSessions(): Result<List<DeviceSessionResponse>> = runCatching {
+        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
+        authenticatedApi.getSessions(authHeader)
+    }.fold(
+        onSuccess = { response ->
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                Result.success(body)
+            } else {
+                Result.failure(mapErrorResponse(response))
+            }
+        },
+        onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+    )
+
+    suspend fun revokeSession(id: Long, isCurrentSession: Boolean): Result<Unit> {
+        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
+        val result = runCatching {
+            authenticatedApi.revokeSession(authHeader, id)
+        }.fold(
+            onSuccess = { response ->
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(mapErrorResponse(response))
+                }
+            },
+            onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+        )
+        if (result.isSuccess && isCurrentSession) {
+            tokenStore.clearSession()
+        }
+        return result
+    }
+
+    private fun mapMessageResponse(response: Response<MessageResponse>): Result<String> {
+        val body = response.body()
+        return if (response.isSuccessful && body != null) {
+            Result.success(body.message)
+        } else {
+            Result.failure(mapErrorResponse(response))
+        }
+    }
 
     private suspend fun handleAuthResponse(
         response: Response<AuthResponse>,

@@ -20,6 +20,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/v1/\"")
+        }
+        create("staging") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://staging-api.natsu.mikoshift.io/v1/\"")
+        }
+        create("prod") {
+            dimension = "environment"
+            buildConfigField("String", "BASE_URL", "\"https://api.natsu.mikoshift.io/v1/\"")
+        }
+    }
+
     buildTypes {
         release {
             optimization {

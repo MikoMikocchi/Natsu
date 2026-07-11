@@ -20,12 +20,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RegisterScreen(
-    viewModel: RegisterViewModel,
+fun ForgotPasswordScreen(
+    viewModel: ForgotPasswordViewModel,
     onNavigateToLogin: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -37,16 +36,10 @@ fun RegisterScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Регистрация", style = MaterialTheme.typography.headlineSmall)
-
-        OutlinedTextField(
-            value = uiState.name,
-            onValueChange = viewModel::onNameChange,
-            label = { Text("Имя") },
-            singleLine = true,
-            isError = uiState.nameError != null,
-            supportingText = uiState.nameError?.let { error -> { Text(error) } },
-            modifier = Modifier.fillMaxWidth(),
+        Text(text = "Восстановление пароля", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = "Введите email — мы отправим ссылку для сброса пароля.",
+            style = MaterialTheme.typography.bodyMedium,
         )
 
         OutlinedTextField(
@@ -60,34 +53,17 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        OutlinedTextField(
-            value = uiState.password,
-            onValueChange = viewModel::onPasswordChange,
-            label = { Text("Пароль") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            isError = uiState.passwordError != null,
-            supportingText = uiState.passwordError?.let { error -> { Text(error) } },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        OutlinedTextField(
-            value = uiState.passwordConfirmation,
-            onValueChange = viewModel::onPasswordConfirmationChange,
-            label = { Text("Подтверждение пароля") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            isError = uiState.passwordConfirmationError != null,
-            supportingText = uiState.passwordConfirmationError?.let { error -> { Text(error) } },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
         if (uiState.generalError != null) {
             Text(
                 text = uiState.generalError.orEmpty(),
                 color = MaterialTheme.colorScheme.error,
+            )
+        }
+
+        if (uiState.successMessage != null) {
+            Text(
+                text = uiState.successMessage.orEmpty(),
+                color = MaterialTheme.colorScheme.primary,
             )
         }
 
@@ -102,7 +78,7 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Зарегистрироваться")
+                Text("Отправить")
             }
         }
 
@@ -110,7 +86,7 @@ fun RegisterScreen(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Уже есть аккаунт? Войти")
+            Text("Вернуться ко входу")
         }
     }
 }

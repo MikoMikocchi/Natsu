@@ -16,7 +16,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,15 +27,9 @@ import androidx.compose.ui.unit.dp
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
-    onLoggedIn: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            onLoggedIn()
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -90,6 +83,13 @@ fun LoginScreen(
             } else {
                 Text("Войти")
             }
+        }
+
+        TextButton(
+            onClick = onNavigateToForgotPassword,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Забыли пароль?")
         }
 
         TextButton(

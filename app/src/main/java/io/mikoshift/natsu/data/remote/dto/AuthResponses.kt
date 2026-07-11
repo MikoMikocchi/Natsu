@@ -36,3 +36,11 @@ data class UserShowResponse(
 data class MessageResponse(
     val message: String,
 )
+
+@Serializable
+data class DeviceSessionResponse(
+    val id: Long,
+    val name: String,
+    @SerialName("created_at") val createdAt: String,
+    val current: Boolean,
+)

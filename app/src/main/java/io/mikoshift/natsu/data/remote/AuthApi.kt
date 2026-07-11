@@ -3,6 +3,7 @@ package io.mikoshift.natsu.data.remote
 import io.mikoshift.natsu.data.remote.dto.AuthResponse
 import io.mikoshift.natsu.data.remote.dto.ChangePasswordRequest
 import io.mikoshift.natsu.data.remote.dto.DeleteAccountRequest
+import io.mikoshift.natsu.data.remote.dto.DeviceSessionResponse
 import io.mikoshift.natsu.data.remote.dto.ForgotPasswordRequest
 import io.mikoshift.natsu.data.remote.dto.LoginRequest
 import io.mikoshift.natsu.data.remote.dto.MessageResponse
@@ -17,6 +18,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * Retrofit definition of the backend's `/v1/auth` endpoints.
@@ -24,10 +26,6 @@ import retrofit2.http.POST
  * All functions return [Response] rather than the raw body so callers can inspect HTTP
  * status codes and raw error bodies (parsed as `ApiErrorResponse`) instead of Retrofit
  * throwing on non-2xx responses.
- *
- * Endpoints that require authentication take the `Authorization` header explicitly as a
- * parameter (e.g. pass `"Bearer <token>"`) for now. A later subtask will replace this with
- * an automatic interceptor on an authenticated Retrofit/OkHttp instance.
  */
 interface AuthApi {
 
@@ -63,4 +61,13 @@ interface AuthApi {
 
     @POST("auth/password/reset")
     suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<MessageResponse>
+
+    @GET("auth/sessions")
+    suspend fun getSessions(@Header("Authorization") authHeader: String): Response<List<DeviceSessionResponse>>
+
+    @DELETE("auth/sessions/{id}")
+    suspend fun revokeSession(
+        @Header("Authorization") authHeader: String,
+        @Path("id") id: Long,
+    ): Response<Unit>
 }
