@@ -1,16 +1,37 @@
 package io.mikoshift.natsu.di
 
 import android.content.Context
+import io.mikoshift.natsu.data.local.TokenStore
+import io.mikoshift.natsu.data.remote.AuthApi
+import io.mikoshift.natsu.data.remote.NetworkFactory
+import io.mikoshift.natsu.data.repository.AuthRepository
 
 /**
  * Simple manual dependency container for the app (no Hilt/Dagger).
  *
- * This is a stub: later subtasks will add lazily-initialized properties here for things
- * like the Retrofit/OkHttp network client, the TokenStore (EncryptedSharedPreferences),
- * and the AuthRepository.
+ * Every property is lazily initialized via `by lazy`, so construction order (e.g. TokenStore
+ * before the authenticated AuthApi before AuthRepository) is handled automatically without
+ * needing an explicit init block.
  */
 class AppContainer(private val context: Context) {
 
-    // TODO: network client (OkHttpClient / Retrofit), TokenStore, AuthRepository, etc.
-    // will be added here as lazy-initialized properties by later subtasks.
+    val tokenStore: TokenStore by lazy { TokenStore(context) }
+
+    private val unauthenticatedAuthApi: AuthApi by lazy {
+        NetworkFactory.createAuthApi(
+            NetworkFactory.createRetrofit(NetworkFactory.createUnauthenticatedOkHttpClient()),
+        )
+    }
+
+    private val authenticatedAuthApi: AuthApi by lazy {
+        NetworkFactory.createAuthenticatedAuthApi(tokenStore)
+    }
+
+    val authRepository: AuthRepository by lazy {
+        AuthRepository(
+            unauthenticatedApi = unauthenticatedAuthApi,
+            authenticatedApi = authenticatedAuthApi,
+            tokenStore = tokenStore,
+        )
+    }
 }
