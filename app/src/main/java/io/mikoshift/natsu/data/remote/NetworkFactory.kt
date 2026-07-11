@@ -2,6 +2,7 @@ package io.mikoshift.natsu.data.remote
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import io.mikoshift.natsu.BuildConfig
+import io.mikoshift.natsu.data.local.TokenStore
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -61,4 +62,38 @@ object NetworkFactory {
     val authApi: AuthApi by lazy {
         createAuthApi(createRetrofit(createUnauthenticatedOkHttpClient()))
     }
+
+    /**
+     * Authenticated OkHttpClient, suitable for logout/getUser/deleteAccount/changePassword.
+     *
+     * Automatically attaches the current access token via [AuthInterceptor] and transparently
+     * refreshes + retries once on a 401 via [TokenAuthenticator].
+     */
+    fun createAuthenticatedOkHttpClient(tokenStore: TokenStore): OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor())
+            .addInterceptor(AuthInterceptor(tokenStore))
+            .authenticator(TokenAuthenticator(tokenStore))
+            .build()
+
+    /**
+     * Builds an authenticated Retrofit instance from the given [OkHttpClient] and
+     * [NetworkConfig.BASE_URL], reusing the same shared [json] configuration as the
+     * unauthenticated Retrofit instance.
+     */
+    fun createAuthenticatedRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        val contentType = "application/json".toMediaType()
+        return Retrofit.Builder()
+            .baseUrl(NetworkConfig.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory(contentType))
+            .build()
+    }
+
+    /**
+     * Convenience: an authenticated [AuthApi], built from a fresh authenticated OkHttpClient +
+     * Retrofit instance backed by the given [tokenStore].
+     */
+    fun createAuthenticatedAuthApi(tokenStore: TokenStore): AuthApi =
+        createAuthApi(createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(tokenStore)))
 }
