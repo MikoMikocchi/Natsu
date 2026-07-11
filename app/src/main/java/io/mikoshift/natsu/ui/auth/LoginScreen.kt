@@ -38,7 +38,7 @@ fun LoginScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Вход", style = MaterialTheme.typography.headlineSmall)
+        Text(text = "Sign in", style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = uiState.email,
@@ -54,7 +54,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Пароль") },
+            label = { Text("Password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -81,7 +81,7 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Войти")
+                Text("Sign in")
             }
         }
 
@@ -89,14 +89,14 @@ fun LoginScreen(
             onClick = onNavigateToForgotPassword,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Забыли пароль?")
+            Text("Forgot password?")
         }
 
         TextButton(
             onClick = onNavigateToRegister,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Нет аккаунта? Зарегистрироваться")
+            Text("Don't have an account? Sign up")
         }
     }
 }

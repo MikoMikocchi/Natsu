@@ -33,7 +33,7 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         ) {
             Text(
-                text = "Привет, ${session?.userName.orEmpty()}!",
+                text = "Hello, ${session?.userName.orEmpty()}!",
                 style = MaterialTheme.typography.headlineSmall,
             )
             Text(text = session?.userEmail.orEmpty())
@@ -42,7 +42,7 @@ fun HomeScreen(
                 onClick = onNavigateToProfile,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Профиль")
+                Text("Profile")
             }
         }
     }

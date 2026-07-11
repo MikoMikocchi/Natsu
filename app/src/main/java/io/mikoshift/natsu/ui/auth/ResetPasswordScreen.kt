@@ -44,12 +44,12 @@ fun ResetPasswordScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Новый пароль", style = MaterialTheme.typography.headlineSmall)
+        Text(text = "New password", style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = uiState.token,
             onValueChange = viewModel::onTokenChange,
-            label = { Text("Токен сброса") },
+            label = { Text("Reset token") },
             singleLine = true,
             isError = uiState.tokenError != null,
             supportingText = uiState.tokenError?.let { error -> { Text(error) } },
@@ -59,7 +59,7 @@ fun ResetPasswordScreen(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Новый пароль") },
+            label = { Text("New password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -71,7 +71,7 @@ fun ResetPasswordScreen(
         OutlinedTextField(
             value = uiState.passwordConfirmation,
             onValueChange = viewModel::onPasswordConfirmationChange,
-            label = { Text("Подтверждение пароля") },
+            label = { Text("Confirm password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -98,7 +98,7 @@ fun ResetPasswordScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Сбросить пароль")
+                Text("Reset password")
             }
         }
 
@@ -106,7 +106,7 @@ fun ResetPasswordScreen(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Вернуться ко входу")
+            Text("Back to sign in")
         }
     }
 }

@@ -36,9 +36,9 @@ fun ForgotPasswordScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Восстановление пароля", style = MaterialTheme.typography.headlineSmall)
+        Text(text = "Reset password", style = MaterialTheme.typography.headlineSmall)
         Text(
-            text = "Введите email — мы отправим ссылку для сброса пароля.",
+            text = "Enter your email and we'll send you a password reset link.",
             style = MaterialTheme.typography.bodyMedium,
         )
 
@@ -78,7 +78,7 @@ fun ForgotPasswordScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Отправить")
+                Text("Send")
             }
         }
 
@@ -86,7 +86,7 @@ fun ForgotPasswordScreen(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Вернуться ко входу")
+            Text("Back to sign in")
         }
     }
 }

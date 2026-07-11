@@ -37,12 +37,12 @@ fun RegisterScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Регистрация", style = MaterialTheme.typography.headlineSmall)
+        Text(text = "Sign up", style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = uiState.name,
             onValueChange = viewModel::onNameChange,
-            label = { Text("Имя") },
+            label = { Text("Name") },
             singleLine = true,
             isError = uiState.nameError != null,
             supportingText = uiState.nameError?.let { error -> { Text(error) } },
@@ -63,7 +63,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = viewModel::onPasswordChange,
-            label = { Text("Пароль") },
+            label = { Text("Password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -75,7 +75,7 @@ fun RegisterScreen(
         OutlinedTextField(
             value = uiState.passwordConfirmation,
             onValueChange = viewModel::onPasswordConfirmationChange,
-            label = { Text("Подтверждение пароля") },
+            label = { Text("Confirm password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -102,7 +102,7 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Зарегистрироваться")
+                Text("Sign up")
             }
         }
 
@@ -110,7 +110,7 @@ fun RegisterScreen(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Уже есть аккаунт? Войти")
+            Text("Already have an account? Sign in")
         }
     }
 }

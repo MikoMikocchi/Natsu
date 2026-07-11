@@ -37,10 +37,10 @@ fun ChangePasswordScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Смена пароля") },
+                title = { Text("Change password") },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Назад")
+                        Text("Back")
                     }
                 },
             )
@@ -57,7 +57,7 @@ fun ChangePasswordScreen(
             OutlinedTextField(
                 value = uiState.currentPassword,
                 onValueChange = viewModel::onCurrentPasswordChange,
-                label = { Text("Текущий пароль") },
+                label = { Text("Current password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -69,7 +69,7 @@ fun ChangePasswordScreen(
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
-                label = { Text("Новый пароль") },
+                label = { Text("New password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -81,7 +81,7 @@ fun ChangePasswordScreen(
             OutlinedTextField(
                 value = uiState.passwordConfirmation,
                 onValueChange = viewModel::onPasswordConfirmationChange,
-                label = { Text("Подтверждение пароля") },
+                label = { Text("Confirm password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -115,7 +115,7 @@ fun ChangePasswordScreen(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
                 } else {
-                    Text("Сохранить")
+                    Text("Save")
                 }
             }
         }

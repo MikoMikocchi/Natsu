@@ -43,14 +43,14 @@ fun ProfileScreen(
     if (uiState.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = viewModel::dismissDeleteDialog,
-            title = { Text("Удалить аккаунт") },
+            title = { Text("Delete account") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Это действие необратимо. Введите пароль для подтверждения.")
+                    Text("This action cannot be undone. Enter your password to confirm.")
                     OutlinedTextField(
                         value = uiState.deletePassword,
                         onValueChange = viewModel::onDeletePasswordChange,
-                        label = { Text("Пароль") },
+                        label = { Text("Password") },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -68,13 +68,13 @@ fun ProfileScreen(
                     if (uiState.isDeletingAccount) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp))
                     } else {
-                        Text("Удалить")
+                        Text("Delete")
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = viewModel::dismissDeleteDialog) {
-                    Text("Отмена")
+                    Text("Cancel")
                 }
             },
         )
@@ -83,10 +83,10 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Профиль") },
+                title = { Text("Profile") },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Назад")
+                        Text("Back")
                     }
                 },
             )
@@ -100,7 +100,7 @@ fun ProfileScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(text = "Аккаунт", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Account", style = MaterialTheme.typography.titleMedium)
 
             if (uiState.isLoadingUser && uiState.user == null) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -108,7 +108,7 @@ fun ProfileScreen(
                 Text(text = uiState.user?.name.orEmpty(), style = MaterialTheme.typography.headlineSmall)
                 Text(text = uiState.user?.email.orEmpty())
                 Text(
-                    text = "Создан: ${uiState.user?.createdAt.orEmpty()}",
+                    text = "Created: ${uiState.user?.createdAt.orEmpty()}",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -117,17 +117,17 @@ fun ProfileScreen(
                 onClick = onNavigateToChangePassword,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Сменить пароль")
+                Text("Change password")
             }
 
             HorizontalDivider()
 
-            Text(text = "Активные сессии", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Active sessions", style = MaterialTheme.typography.titleMedium)
 
             if (uiState.isLoadingSessions && uiState.sessions.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
             } else if (uiState.sessions.isEmpty()) {
-                Text(text = "Нет активных сессий", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "No active sessions", style = MaterialTheme.typography.bodyMedium)
             } else {
                 uiState.sessions.forEach { session ->
                     SessionRow(
@@ -157,7 +157,7 @@ fun ProfileScreen(
                 if (uiState.isLoggingOut) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                 } else {
-                    Text("Выйти")
+                    Text("Sign out")
                 }
             }
 
@@ -165,7 +165,7 @@ fun ProfileScreen(
                 onClick = viewModel::showDeleteDialog,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Удалить аккаунт", color = MaterialTheme.colorScheme.error)
+                Text("Delete account", color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -187,7 +187,7 @@ private fun SessionRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = name, style = MaterialTheme.typography.bodyLarge)
             Text(
-                text = if (isCurrent) "Текущая · $createdAt" else createdAt,
+                text = if (isCurrent) "Current · $createdAt" else createdAt,
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -198,7 +198,7 @@ private fun SessionRow(
             if (isRevoking) {
                 CircularProgressIndicator(modifier = Modifier.size(16.dp))
             } else {
-                Text("Отозвать")
+                Text("Revoke")
             }
         }
     }
