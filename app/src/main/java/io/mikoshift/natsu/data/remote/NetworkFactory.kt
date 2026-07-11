@@ -55,6 +55,9 @@ object NetworkFactory {
     /** Builds an [AuthApi] backed by the given [Retrofit] instance. */
     fun createAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
 
+    /** Builds a [DocumentApi] backed by the given [Retrofit] instance. */
+    fun createDocumentApi(retrofit: Retrofit): DocumentApi = retrofit.create(DocumentApi::class.java)
+
     /**
      * Convenience: the unauthenticated [AuthApi], built from a fresh unauthenticated
      * OkHttpClient + Retrofit instance.
@@ -96,4 +99,11 @@ object NetworkFactory {
      */
     fun createAuthenticatedAuthApi(tokenStore: TokenStore): AuthApi =
         createAuthApi(createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(tokenStore)))
+
+    /**
+     * Convenience: an authenticated [DocumentApi], built from a fresh authenticated OkHttpClient +
+     * Retrofit instance backed by the given [tokenStore].
+     */
+    fun createAuthenticatedDocumentApi(tokenStore: TokenStore): DocumentApi =
+        createDocumentApi(createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(tokenStore)))
 }
