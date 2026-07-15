@@ -1,4 +1,4 @@
-package io.mikoshift.natsu.data.repository
+package io.mikoshift.natsu.core.model
 
 sealed class DocumentError : RuntimeException() {
     data class ValidationError(val fieldErrors: Map<String, List<String>>) : DocumentError()

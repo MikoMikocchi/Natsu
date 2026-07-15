@@ -1,10 +1,10 @@
 package io.mikoshift.natsu.ui.library
 
-import io.mikoshift.natsu.data.local.db.DocumentEntity
-import io.mikoshift.natsu.data.remote.dto.DocumentSearchResult
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.data.remote.dto.SourceFormat
-import io.mikoshift.natsu.data.repository.DocumentError
+import io.mikoshift.natsu.core.model.Document
+import io.mikoshift.natsu.core.model.DocumentError
+import io.mikoshift.natsu.core.model.DocumentSearchResult
+import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.SourceFormat
 
 data class LibraryUiState(
     val documents: List<DocumentListItem> = emptyList(),
@@ -33,7 +33,7 @@ data class SearchResultItem(
     val snippets: List<String>,
 )
 
-fun DocumentEntity.toListItem(): DocumentListItem = DocumentListItem(
+fun Document.toListItem(): DocumentListItem = DocumentListItem(
     id = id,
     title = title,
     status = status,

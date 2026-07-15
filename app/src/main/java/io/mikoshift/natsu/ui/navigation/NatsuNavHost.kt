@@ -2,17 +2,15 @@ package io.mikoshift.natsu.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import io.mikoshift.natsu.di.AppContainer
-import io.mikoshift.natsu.ui.AppViewModelFactory
 import io.mikoshift.natsu.ui.auth.ForgotPasswordScreen
 import io.mikoshift.natsu.ui.auth.ForgotPasswordViewModel
 import io.mikoshift.natsu.ui.auth.LoginScreen
@@ -40,18 +38,16 @@ private val AUTH_ONLY_ROUTES = setOf(ROUTE_LOGIN, ROUTE_REGISTER)
 private val AUTHENTICATED_ROUTES = setOf(ROUTE_HOME, ROUTE_PROFILE, ROUTE_CHANGE_PASSWORD)
 
 @Composable
-fun NatsuNavHost(appContainer: AppContainer) {
+fun NatsuNavHost(
+    rootViewModel: RootViewModel = hiltViewModel(),
+) {
     val navController: NavHostController = rememberNavController()
-    val viewModelFactory = AppViewModelFactory(
-        authRepository = appContainer.authRepository,
-        documentRepository = appContainer.documentRepository,
-    )
-    val session by appContainer.authRepository.currentSession.collectAsState()
+    val session by rootViewModel.session.collectAsStateWithLifecycle()
     val startDestination = if (session != null) ROUTE_HOME else ROUTE_LOGIN
 
     LaunchedEffect(session) {
         if (session == null) {
-            appContainer.documentRepository.clearOnLogout()
+            rootViewModel.onSessionCleared()
         }
 
         val currentRoute = navController.currentBackStackEntry?.destination?.route ?: return@LaunchedEffect
@@ -74,7 +70,7 @@ fun NatsuNavHost(appContainer: AppContainer) {
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(ROUTE_LOGIN) {
-            val viewModel: LoginViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: LoginViewModel = hiltViewModel()
             LoginScreen(
                 viewModel = viewModel,
                 onNavigateToRegister = { navController.navigate(ROUTE_REGISTER) },
@@ -83,7 +79,7 @@ fun NatsuNavHost(appContainer: AppContainer) {
         }
 
         composable(ROUTE_REGISTER) {
-            val viewModel: RegisterViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: RegisterViewModel = hiltViewModel()
             RegisterScreen(
                 viewModel = viewModel,
                 onNavigateToLogin = { navController.navigate(ROUTE_LOGIN) },
@@ -91,7 +87,7 @@ fun NatsuNavHost(appContainer: AppContainer) {
         }
 
         composable(ROUTE_FORGOT_PASSWORD) {
-            val viewModel: ForgotPasswordViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: ForgotPasswordViewModel = hiltViewModel()
             ForgotPasswordScreen(
                 viewModel = viewModel,
                 onNavigateToLogin = { navController.navigate(ROUTE_LOGIN) },
@@ -106,14 +102,8 @@ fun NatsuNavHost(appContainer: AppContainer) {
                     defaultValue = ""
                 },
             ),
-        ) { backStackEntry ->
-            val token = backStackEntry.arguments?.getString("token").orEmpty()
-            val resetViewModelFactory = AppViewModelFactory(
-                authRepository = appContainer.authRepository,
-                documentRepository = appContainer.documentRepository,
-                resetToken = token,
-            )
-            val viewModel: ResetPasswordViewModel = viewModel(factory = resetViewModelFactory)
+        ) {
+            val viewModel: ResetPasswordViewModel = hiltViewModel()
             ResetPasswordScreen(
                 viewModel = viewModel,
                 onNavigateToLogin = {
@@ -125,7 +115,7 @@ fun NatsuNavHost(appContainer: AppContainer) {
         }
 
         composable(ROUTE_HOME) {
-            val viewModel: LibraryViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: LibraryViewModel = hiltViewModel()
             LibraryScreen(
                 viewModel = viewModel,
                 onNavigateToProfile = { navController.navigate(ROUTE_PROFILE) },
@@ -133,7 +123,7 @@ fun NatsuNavHost(appContainer: AppContainer) {
         }
 
         composable(ROUTE_PROFILE) {
-            val viewModel: ProfileViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: ProfileViewModel = hiltViewModel()
             ProfileScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },
@@ -142,7 +132,7 @@ fun NatsuNavHost(appContainer: AppContainer) {
         }
 
         composable(ROUTE_CHANGE_PASSWORD) {
-            val viewModel: ChangePasswordViewModel = viewModel(factory = viewModelFactory)
+            val viewModel: ChangePasswordViewModel = hiltViewModel()
             ChangePasswordScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },

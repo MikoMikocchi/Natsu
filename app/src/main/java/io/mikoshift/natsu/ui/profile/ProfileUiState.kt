@@ -1,11 +1,11 @@
 package io.mikoshift.natsu.ui.profile
 
-import io.mikoshift.natsu.data.remote.dto.DeviceSessionResponse
-import io.mikoshift.natsu.data.remote.dto.UserResponse
+import io.mikoshift.natsu.core.model.DeviceSession
+import io.mikoshift.natsu.core.model.User
 
 data class ProfileUiState(
-    val user: UserResponse? = null,
-    val sessions: List<DeviceSessionResponse> = emptyList(),
+    val user: User? = null,
+    val sessions: List<DeviceSession> = emptyList(),
     val deletePassword: String = "",
     val deletePasswordError: String? = null,
     val isLoadingUser: Boolean = false,

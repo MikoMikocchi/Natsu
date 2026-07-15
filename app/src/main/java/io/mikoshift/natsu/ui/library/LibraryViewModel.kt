@@ -3,8 +3,10 @@ package io.mikoshift.natsu.ui.library
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.mikoshift.natsu.data.repository.DocumentError
-import io.mikoshift.natsu.data.repository.DocumentRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import io.mikoshift.natsu.core.domain.repository.DocumentRepository
+import io.mikoshift.natsu.core.model.DocumentError
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LibraryViewModel(
+@HiltViewModel
+class LibraryViewModel @Inject constructor(
     private val documentRepository: DocumentRepository,
 ) : ViewModel() {
 
@@ -66,11 +69,11 @@ class LibraryViewModel(
             delay(SEARCH_DEBOUNCE_MS)
             _uiState.update { it.copy(isSearching = true) }
             documentRepository.search(trimmed).fold(
-                onSuccess = { response ->
+                onSuccess = { results ->
                     _uiState.update {
                         it.copy(
                             isSearching = false,
-                            searchResults = response.results.map { result -> result.toSearchResultItem() },
+                            searchResults = results.map { result -> result.toSearchResultItem() },
                         )
                     }
                 },
@@ -93,7 +96,7 @@ class LibraryViewModel(
             it.copy(isImporting = true, importStatusMessage = "Uploading...", error = null)
         }
         viewModelScope.launch {
-            documentRepository.import(uri).fold(
+            documentRepository.import(uri.toString()).fold(
                 onSuccess = { document ->
                     _uiState.update {
                         it.copy(

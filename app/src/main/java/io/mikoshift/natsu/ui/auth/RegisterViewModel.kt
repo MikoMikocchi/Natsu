@@ -3,8 +3,10 @@ package io.mikoshift.natsu.ui.auth
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.mikoshift.natsu.data.repository.AuthError
-import io.mikoshift.natsu.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import io.mikoshift.natsu.core.model.AuthError
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +18,10 @@ import kotlinx.coroutines.launch
  * network, then delegates to [AuthRepository.register] and maps the resulting [AuthError]
  * (if any) onto [RegisterUiState]'s per-field error slots.
  */
-class RegisterViewModel(private val authRepository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()

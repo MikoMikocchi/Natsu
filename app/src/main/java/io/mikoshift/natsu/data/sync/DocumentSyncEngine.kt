@@ -10,11 +10,16 @@ import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
-import io.mikoshift.natsu.data.repository.DocumentError
+import io.mikoshift.natsu.core.model.DocumentError
+import io.mikoshift.natsu.di.AuthenticatedAuthApi
+import io.mikoshift.natsu.di.UnauthenticatedAuthApi
 import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 import retrofit2.Response
 
-class DocumentSyncEngine(
+@Singleton
+class DocumentSyncEngine @Inject constructor(
     private val documentApi: DocumentApi,
     private val documentDao: DocumentDao,
     private val syncCursorStore: SyncCursorStore,

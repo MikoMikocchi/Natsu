@@ -1,6 +1,7 @@
 package io.mikoshift.natsu.data.remote
 
 import io.mikoshift.natsu.data.local.TokenStore
+import io.mikoshift.natsu.data.mapper.toSession
 import io.mikoshift.natsu.data.remote.dto.RefreshRequest
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
@@ -49,7 +50,7 @@ class TokenAuthenticator(private val tokenStore: TokenStore) : Authenticator {
                 return null
             }
 
-            runBlocking { tokenStore.saveSession(authResponse) }
+            runBlocking { tokenStore.saveSession(authResponse.toSession()) }
 
             response.request.newBuilder()
                 .header("Authorization", "Bearer ${authResponse.token}")

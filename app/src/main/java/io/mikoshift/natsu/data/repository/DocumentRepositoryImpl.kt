@@ -3,47 +3,55 @@ package io.mikoshift.natsu.data.repository
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.mikoshift.natsu.core.domain.repository.DocumentRepository
+import io.mikoshift.natsu.core.model.Document
+import io.mikoshift.natsu.core.model.DocumentError
+import io.mikoshift.natsu.core.model.DocumentSearchResult
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
 import io.mikoshift.natsu.data.local.db.DocumentDao
-import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.toEntity
+import io.mikoshift.natsu.data.mapper.toDomain
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentSearchResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus
 import io.mikoshift.natsu.data.sync.DocumentSyncEngine
 import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 
-class DocumentRepository(
-    private val context: Context,
+@Singleton
+class DocumentRepositoryImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val documentApi: DocumentApi,
     private val documentDao: DocumentDao,
     private val syncCursorStore: SyncCursorStore,
     private val packageFileStore: PackageFileStore,
     private val syncEngine: DocumentSyncEngine,
-) {
+) : DocumentRepository {
 
-    fun observeLibrary(): Flow<List<DocumentEntity>> = documentDao.observeLibrary()
+    override fun observeLibrary(): Flow<List<Document>> =
+        documentDao.observeLibrary().map { documents -> documents.map { it.toDomain() } }
 
-    suspend fun sync(): Result<Unit> = syncEngine.sync()
+    override suspend fun sync(): Result<Unit> = syncEngine.sync()
 
-    suspend fun search(query: String): Result<DocumentSearchResponse> = runCatching {
+    override suspend fun search(query: String): Result<List<DocumentSearchResult>> = runCatching {
         documentApi.search(query.trim())
     }.fold(
         onSuccess = { response ->
             val body = response.body()
             if (response.isSuccessful && body != null) {
-                Result.success(body)
+                Result.success(body.results.map { it.toDomain() })
             } else {
                 Result.failure(mapErrorResponse(response))
             }
@@ -51,7 +59,8 @@ class DocumentRepository(
         onFailure = { throwable -> Result.failure(throwable.toDocumentFailure()) },
     )
 
-    suspend fun import(uri: Uri): Result<DocumentResponse> = runCatching {
+    override suspend fun import(contentUri: String): Result<Document> = runCatching {
+        val uri = Uri.parse(contentUri)
         val (bytes, fileName) = readUriContent(uri)
         val part = MultipartBody.Part.createFormData(
             "file",
@@ -73,7 +82,7 @@ class DocumentRepository(
         onFailure = { throwable -> Result.failure(throwable.toDocumentFailure()) },
     )
 
-    suspend fun markDeleted(id: String): Result<Unit> {
+    override suspend fun markDeleted(id: String): Result<Unit> {
         val local = documentDao.getById(id) ?: return Result.success(Unit)
         val now = System.currentTimeMillis()
         documentDao.upsert(
@@ -87,13 +96,13 @@ class DocumentRepository(
         return syncEngine.sync()
     }
 
-    suspend fun clearOnLogout() {
+    override suspend fun clearOnLogout() {
         documentDao.deleteAll()
         packageFileStore.deleteAll()
         syncCursorStore.clear()
     }
 
-    private suspend fun pollImportStatus(documentId: String): Result<DocumentResponse> {
+    private suspend fun pollImportStatus(documentId: String): Result<Document> {
         repeat(IMPORT_POLL_MAX_ATTEMPTS) {
             delay(IMPORT_POLL_INTERVAL_MS)
             val response = documentApi.show(documentId)
@@ -107,7 +116,7 @@ class DocumentRepository(
             when (document.status) {
                 DocumentStatus.READY -> {
                     syncEngine.sync()
-                    return Result.success(document)
+                    return Result.success(document.toDomain())
                 }
                 DocumentStatus.FAILED -> {
                     return Result.failure(DocumentError.ImportFailed(document.importError))

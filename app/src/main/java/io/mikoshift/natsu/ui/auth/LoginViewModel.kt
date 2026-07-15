@@ -2,8 +2,10 @@ package io.mikoshift.natsu.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.mikoshift.natsu.data.repository.AuthError
-import io.mikoshift.natsu.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import io.mikoshift.natsu.core.model.AuthError
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +18,10 @@ import kotlinx.coroutines.launch
  * [LoginUiState]'s error slots. Invalid-credential errors from the backend land under the
  * `"base"` key, which is treated as [LoginUiState.generalError].
  */
-class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()

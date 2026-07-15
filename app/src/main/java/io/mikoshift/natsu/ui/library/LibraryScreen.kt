@@ -42,8 +42,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.data.remote.dto.SourceFormat
+import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.SourceFormat
+import io.mikoshift.natsu.data.mapper.toSession
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

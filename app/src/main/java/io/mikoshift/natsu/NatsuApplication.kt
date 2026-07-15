@@ -1,15 +1,7 @@
 package io.mikoshift.natsu
 
 import android.app.Application
-import io.mikoshift.natsu.di.AppContainer
+import dagger.hilt.android.HiltAndroidApp
 
-class NatsuApplication : Application() {
-
-    lateinit var appContainer: AppContainer
-        private set
-
-    override fun onCreate() {
-        super.onCreate()
-        appContainer = AppContainer(this)
-    }
-}
+@HiltAndroidApp
+class NatsuApplication : Application()
