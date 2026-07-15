@@ -1,18 +1,14 @@
 package io.mikoshift.natsu.data.sync
 
+import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
 import io.mikoshift.natsu.data.local.db.DocumentDao
-import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.toEntity
 import io.mikoshift.natsu.data.local.db.toSyncItemRequest
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
-import io.mikoshift.natsu.core.model.DocumentError
-import io.mikoshift.natsu.di.AuthenticatedAuthApi
-import io.mikoshift.natsu.di.UnauthenticatedAuthApi
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,7 +45,7 @@ class DocumentSyncEngine @Inject constructor(
 
         for (serverDoc in body.documents) {
             val local = documentDao.getById(serverDoc.id)
-            val merged = mergeServerDocument(serverDoc, local)
+            val merged = DocumentMerger.merge(serverDoc, local)
             documentDao.upsert(merged)
             if (serverDoc.updatedAtMs > maxUpdatedAtMs) {
                 maxUpdatedAtMs = serverDoc.updatedAtMs
@@ -118,44 +114,6 @@ class DocumentSyncEngine @Inject constructor(
                 body.close()
             }
         }
-    }
-
-    private fun mergeServerDocument(
-        server: DocumentResponse,
-        local: DocumentEntity?,
-    ): DocumentEntity {
-        if (local == null) {
-            return server.toEntity()
-        }
-
-        if (server.updatedAtMs > local.updatedAtMs) {
-            val keepPackage = server.packageSha256 != null &&
-                server.packageSha256 == local.cachedPackageSha256
-            return server.toEntity(
-                isDirty = false,
-                localPackagePath = if (keepPackage) local.localPackagePath else null,
-                cachedPackageSha256 = if (keepPackage) local.cachedPackageSha256 else null,
-            )
-        }
-
-        if (local.isDirty) {
-            return local.copy(
-                status = server.status,
-                importError = server.importError,
-                packageSizeBytes = server.packageSizeBytes,
-                packageUpdatedAtMs = server.packageUpdatedAtMs,
-                packageSha256 = server.packageSha256,
-                charCount = if (server.charCount > 0) server.charCount else local.charCount,
-            )
-        }
-
-        val keepPackage = server.packageSha256 != null &&
-            server.packageSha256 == local.cachedPackageSha256
-        return server.toEntity(
-            isDirty = false,
-            localPackagePath = if (keepPackage) local.localPackagePath else null,
-            cachedPackageSha256 = if (keepPackage) local.cachedPackageSha256 else null,
-        )
     }
 
     private fun <T> requireSuccess(response: Response<T>): T {

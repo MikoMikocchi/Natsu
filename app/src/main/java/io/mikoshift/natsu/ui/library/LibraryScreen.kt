@@ -44,7 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
-import io.mikoshift.natsu.data.mapper.toSession
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

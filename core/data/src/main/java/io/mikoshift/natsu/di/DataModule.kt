@@ -13,8 +13,10 @@ import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.local.db.NatsuDatabase
 import io.mikoshift.natsu.data.local.db.SyncStateDao
 import io.mikoshift.natsu.data.remote.AuthApi
+import io.mikoshift.natsu.data.remote.AuthInterceptor
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
+import io.mikoshift.natsu.data.remote.TokenAuthenticator
 import javax.inject.Singleton
 
 @Module
@@ -46,18 +48,24 @@ object DataModule {
 
     @Provides
     @UnauthenticatedAuthApi
-    fun provideUnauthenticatedAuthApi(): AuthApi =
-        NetworkFactory.createAuthApi(
-            NetworkFactory.createRetrofit(NetworkFactory.createUnauthenticatedOkHttpClient()),
+    fun provideUnauthenticatedAuthApi(networkFactory: NetworkFactory): AuthApi =
+        networkFactory.createAuthApi(
+            networkFactory.createRetrofit(networkFactory.createUnauthenticatedOkHttpClient()),
         )
 
     @Provides
     @AuthenticatedAuthApi
-    fun provideAuthenticatedAuthApi(tokenStore: TokenStore): AuthApi =
-        NetworkFactory.createAuthenticatedAuthApi(tokenStore)
+    fun provideAuthenticatedAuthApi(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): AuthApi = networkFactory.createAuthenticatedAuthApi(authInterceptor, tokenAuthenticator)
 
     @Provides
     @Singleton
-    fun provideDocumentApi(tokenStore: TokenStore): DocumentApi =
-        NetworkFactory.createAuthenticatedDocumentApi(tokenStore)
+    fun provideDocumentApi(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): DocumentApi = networkFactory.createAuthenticatedDocumentApi(authInterceptor, tokenAuthenticator)
 }

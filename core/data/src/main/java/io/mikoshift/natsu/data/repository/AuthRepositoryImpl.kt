@@ -35,6 +35,7 @@ class AuthRepositoryImpl @Inject constructor(
     @UnauthenticatedAuthApi private val unauthenticatedApi: AuthApi,
     @AuthenticatedAuthApi private val authenticatedApi: AuthApi,
     private val tokenStore: TokenStore,
+    private val networkFactory: NetworkFactory,
 ) : AuthRepository {
 
     override val isLoggedIn: Flow<Boolean> = tokenStore.sessionFlow.map { it != null }
@@ -235,7 +236,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
         if (errorBody != null) {
             try {
-                val parsed = NetworkFactory.json.decodeFromString(
+                val parsed = networkFactory.json.decodeFromString(
                     ApiErrorResponse.serializer(),
                     errorBody,
                 )

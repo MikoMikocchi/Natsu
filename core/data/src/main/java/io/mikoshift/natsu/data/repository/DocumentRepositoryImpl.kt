@@ -38,6 +38,7 @@ class DocumentRepositoryImpl @Inject constructor(
     private val syncCursorStore: SyncCursorStore,
     private val packageFileStore: PackageFileStore,
     private val syncEngine: DocumentSyncEngine,
+    private val networkFactory: NetworkFactory,
 ) : DocumentRepository {
 
     override fun observeLibrary(): Flow<List<Document>> =
@@ -164,7 +165,7 @@ class DocumentRepositoryImpl @Inject constructor(
         }
         if (errorBody != null) {
             try {
-                val parsed = NetworkFactory.json.decodeFromString(
+                val parsed = networkFactory.json.decodeFromString(
                     ApiErrorResponse.serializer(),
                     errorBody,
                 )
