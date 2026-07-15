@@ -91,14 +91,14 @@ internal fun ProfileScreenContent(
     if (uiState.showDeleteDialog) {
         AlertDialog(
             onDismissRequest = onDismissDeleteDialog,
-            title = { Text("Delete account") },
+            title = { Text(stringResource(R.string.delete_account)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("This action cannot be undone. Enter your password to confirm.")
+                    Text(stringResource(R.string.delete_account_confirm))
                     OutlinedTextField(
                         value = uiState.deletePassword,
                         onValueChange = onDeletePasswordChange,
-                        label = { Text("Password") },
+                        label = { Text(stringResource(R.string.password)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -116,13 +116,13 @@ internal fun ProfileScreenContent(
                     if (uiState.isDeletingAccount) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp))
                     } else {
-                        Text("Delete")
+                        Text(stringResource(R.string.delete))
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissDeleteDialog) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )
@@ -132,10 +132,10 @@ internal fun ProfileScreenContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Profile") },
+                title = { Text(stringResource(R.string.profile_title)) },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Back")
+                        Text(stringResource(R.string.back))
                     }
                 },
             )
@@ -157,7 +157,7 @@ internal fun ProfileScreenContent(
                 Text(text = uiState.user?.displayName.orEmpty(), style = MaterialTheme.typography.headlineSmall)
                 Text(text = uiState.user?.email.orEmpty())
                 Text(
-                    text = "Created: ${uiState.user?.memberSince.orEmpty()}",
+                    text = stringResource(R.string.created_at, uiState.user?.memberSince.orEmpty()),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -166,7 +166,7 @@ internal fun ProfileScreenContent(
                 onClick = onNavigateToChangePassword,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Change password")
+                Text(stringResource(R.string.change_password))
             }
 
             HorizontalDivider()
@@ -207,7 +207,7 @@ internal fun ProfileScreenContent(
                 if (uiState.isLoggingOut) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                 } else {
-                    Text("Sign out")
+                    Text(stringResource(R.string.sign_out))
                 }
             }
 
@@ -215,7 +215,7 @@ internal fun ProfileScreenContent(
                 onClick = onShowDeleteDialog,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Delete account", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.delete_account), color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -234,7 +234,14 @@ private fun SessionRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = session.deviceName, style = MaterialTheme.typography.bodyLarge)
-            Text(text = session.subtitle, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = if (session.isCurrent) {
+                    stringResource(R.string.session_current, session.createdAt)
+                } else {
+                    session.createdAt
+                },
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
         TextButton(
             onClick = onRevoke,
@@ -243,7 +250,7 @@ private fun SessionRow(
             if (isRevoking) {
                 CircularProgressIndicator(modifier = Modifier.size(16.dp))
             } else {
-                Text("Revoke")
+                Text(stringResource(R.string.revoke))
             }
         }
     }
@@ -264,7 +271,7 @@ private fun ProfileScreenPreview() {
                     SessionUiModel(
                         id = 1,
                         deviceName = "Pixel 8",
-                        subtitle = "Current · 2026-07-01",
+                        createdAt = "2026-07-01",
                         isCurrent = true,
                     ),
                 ),

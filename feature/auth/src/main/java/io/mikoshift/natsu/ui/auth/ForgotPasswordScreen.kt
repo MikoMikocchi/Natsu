@@ -56,14 +56,14 @@ internal fun ForgotPasswordScreenContent(
     ) {
         Text(text = stringResource(R.string.forgot_password_title), style = MaterialTheme.typography.headlineSmall)
         Text(
-            text = "Enter your email and we'll send you a password reset link.",
+            text = stringResource(R.string.forgot_password_body),
             style = MaterialTheme.typography.bodyMedium,
         )
 
         OutlinedTextField(
             value = uiState.email,
             onValueChange = onEmailChange,
-            label = { Text("Email") },
+            label = { Text(stringResource(R.string.email)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isError = uiState.emailError != null,
@@ -96,7 +96,7 @@ internal fun ForgotPasswordScreenContent(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Send")
+                Text(stringResource(R.string.send))
             }
         }
 
@@ -104,7 +104,7 @@ internal fun ForgotPasswordScreenContent(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Back to sign in")
+            Text(stringResource(R.string.back_to_sign_in))
         }
     }
 }

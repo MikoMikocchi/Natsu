@@ -21,11 +21,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.feature.profile.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,10 +60,10 @@ internal fun ChangePasswordScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Change password") },
+                title = { Text(stringResource(R.string.change_password)) },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Back")
+                        Text(stringResource(R.string.back))
                     }
                 },
             )
@@ -78,7 +80,7 @@ internal fun ChangePasswordScreenContent(
             OutlinedTextField(
                 value = uiState.currentPassword,
                 onValueChange = onCurrentPasswordChange,
-                label = { Text("Current password") },
+                label = { Text(stringResource(R.string.current_password)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -90,7 +92,7 @@ internal fun ChangePasswordScreenContent(
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = onPasswordChange,
-                label = { Text("New password") },
+                label = { Text(stringResource(R.string.new_password)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -102,7 +104,7 @@ internal fun ChangePasswordScreenContent(
             OutlinedTextField(
                 value = uiState.passwordConfirmation,
                 onValueChange = onPasswordConfirmationChange,
-                label = { Text("Confirm password") },
+                label = { Text(stringResource(R.string.confirm_password)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -136,7 +138,7 @@ internal fun ChangePasswordScreenContent(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
                 } else {
-                    Text("Save")
+                    Text(stringResource(R.string.save))
                 }
             }
         }

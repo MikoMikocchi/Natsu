@@ -72,7 +72,7 @@ internal fun ResetPasswordScreenContent(
         OutlinedTextField(
             value = uiState.token,
             onValueChange = onTokenChange,
-            label = { Text("Reset token") },
+            label = { Text(stringResource(R.string.reset_token)) },
             singleLine = true,
             isError = uiState.tokenError != null,
             supportingText = uiState.tokenError?.let { error -> { Text(error) } },
@@ -94,7 +94,7 @@ internal fun ResetPasswordScreenContent(
         OutlinedTextField(
             value = uiState.passwordConfirmation,
             onValueChange = onPasswordConfirmationChange,
-            label = { Text("Confirm password") },
+            label = { Text(stringResource(R.string.confirm_password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -129,7 +129,7 @@ internal fun ResetPasswordScreenContent(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Back to sign in")
+            Text(stringResource(R.string.back_to_sign_in))
         }
     }
 }

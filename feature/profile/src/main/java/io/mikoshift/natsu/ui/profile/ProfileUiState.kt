@@ -9,7 +9,7 @@ data class UserUiModel(
 data class SessionUiModel(
     val id: Long,
     val deviceName: String,
-    val subtitle: String,
+    val createdAt: String,
     val isCurrent: Boolean,
 )
 
@@ -22,7 +22,7 @@ fun io.mikoshift.natsu.core.model.User.toUiModel(): UserUiModel = UserUiModel(
 fun io.mikoshift.natsu.core.model.DeviceSession.toUiModel(): SessionUiModel = SessionUiModel(
     id = id,
     deviceName = name,
-    subtitle = if (current) "Current · $createdAt" else createdAt,
+    createdAt = createdAt,
     isCurrent = current,
 )
 

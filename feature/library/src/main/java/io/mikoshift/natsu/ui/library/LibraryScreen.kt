@@ -40,11 +40,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
+import io.mikoshift.natsu.feature.library.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,16 +109,16 @@ internal fun LibraryScreenContent(
     if (uiState.deleteCandidateId != null) {
         AlertDialog(
             onDismissRequest = onDismissDelete,
-            title = { Text("Delete document?") },
-            text = { Text("This document will be removed from your library on all devices.") },
+            title = { Text(stringResource(R.string.delete_document_title)) },
+            text = { Text(stringResource(R.string.delete_document_message)) },
             confirmButton = {
                 TextButton(onClick = onConfirmDelete) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissDelete) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             },
         )
@@ -125,10 +127,10 @@ internal fun LibraryScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Library") },
+                title = { Text(stringResource(R.string.library_title)) },
                 actions = {
                     IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
+                        Icon(Icons.Default.Person, contentDescription = stringResource(R.string.profile))
                     }
                 },
             )
@@ -137,7 +139,7 @@ internal fun LibraryScreenContent(
         floatingActionButton = {
             if (!uiState.isImporting) {
                 FloatingActionButton(onClick = onImportClick) {
-                    Icon(Icons.Default.Add, contentDescription = "Import")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.import_action))
                 }
             }
         },
@@ -159,7 +161,7 @@ internal fun LibraryScreenContent(
                     value = uiState.searchQuery,
                     onValueChange = onSearchQueryChange,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Search library") },
+                    placeholder = { Text(stringResource(R.string.search_library)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
@@ -169,7 +171,7 @@ internal fun LibraryScreenContent(
                 if (uiState.isImporting) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = uiState.importStatusMessage ?: "Importing...",
+                            text = uiState.importStatusMessage ?: stringResource(R.string.importing),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -189,7 +191,7 @@ internal fun LibraryScreenContent(
                     val searchResults = uiState.searchResults
                     if (searchResults != null) {
                         if (searchResults.isEmpty()) {
-                            EmptyState(message = "No matches found")
+                            EmptyState(message = stringResource(R.string.no_matches_found))
                         } else {
                             LazyColumn(
                                 contentPadding = PaddingValues(bottom = 88.dp),
@@ -201,7 +203,7 @@ internal fun LibraryScreenContent(
                             }
                         }
                     } else if (uiState.documents.isEmpty() && !uiState.isSyncing) {
-                        EmptyState(message = "Your library is empty.\nTap + to import a book.")
+                        EmptyState(message = stringResource(R.string.library_empty))
                     } else {
                         LazyColumn(
                             contentPadding = PaddingValues(bottom = 88.dp),
@@ -250,7 +252,7 @@ private fun DocumentCard(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = document.title.ifBlank { "Untitled" },
+                text = document.title.ifBlank { stringResource(R.string.untitled) },
                 style = MaterialTheme.typography.titleMedium,
             )
             androidx.compose.foundation.layout.Row(
@@ -274,7 +276,7 @@ private fun DocumentCard(
             }
             if (document.status == DocumentStatus.PENDING) {
                 Text(
-                    text = "Import in progress...",
+                    text = stringResource(R.string.import_in_progress),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -284,7 +286,7 @@ private fun DocumentCard(
                 horizontalArrangement = Arrangement.End,
             ) {
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
                 }
             }
         }
@@ -312,16 +314,18 @@ private fun SearchResultCard(result: SearchResultItem) {
     }
 }
 
+@Composable
 private fun DocumentStatus.label(): String = when (this) {
-    DocumentStatus.PENDING -> "Pending"
-    DocumentStatus.READY -> "Ready"
-    DocumentStatus.FAILED -> "Failed"
+    DocumentStatus.PENDING -> stringResource(R.string.status_pending)
+    DocumentStatus.READY -> stringResource(R.string.status_ready)
+    DocumentStatus.FAILED -> stringResource(R.string.status_failed)
 }
 
+@Composable
 private fun SourceFormat.label(): String = when (this) {
-    SourceFormat.EPUB -> "EPUB"
-    SourceFormat.MARKDOWN -> "Markdown"
-    SourceFormat.PLAIN_TEXT -> "Text"
+    SourceFormat.EPUB -> stringResource(R.string.format_epub)
+    SourceFormat.MARKDOWN -> stringResource(R.string.format_markdown)
+    SourceFormat.PLAIN_TEXT -> stringResource(R.string.format_text)
 }
 
 private val IMPORT_MIME_TYPES = arrayOf(

@@ -66,7 +66,7 @@ internal fun RegisterScreenContent(
         OutlinedTextField(
             value = uiState.name,
             onValueChange = onNameChange,
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.name)) },
             singleLine = true,
             isError = uiState.nameError != null,
             supportingText = uiState.nameError?.let { error -> { Text(error) } },
@@ -76,7 +76,7 @@ internal fun RegisterScreenContent(
         OutlinedTextField(
             value = uiState.email,
             onValueChange = onEmailChange,
-            label = { Text("Email") },
+            label = { Text(stringResource(R.string.email)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isError = uiState.emailError != null,
@@ -87,7 +87,7 @@ internal fun RegisterScreenContent(
         OutlinedTextField(
             value = uiState.password,
             onValueChange = onPasswordChange,
-            label = { Text("Password") },
+            label = { Text(stringResource(R.string.password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -99,7 +99,7 @@ internal fun RegisterScreenContent(
         OutlinedTextField(
             value = uiState.passwordConfirmation,
             onValueChange = onPasswordConfirmationChange,
-            label = { Text("Confirm password") },
+            label = { Text(stringResource(R.string.confirm_password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -134,7 +134,7 @@ internal fun RegisterScreenContent(
             onClick = onNavigateToLogin,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Already have an account? Sign in")
+            Text(stringResource(R.string.sign_in_prompt))
         }
     }
 }

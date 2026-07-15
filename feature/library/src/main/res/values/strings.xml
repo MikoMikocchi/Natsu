@@ -9,4 +9,24 @@
     <string name="error_generic">Something went wrong</string>
     <string name="import_uploading">Uploading…</string>
     <string name="import_success">\"%1$s\" imported</string>
+
+    <string name="library_title">Library</string>
+    <string name="profile">Profile</string>
+    <string name="import_action">Import</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="search_library">Search library</string>
+    <string name="delete_document_title">Delete document?</string>
+    <string name="delete_document_message">This document will be removed from your library on all devices.</string>
+    <string name="importing">Importing…</string>
+    <string name="no_matches_found">No matches found</string>
+    <string name="library_empty">Your library is empty.\nTap + to import a book.</string>
+    <string name="untitled">Untitled</string>
+    <string name="import_in_progress">Import in progress…</string>
+    <string name="status_pending">Pending</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_failed">Failed</string>
+    <string name="format_epub">EPUB</string>
+    <string name="format_markdown">Markdown</string>
+    <string name="format_text">Text</string>
 </resources>

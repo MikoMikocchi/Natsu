@@ -4,6 +4,23 @@
     <string name="active_sessions">Active sessions</string>
     <string name="no_active_sessions">No active sessions</string>
 
+    <string name="profile_title">Profile</string>
+    <string name="back">Back</string>
+    <string name="change_password">Change password</string>
+    <string name="current_password">Current password</string>
+    <string name="new_password">New password</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="password">Password</string>
+    <string name="save">Save</string>
+    <string name="sign_out">Sign out</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_confirm">This action cannot be undone. Enter your password to confirm.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="revoke">Revoke</string>
+    <string name="created_at">Created: %1$s</string>
+    <string name="session_current">Current · %1$s</string>
+
     <string name="error_password_required">Password is required</string>
     <string name="error_current_password_required">Current password is required</string>
     <string name="error_password_min_length">Password must be at least 8 characters</string>
