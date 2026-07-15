@@ -6,9 +6,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.mikoshift.natsu.core.domain.repository.AuthRepository
 import io.mikoshift.natsu.core.model.AuthError
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -19,6 +21,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+
+    private val _effects = Channel<ProfileEffect>(Channel.BUFFERED)
+    val effects = _effects.receiveAsFlow()
 
     init {
         refresh()
@@ -92,7 +97,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.getUser().fold(
                 onSuccess = { user ->
-                    _uiState.update { it.copy(isLoadingUser = false, user = user) }
+                    _uiState.update { it.copy(isLoadingUser = false, user = user.toUiModel()) }
                 },
                 onFailure = { throwable ->
                     _uiState.update { it.copy(isLoadingUser = false) }
@@ -107,7 +112,12 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.getSessions().fold(
                 onSuccess = { sessions ->
-                    _uiState.update { it.copy(isLoadingSessions = false, sessions = sessions) }
+                    _uiState.update {
+                        it.copy(
+                            isLoadingSessions = false,
+                            sessions = sessions.map { session -> session.toUiModel() },
+                        )
+                    }
                 },
                 onFailure = { throwable ->
                     _uiState.update { it.copy(isLoadingSessions = false) }
@@ -137,11 +147,9 @@ class ProfileViewModel @Inject constructor(
                 }
             }
             is AuthError.NetworkFailure -> {
-                _uiState.update {
-                    it.copy(
-                        isDeletingAccount = false,
-                        generalError = "Network error, please try again",
-                    )
+                _uiState.update { it.copy(isDeletingAccount = false, generalError = null) }
+                viewModelScope.launch {
+                    _effects.send(ProfileEffect.ShowMessage("Network error, please try again"))
                 }
             }
             else -> {

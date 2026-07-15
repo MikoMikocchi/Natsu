@@ -19,17 +19,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.core.ui.CollectEffects
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +44,17 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToChangePassword: () -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    CollectEffects(viewModel.effects) { effect ->
+        when (effect) {
+            is ProfileEffect.ShowMessage -> scope.launch {
+                snackbarHostState.showSnackbar(effect.text)
+            }
+        }
+    }
 
     if (uiState.showDeleteDialog) {
         AlertDialog(
@@ -81,6 +97,7 @@ fun ProfileScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Profile") },
@@ -105,10 +122,10 @@ fun ProfileScreen(
             if (uiState.isLoadingUser && uiState.user == null) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
             } else {
-                Text(text = uiState.user?.name.orEmpty(), style = MaterialTheme.typography.headlineSmall)
+                Text(text = uiState.user?.displayName.orEmpty(), style = MaterialTheme.typography.headlineSmall)
                 Text(text = uiState.user?.email.orEmpty())
                 Text(
-                    text = "Created: ${uiState.user?.createdAt.orEmpty()}",
+                    text = "Created: ${uiState.user?.memberSince.orEmpty()}",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -131,11 +148,9 @@ fun ProfileScreen(
             } else {
                 uiState.sessions.forEach { session ->
                     SessionRow(
-                        name = session.name,
-                        createdAt = session.createdAt,
-                        isCurrent = session.current,
+                        session = session,
                         isRevoking = uiState.revokingSessionId == session.id,
-                        onRevoke = { viewModel.revokeSession(session.id, session.current) },
+                        onRevoke = { viewModel.revokeSession(session.id, session.isCurrent) },
                     )
                 }
             }
@@ -173,9 +188,7 @@ fun ProfileScreen(
 
 @Composable
 private fun SessionRow(
-    name: String,
-    createdAt: String,
-    isCurrent: Boolean,
+    session: SessionUiModel,
     isRevoking: Boolean,
     onRevoke: () -> Unit,
 ) {
@@ -185,11 +198,8 @@ private fun SessionRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = name, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = if (isCurrent) "Current · $createdAt" else createdAt,
-                style = MaterialTheme.typography.bodySmall,
-            )
+            Text(text = session.deviceName, style = MaterialTheme.typography.bodyLarge)
+            Text(text = session.subtitle, style = MaterialTheme.typography.bodySmall)
         }
         TextButton(
             onClick = onRevoke,
