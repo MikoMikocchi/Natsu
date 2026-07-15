@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.mikoshift.natsu.core.domain.repository.AuthRepository
 import io.mikoshift.natsu.core.domain.usecase.DeleteAccountUseCase
 import io.mikoshift.natsu.core.domain.usecase.LogoutUseCase
+import io.mikoshift.natsu.core.domain.usecase.ObserveSessionsUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveUserProfileUseCase
 import io.mikoshift.natsu.core.domain.usecase.RevokeSessionUseCase
 import io.mikoshift.natsu.core.model.AuthError
@@ -25,10 +25,10 @@ import kotlinx.coroutines.launch
 class ProfileViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val observeUserProfile: ObserveUserProfileUseCase,
+    private val observeSessions: ObserveSessionsUseCase,
     private val logoutUseCase: LogoutUseCase,
     private val deleteAccount: DeleteAccountUseCase,
     private val revokeSession: RevokeSessionUseCase,
-    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -124,7 +124,7 @@ class ProfileViewModel @Inject constructor(
     private fun loadSessions() {
         _uiState.update { it.copy(isLoadingSessions = true) }
         viewModelScope.launch {
-            authRepository.getSessions().fold(
+            observeSessions().fold(
                 onSuccess = { sessions ->
                     _uiState.update {
                         it.copy(

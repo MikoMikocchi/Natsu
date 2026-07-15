@@ -6,10 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.mikoshift.natsu.core.domain.repository.DocumentRepository
-import io.mikoshift.natsu.core.domain.repository.SyncStatusRepository
 import io.mikoshift.natsu.core.domain.usecase.ImportDocumentUseCase
+import io.mikoshift.natsu.core.domain.usecase.MarkDocumentDeletedUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveLibraryUseCase
+import io.mikoshift.natsu.core.domain.usecase.ObserveSyncStatusUseCase
+import io.mikoshift.natsu.core.domain.usecase.SearchDocumentsUseCase
 import io.mikoshift.natsu.core.domain.usecase.SyncDocumentsUseCase
 import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.core.model.SyncState
@@ -26,11 +27,12 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val documentRepository: DocumentRepository,
     private val observeLibrary: ObserveLibraryUseCase,
+    private val observeSyncStatus: ObserveSyncStatusUseCase,
     private val syncDocuments: SyncDocumentsUseCase,
     private val importDocument: ImportDocumentUseCase,
-    syncStatusRepository: SyncStatusRepository,
+    private val searchDocuments: SearchDocumentsUseCase,
+    private val markDocumentDeleted: MarkDocumentDeletedUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -47,7 +49,7 @@ class LibraryViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            syncStatusRepository.syncState.collect { state ->
+            observeSyncStatus().collect { state ->
                 _uiState.update { it.copy(isSyncing = state is SyncState.Syncing) }
             }
         }
@@ -83,7 +85,7 @@ class LibraryViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             delay(SEARCH_DEBOUNCE_MS)
             _uiState.update { it.copy(isSearching = true) }
-            documentRepository.search(trimmed).fold(
+            searchDocuments(trimmed).fold(
                 onSuccess = { results ->
                     _uiState.update {
                         it.copy(
@@ -150,7 +152,7 @@ class LibraryViewModel @Inject constructor(
         val id = _uiState.value.deleteCandidateId ?: return
         _uiState.update { it.copy(deleteCandidateId = null) }
         viewModelScope.launch {
-            documentRepository.markDeleted(id).fold(
+            markDocumentDeleted(id).fold(
                 onSuccess = { sync() },
                 onFailure = { throwable ->
                     _uiState.update {
@@ -170,6 +172,14 @@ class LibraryViewModel @Inject constructor(
 
     fun clearImportStatus() {
         _uiState.update { it.copy(importStatusMessage = null) }
+    }
+
+    private fun DocumentError.toUserMessage(): String = when (this) {
+        is DocumentError.ValidationError -> fieldErrors.values.flatten().joinToString(", ")
+        DocumentError.Unauthorized -> context.getString(R.string.error_session_expired)
+        DocumentError.NetworkFailure -> context.getString(R.string.error_network)
+        is DocumentError.ImportFailed -> reason ?: context.getString(R.string.error_import_failed)
+        is DocumentError.Unknown -> errorMessage ?: context.getString(R.string.error_generic)
     }
 
     private companion object {

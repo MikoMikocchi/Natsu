@@ -1,7 +1,6 @@
 package io.mikoshift.natsu.ui.library
 
 import io.mikoshift.natsu.core.model.Document
-import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.core.model.DocumentSearchResult
 import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
@@ -48,10 +47,3 @@ fun DocumentSearchResult.toSearchResultItem(): SearchResultItem = SearchResultIt
     snippets = matches.map { it.snippet },
 )
 
-fun DocumentError.toUserMessage(): String = when (this) {
-    is DocumentError.ValidationError -> fieldErrors.values.flatten().joinToString(", ")
-    DocumentError.Unauthorized -> "Session expired, please sign in again"
-    DocumentError.NetworkFailure -> "Network error, please try again"
-    is DocumentError.ImportFailed -> reason ?: "Import failed"
-    is DocumentError.Unknown -> errorMessage ?: "Something went wrong"
-}

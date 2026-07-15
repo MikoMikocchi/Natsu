@@ -1,11 +1,14 @@
 package io.mikoshift.natsu.ui.auth
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.mikoshift.natsu.core.domain.usecase.ResetPasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.feature.auth.R
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +18,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ResetPasswordViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
+    private val resetPassword: ResetPasswordUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -41,14 +45,18 @@ class ResetPasswordViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val tokenError = if (state.token.isBlank()) "Token is required" else null
+        val tokenError = if (state.token.isBlank()) {
+            context.getString(R.string.error_token_required)
+        } else {
+            null
+        }
         val passwordError = if (state.password.length < 8) {
-            "Password must be at least 8 characters"
+            context.getString(R.string.error_password_min_length)
         } else {
             null
         }
         val passwordConfirmationError = if (state.passwordConfirmation != state.password) {
-            "Passwords do not match"
+            context.getString(R.string.error_passwords_do_not_match)
         } else {
             null
         }
@@ -75,7 +83,7 @@ class ResetPasswordViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            authRepository.resetPassword(
+            resetPassword(
                 token = state.token,
                 password = state.password,
                 passwordConfirmation = state.passwordConfirmation,
@@ -106,7 +114,7 @@ class ResetPasswordViewModel @Inject constructor(
             }
             is AuthError.NetworkFailure -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Network error, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_network))
                 }
             }
             else -> {
@@ -114,7 +122,7 @@ class ResetPasswordViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         generalError = (error as? AuthError.Unknown)?.errorMessage
-                            ?: "Something went wrong, please try again",
+                            ?: context.getString(R.string.error_generic),
                     )
                 }
             }

@@ -1,11 +1,14 @@
 package io.mikoshift.natsu.ui.auth
 
+import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.mikoshift.natsu.core.domain.usecase.ForgotPasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.feature.auth.R
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +18,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ForgotPasswordViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
+    private val forgotPassword: ForgotPasswordUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ForgotPasswordUiState())
@@ -28,7 +32,7 @@ class ForgotPasswordViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
         val emailError = if (!Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
-            "Enter a valid email address"
+            context.getString(R.string.error_invalid_email)
         } else {
             null
         }
@@ -43,7 +47,7 @@ class ForgotPasswordViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            authRepository.forgotPassword(state.email).fold(
+            forgotPassword(state.email).fold(
                 onSuccess = { message ->
                     _uiState.update {
                         it.copy(isLoading = false, successMessage = message)
@@ -69,7 +73,7 @@ class ForgotPasswordViewModel @Inject constructor(
             }
             is AuthError.NetworkFailure -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Network error, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_network))
                 }
             }
             else -> {
@@ -77,7 +81,7 @@ class ForgotPasswordViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         generalError = (error as? AuthError.Unknown)?.errorMessage
-                            ?: "Something went wrong, please try again",
+                            ?: context.getString(R.string.error_generic),
                     )
                 }
             }
