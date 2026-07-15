@@ -5,7 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.mikoshift.natsu.core.domain.repository.DocumentRepository
+import io.mikoshift.natsu.core.domain.repository.SyncStatusRepository
+import io.mikoshift.natsu.core.domain.usecase.SyncDocumentsUseCase
 import io.mikoshift.natsu.core.model.DocumentError
+import io.mikoshift.natsu.core.model.SyncState
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -18,6 +21,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val documentRepository: DocumentRepository,
+    private val syncDocuments: SyncDocumentsUseCase,
+    syncStatusRepository: SyncStatusRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -33,26 +38,28 @@ class LibraryViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            syncStatusRepository.syncState.collect { state ->
+                _uiState.update { it.copy(isSyncing = state is SyncState.Syncing) }
+            }
+        }
         sync()
     }
 
     fun sync() {
         if (_uiState.value.isSyncing) return
-        _uiState.update { it.copy(isSyncing = true, error = null) }
+        _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
-            documentRepository.sync().fold(
-                onSuccess = {
-                    _uiState.update { it.copy(isSyncing = false) }
-                },
+            syncDocuments().fold(
                 onFailure = { throwable ->
                     _uiState.update {
                         it.copy(
-                            isSyncing = false,
                             error = (throwable as? DocumentError)?.toUserMessage()
                                 ?: "Sync failed",
                         )
                     }
                 },
+                onSuccess = {},
             )
         }
     }

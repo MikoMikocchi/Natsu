@@ -4,6 +4,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import io.mikoshift.natsu.navigation.ForgotPasswordRoute
 import io.mikoshift.natsu.navigation.LoginRoute
 import io.mikoshift.natsu.navigation.RegisterRoute
@@ -43,7 +44,16 @@ fun NavGraphBuilder.authGraph(navController: NavHostController) {
         )
     }
 
-    composable<ResetPasswordRoute> {
+    composable<ResetPasswordRoute>(
+        deepLinks = listOf(
+            navDeepLink<ResetPasswordRoute>(
+                basePath = "https://natsu.mikoshift.io/reset-password",
+            ),
+            navDeepLink<ResetPasswordRoute>(
+                basePath = "natsu://reset-password",
+            ),
+        ),
+    ) {
         val viewModel: ResetPasswordViewModel = hiltViewModel()
         ResetPasswordScreen(
             viewModel = viewModel,

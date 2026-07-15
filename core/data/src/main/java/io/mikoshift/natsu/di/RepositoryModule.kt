@@ -7,8 +7,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.mikoshift.natsu.core.domain.repository.AuthRepository
 import io.mikoshift.natsu.core.domain.repository.DocumentRepository
+import io.mikoshift.natsu.core.domain.repository.SyncStatusRepository
 import io.mikoshift.natsu.data.repository.AuthRepositoryImpl
 import io.mikoshift.natsu.data.repository.DocumentRepositoryImpl
+import io.mikoshift.natsu.data.repository.SyncStatusRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -22,4 +24,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDocumentRepository(impl: DocumentRepositoryImpl): DocumentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncStatusRepository(impl: SyncStatusRepositoryImpl): SyncStatusRepository
 }
