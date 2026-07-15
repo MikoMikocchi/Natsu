@@ -18,11 +18,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.feature.auth.R
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @Composable
 fun ResetPasswordScreen(
@@ -37,6 +41,25 @@ fun ResetPasswordScreen(
         }
     }
 
+    ResetPasswordScreenContent(
+        uiState = uiState,
+        onTokenChange = viewModel::onTokenChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onPasswordConfirmationChange = viewModel::onPasswordConfirmationChange,
+        onSubmit = viewModel::submit,
+        onNavigateToLogin = onNavigateToLogin,
+    )
+}
+
+@Composable
+internal fun ResetPasswordScreenContent(
+    uiState: ResetPasswordUiState,
+    onTokenChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onPasswordConfirmationChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,11 +67,11 @@ fun ResetPasswordScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "New password", style = MaterialTheme.typography.headlineSmall)
+        Text(text = stringResource(R.string.new_password), style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = uiState.token,
-            onValueChange = viewModel::onTokenChange,
+            onValueChange = onTokenChange,
             label = { Text("Reset token") },
             singleLine = true,
             isError = uiState.tokenError != null,
@@ -58,8 +81,8 @@ fun ResetPasswordScreen(
 
         OutlinedTextField(
             value = uiState.password,
-            onValueChange = viewModel::onPasswordChange,
-            label = { Text("New password") },
+            onValueChange = onPasswordChange,
+            label = { Text(stringResource(R.string.new_password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -70,7 +93,7 @@ fun ResetPasswordScreen(
 
         OutlinedTextField(
             value = uiState.passwordConfirmation,
-            onValueChange = viewModel::onPasswordConfirmationChange,
+            onValueChange = onPasswordConfirmationChange,
             label = { Text("Confirm password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -88,7 +111,7 @@ fun ResetPasswordScreen(
         }
 
         Button(
-            onClick = viewModel::submit,
+            onClick = onSubmit,
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -98,7 +121,7 @@ fun ResetPasswordScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Reset password")
+                Text(stringResource(R.string.reset_password))
             }
         }
 
@@ -108,5 +131,20 @@ fun ResetPasswordScreen(
         ) {
             Text("Back to sign in")
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ResetPasswordScreenPreview() {
+    NatsuTheme {
+        ResetPasswordScreenContent(
+            uiState = ResetPasswordUiState(token = "abc123"),
+            onTokenChange = {},
+            onPasswordChange = {},
+            onPasswordConfirmationChange = {},
+            onSubmit = {},
+            onNavigateToLogin = {},
+        )
     }
 }

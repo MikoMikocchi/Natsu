@@ -30,11 +30,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.mikoshift.natsu.core.ui.CollectEffects
+import io.mikoshift.natsu.feature.profile.R
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,16 +60,44 @@ fun ProfileScreen(
         }
     }
 
+    ProfileScreenContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onNavigateBack = onNavigateBack,
+        onNavigateToChangePassword = onNavigateToChangePassword,
+        onDeletePasswordChange = viewModel::onDeletePasswordChange,
+        onDismissDeleteDialog = viewModel::dismissDeleteDialog,
+        onDeleteAccount = viewModel::deleteAccount,
+        onRevokeSession = viewModel::revokeSession,
+        onLogout = viewModel::logout,
+        onShowDeleteDialog = viewModel::showDeleteDialog,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ProfileScreenContent(
+    uiState: ProfileUiState,
+    snackbarHostState: SnackbarHostState,
+    onNavigateBack: () -> Unit,
+    onNavigateToChangePassword: () -> Unit,
+    onDeletePasswordChange: (String) -> Unit,
+    onDismissDeleteDialog: () -> Unit,
+    onDeleteAccount: () -> Unit,
+    onRevokeSession: (Long, Boolean) -> Unit,
+    onLogout: () -> Unit,
+    onShowDeleteDialog: () -> Unit,
+) {
     if (uiState.showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = viewModel::dismissDeleteDialog,
+            onDismissRequest = onDismissDeleteDialog,
             title = { Text("Delete account") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("This action cannot be undone. Enter your password to confirm.")
                     OutlinedTextField(
                         value = uiState.deletePassword,
-                        onValueChange = viewModel::onDeletePasswordChange,
+                        onValueChange = onDeletePasswordChange,
                         label = { Text("Password") },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
@@ -78,7 +110,7 @@ fun ProfileScreen(
             },
             confirmButton = {
                 TextButton(
-                    onClick = viewModel::deleteAccount,
+                    onClick = onDeleteAccount,
                     enabled = !uiState.isDeletingAccount,
                 ) {
                     if (uiState.isDeletingAccount) {
@@ -89,7 +121,7 @@ fun ProfileScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = viewModel::dismissDeleteDialog) {
+                TextButton(onClick = onDismissDeleteDialog) {
                     Text("Cancel")
                 }
             },
@@ -117,7 +149,7 @@ fun ProfileScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(text = "Account", style = MaterialTheme.typography.titleMedium)
+            Text(text = stringResource(R.string.account), style = MaterialTheme.typography.titleMedium)
 
             if (uiState.isLoadingUser && uiState.user == null) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -139,18 +171,21 @@ fun ProfileScreen(
 
             HorizontalDivider()
 
-            Text(text = "Active sessions", style = MaterialTheme.typography.titleMedium)
+            Text(text = stringResource(R.string.active_sessions), style = MaterialTheme.typography.titleMedium)
 
             if (uiState.isLoadingSessions && uiState.sessions.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
             } else if (uiState.sessions.isEmpty()) {
-                Text(text = "No active sessions", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = stringResource(R.string.no_active_sessions),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
             } else {
                 uiState.sessions.forEach { session ->
                     SessionRow(
                         session = session,
                         isRevoking = uiState.revokingSessionId == session.id,
-                        onRevoke = { viewModel.revokeSession(session.id, session.isCurrent) },
+                        onRevoke = { onRevokeSession(session.id, session.isCurrent) },
                     )
                 }
             }
@@ -165,7 +200,7 @@ fun ProfileScreen(
             HorizontalDivider()
 
             OutlinedButton(
-                onClick = viewModel::logout,
+                onClick = onLogout,
                 enabled = !uiState.isLoggingOut,
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -177,7 +212,7 @@ fun ProfileScreen(
             }
 
             TextButton(
-                onClick = viewModel::showDeleteDialog,
+                onClick = onShowDeleteDialog,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Delete account", color = MaterialTheme.colorScheme.error)
@@ -211,5 +246,63 @@ private fun SessionRow(
                 Text("Revoke")
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ProfileScreenPreview() {
+    NatsuTheme {
+        ProfileScreenContent(
+            uiState = ProfileUiState(
+                user = UserUiModel(
+                    displayName = "Jane Doe",
+                    email = "jane@example.com",
+                    memberSince = "2024-01-15",
+                ),
+                sessions = listOf(
+                    SessionUiModel(
+                        id = 1,
+                        deviceName = "Pixel 8",
+                        subtitle = "Current · 2026-07-01",
+                        isCurrent = true,
+                    ),
+                ),
+            ),
+            snackbarHostState = SnackbarHostState(),
+            onNavigateBack = {},
+            onNavigateToChangePassword = {},
+            onDeletePasswordChange = {},
+            onDismissDeleteDialog = {},
+            onDeleteAccount = {},
+            onRevokeSession = { _, _ -> },
+            onLogout = {},
+            onShowDeleteDialog = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ProfileScreenEmptySessionsPreview() {
+    NatsuTheme {
+        ProfileScreenContent(
+            uiState = ProfileUiState(
+                user = UserUiModel(
+                    displayName = "Jane Doe",
+                    email = "jane@example.com",
+                    memberSince = "2024-01-15",
+                ),
+            ),
+            snackbarHostState = SnackbarHostState(),
+            onNavigateBack = {},
+            onNavigateToChangePassword = {},
+            onDeletePasswordChange = {},
+            onDismissDeleteDialog = {},
+            onDeleteAccount = {},
+            onRevokeSession = { _, _ -> },
+            onLogout = {},
+            onShowDeleteDialog = {},
+        )
     }
 }

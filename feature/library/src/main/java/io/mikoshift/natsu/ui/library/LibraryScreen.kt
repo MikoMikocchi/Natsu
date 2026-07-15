@@ -37,13 +37,15 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,18 +78,44 @@ fun LibraryScreen(
         }
     }
 
+    LibraryScreenContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onNavigateToProfile = onNavigateToProfile,
+        onImportClick = { importLauncher.launch(IMPORT_MIME_TYPES) },
+        onSearchQueryChange = viewModel::onSearchQueryChange,
+        onSync = viewModel::sync,
+        onRequestDelete = viewModel::requestDelete,
+        onConfirmDelete = viewModel::confirmDelete,
+        onDismissDelete = viewModel::dismissDelete,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun LibraryScreenContent(
+    uiState: LibraryUiState,
+    snackbarHostState: SnackbarHostState,
+    onNavigateToProfile: () -> Unit,
+    onImportClick: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onSync: () -> Unit,
+    onRequestDelete: (String) -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
+) {
     if (uiState.deleteCandidateId != null) {
         AlertDialog(
-            onDismissRequest = viewModel::dismissDelete,
+            onDismissRequest = onDismissDelete,
             title = { Text("Delete document?") },
             text = { Text("This document will be removed from your library on all devices.") },
             confirmButton = {
-                TextButton(onClick = viewModel::confirmDelete) {
+                TextButton(onClick = onConfirmDelete) {
                     Text("Delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = viewModel::dismissDelete) {
+                TextButton(onClick = onDismissDelete) {
                     Text("Cancel")
                 }
             },
@@ -108,9 +136,7 @@ fun LibraryScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             if (!uiState.isImporting) {
-                FloatingActionButton(
-                    onClick = { importLauncher.launch(IMPORT_MIME_TYPES) },
-                ) {
+                FloatingActionButton(onClick = onImportClick) {
                     Icon(Icons.Default.Add, contentDescription = "Import")
                 }
             }
@@ -118,7 +144,7 @@ fun LibraryScreen(
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = uiState.isSyncing,
-            onRefresh = viewModel::sync,
+            onRefresh = onSync,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
@@ -131,7 +157,7 @@ fun LibraryScreen(
             ) {
                 OutlinedTextField(
                     value = uiState.searchQuery,
-                    onValueChange = viewModel::onSearchQueryChange,
+                    onValueChange = onSearchQueryChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Search library") },
                     leadingIcon = {
@@ -184,7 +210,7 @@ fun LibraryScreen(
                             items(uiState.documents, key = { it.id }) { document ->
                                 DocumentCard(
                                     document = document,
-                                    onDelete = { viewModel.requestDelete(document.id) },
+                                    onDelete = { onRequestDelete(document.id) },
                                 )
                             }
                         }
@@ -304,3 +330,54 @@ private val IMPORT_MIME_TYPES = arrayOf(
     "text/markdown",
     "application/octet-stream",
 )
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryScreenPreview() {
+    NatsuTheme {
+        LibraryScreenContent(
+            uiState = LibraryUiState(
+                documents = listOf(
+                    DocumentListItem(
+                        id = "1",
+                        title = "The Great Gatsby",
+                        status = DocumentStatus.READY,
+                        sourceFormat = SourceFormat.EPUB,
+                    ),
+                    DocumentListItem(
+                        id = "2",
+                        title = "Notes",
+                        status = DocumentStatus.PENDING,
+                        sourceFormat = SourceFormat.MARKDOWN,
+                    ),
+                ),
+            ),
+            snackbarHostState = SnackbarHostState(),
+            onNavigateToProfile = {},
+            onImportClick = {},
+            onSearchQueryChange = {},
+            onSync = {},
+            onRequestDelete = {},
+            onConfirmDelete = {},
+            onDismissDelete = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LibraryScreenEmptyPreview() {
+    NatsuTheme {
+        LibraryScreenContent(
+            uiState = LibraryUiState(),
+            snackbarHostState = SnackbarHostState(),
+            onNavigateToProfile = {},
+            onImportClick = {},
+            onSearchQueryChange = {},
+            onSync = {},
+            onRequestDelete = {},
+            onConfirmDelete = {},
+            onDismissDelete = {},
+        )
+    }
+}

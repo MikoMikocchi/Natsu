@@ -20,11 +20,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,26 @@ fun ChangePasswordScreen(
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    ChangePasswordScreenContent(
+        uiState = uiState,
+        onNavigateBack = onNavigateBack,
+        onCurrentPasswordChange = viewModel::onCurrentPasswordChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onPasswordConfirmationChange = viewModel::onPasswordConfirmationChange,
+        onSubmit = viewModel::submit,
+    )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ChangePasswordScreenContent(
+    uiState: ChangePasswordUiState,
+    onNavigateBack: () -> Unit,
+    onCurrentPasswordChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onPasswordConfirmationChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -56,7 +77,7 @@ fun ChangePasswordScreen(
         ) {
             OutlinedTextField(
                 value = uiState.currentPassword,
-                onValueChange = viewModel::onCurrentPasswordChange,
+                onValueChange = onCurrentPasswordChange,
                 label = { Text("Current password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -68,7 +89,7 @@ fun ChangePasswordScreen(
 
             OutlinedTextField(
                 value = uiState.password,
-                onValueChange = viewModel::onPasswordChange,
+                onValueChange = onPasswordChange,
                 label = { Text("New password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -80,7 +101,7 @@ fun ChangePasswordScreen(
 
             OutlinedTextField(
                 value = uiState.passwordConfirmation,
-                onValueChange = viewModel::onPasswordConfirmationChange,
+                onValueChange = onPasswordConfirmationChange,
                 label = { Text("Confirm password") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -105,7 +126,7 @@ fun ChangePasswordScreen(
             }
 
             Button(
-                onClick = viewModel::submit,
+                onClick = onSubmit,
                 enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -119,5 +140,20 @@ fun ChangePasswordScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ChangePasswordScreenPreview() {
+    NatsuTheme {
+        ChangePasswordScreenContent(
+            uiState = ChangePasswordUiState(),
+            onNavigateBack = {},
+            onCurrentPasswordChange = {},
+            onPasswordChange = {},
+            onPasswordConfirmationChange = {},
+            onSubmit = {},
+        )
     }
 }

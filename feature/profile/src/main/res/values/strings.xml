@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="account">Account</string>
+    <string name="active_sessions">Active sessions</string>
+    <string name="no_active_sessions">No active sessions</string>
+
     <string name="error_password_required">Password is required</string>
     <string name="error_current_password_required">Current password is required</string>
     <string name="error_password_min_length">Password must be at least 8 characters</string>

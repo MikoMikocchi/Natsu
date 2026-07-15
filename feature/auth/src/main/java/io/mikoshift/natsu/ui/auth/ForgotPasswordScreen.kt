@@ -17,10 +17,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.feature.auth.R
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @Composable
 fun ForgotPasswordScreen(
@@ -28,7 +32,21 @@ fun ForgotPasswordScreen(
     onNavigateToLogin: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    ForgotPasswordScreenContent(
+        uiState = uiState,
+        onEmailChange = viewModel::onEmailChange,
+        onSubmit = viewModel::submit,
+        onNavigateToLogin = onNavigateToLogin,
+    )
+}
 
+@Composable
+internal fun ForgotPasswordScreenContent(
+    uiState: ForgotPasswordUiState,
+    onEmailChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -36,7 +54,7 @@ fun ForgotPasswordScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Reset password", style = MaterialTheme.typography.headlineSmall)
+        Text(text = stringResource(R.string.forgot_password_title), style = MaterialTheme.typography.headlineSmall)
         Text(
             text = "Enter your email and we'll send you a password reset link.",
             style = MaterialTheme.typography.bodyMedium,
@@ -44,7 +62,7 @@ fun ForgotPasswordScreen(
 
         OutlinedTextField(
             value = uiState.email,
-            onValueChange = viewModel::onEmailChange,
+            onValueChange = onEmailChange,
             label = { Text("Email") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -68,7 +86,7 @@ fun ForgotPasswordScreen(
         }
 
         Button(
-            onClick = viewModel::submit,
+            onClick = onSubmit,
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -88,5 +106,18 @@ fun ForgotPasswordScreen(
         ) {
             Text("Back to sign in")
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ForgotPasswordScreenPreview() {
+    NatsuTheme {
+        ForgotPasswordScreenContent(
+            uiState = ForgotPasswordUiState(email = "user@example.com"),
+            onEmailChange = {},
+            onSubmit = {},
+            onNavigateToLogin = {},
+        )
     }
 }

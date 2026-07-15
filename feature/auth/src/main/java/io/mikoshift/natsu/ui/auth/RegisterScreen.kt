@@ -17,11 +17,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.feature.auth.R
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @Composable
 fun RegisterScreen(
@@ -29,7 +33,27 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    RegisterScreenContent(
+        uiState = uiState,
+        onNameChange = viewModel::onNameChange,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onPasswordConfirmationChange = viewModel::onPasswordConfirmationChange,
+        onSubmit = viewModel::submit,
+        onNavigateToLogin = onNavigateToLogin,
+    )
+}
 
+@Composable
+internal fun RegisterScreenContent(
+    uiState: RegisterUiState,
+    onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onPasswordConfirmationChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,11 +61,11 @@ fun RegisterScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Sign up", style = MaterialTheme.typography.headlineSmall)
+        Text(text = stringResource(R.string.sign_up_title), style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = uiState.name,
-            onValueChange = viewModel::onNameChange,
+            onValueChange = onNameChange,
             label = { Text("Name") },
             singleLine = true,
             isError = uiState.nameError != null,
@@ -51,7 +75,7 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = uiState.email,
-            onValueChange = viewModel::onEmailChange,
+            onValueChange = onEmailChange,
             label = { Text("Email") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -62,7 +86,7 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = uiState.password,
-            onValueChange = viewModel::onPasswordChange,
+            onValueChange = onPasswordChange,
             label = { Text("Password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -74,7 +98,7 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = uiState.passwordConfirmation,
-            onValueChange = viewModel::onPasswordConfirmationChange,
+            onValueChange = onPasswordConfirmationChange,
             label = { Text("Confirm password") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -92,7 +116,7 @@ fun RegisterScreen(
         }
 
         Button(
-            onClick = viewModel::submit,
+            onClick = onSubmit,
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -102,7 +126,7 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Sign up")
+                Text(stringResource(R.string.sign_up))
             }
         }
 
@@ -112,5 +136,21 @@ fun RegisterScreen(
         ) {
             Text("Already have an account? Sign in")
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterScreenPreview() {
+    NatsuTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(name = "Jane Doe", email = "jane@example.com"),
+            onNameChange = {},
+            onEmailChange = {},
+            onPasswordChange = {},
+            onPasswordConfirmationChange = {},
+            onSubmit = {},
+            onNavigateToLogin = {},
+        )
     }
 }
