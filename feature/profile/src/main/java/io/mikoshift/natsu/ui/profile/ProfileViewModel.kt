@@ -1,10 +1,17 @@
 package io.mikoshift.natsu.ui.profile
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import io.mikoshift.natsu.core.domain.usecase.DeleteAccountUseCase
+import io.mikoshift.natsu.core.domain.usecase.LogoutUseCase
+import io.mikoshift.natsu.core.domain.usecase.ObserveUserProfileUseCase
+import io.mikoshift.natsu.core.domain.usecase.RevokeSessionUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.feature.profile.R
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +23,11 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val observeUserProfile: ObserveUserProfileUseCase,
+    private val logoutUseCase: LogoutUseCase,
+    private val deleteAccount: DeleteAccountUseCase,
+    private val revokeSession: RevokeSessionUseCase,
     private val authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -49,7 +61,7 @@ class ProfileViewModel @Inject constructor(
     fun logout() {
         _uiState.update { it.copy(isLoggingOut = true, generalError = null) }
         viewModelScope.launch {
-            authRepository.logout()
+            logoutUseCase()
             _uiState.update { it.copy(isLoggingOut = false) }
         }
     }
@@ -57,13 +69,15 @@ class ProfileViewModel @Inject constructor(
     fun deleteAccount() {
         val password = _uiState.value.deletePassword
         if (password.isBlank()) {
-            _uiState.update { it.copy(deletePasswordError = "Password is required") }
+            _uiState.update {
+                it.copy(deletePasswordError = context.getString(R.string.error_password_required))
+            }
             return
         }
 
         _uiState.update { it.copy(isDeletingAccount = true, deletePasswordError = null, generalError = null) }
         viewModelScope.launch {
-            authRepository.deleteAccount(password).fold(
+            deleteAccount(password).fold(
                 onSuccess = {
                     _uiState.update { it.copy(isDeletingAccount = false, showDeleteDialog = false) }
                 },
@@ -77,7 +91,7 @@ class ProfileViewModel @Inject constructor(
     fun revokeSession(sessionId: Long, isCurrent: Boolean) {
         _uiState.update { it.copy(revokingSessionId = sessionId, generalError = null) }
         viewModelScope.launch {
-            authRepository.revokeSession(sessionId, isCurrent).fold(
+            revokeSession(sessionId = sessionId, isCurrentSession = isCurrent).fold(
                 onSuccess = {
                     _uiState.update { it.copy(revokingSessionId = null) }
                     if (!isCurrent) {
@@ -95,7 +109,7 @@ class ProfileViewModel @Inject constructor(
     private fun loadUser() {
         _uiState.update { it.copy(isLoadingUser = true, generalError = null) }
         viewModelScope.launch {
-            authRepository.getUser().fold(
+            observeUserProfile().fold(
                 onSuccess = { user ->
                     _uiState.update { it.copy(isLoadingUser = false, user = user.toUiModel()) }
                 },
@@ -149,7 +163,7 @@ class ProfileViewModel @Inject constructor(
             is AuthError.NetworkFailure -> {
                 _uiState.update { it.copy(isDeletingAccount = false, generalError = null) }
                 viewModelScope.launch {
-                    _effects.send(ProfileEffect.ShowMessage("Network error, please try again"))
+                    _effects.send(ProfileEffect.ShowMessage(context.getString(R.string.error_network)))
                 }
             }
             else -> {
@@ -157,7 +171,7 @@ class ProfileViewModel @Inject constructor(
                     it.copy(
                         isDeletingAccount = false,
                         generalError = (error as? AuthError.Unknown)?.errorMessage
-                            ?: "Something went wrong, please try again",
+                            ?: context.getString(R.string.error_generic),
                     )
                 }
             }

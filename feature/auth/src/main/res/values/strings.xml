@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sign_in_title">Sign in</string>
+    <string name="sign_in">Sign in</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_up_prompt">Don\'t have an account? Sign up</string>
+
+    <string name="sign_up_title">Sign up</string>
+    <string name="sign_up">Sign up</string>
+    <string name="name">Name</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="sign_in_prompt">Already have an account? Sign in</string>
+
+    <string name="forgot_password_title">Reset password</string>
+    <string name="reset_password">Reset password</string>
+    <string name="token">Token</string>
+    <string name="new_password">New password</string>
+
+    <string name="error_email_required">Email is required</string>
+    <string name="error_password_required">Password is required</string>
+    <string name="error_name_required">Name is required</string>
+    <string name="error_invalid_email">Enter a valid email address</string>
+    <string name="error_password_min_length">Password must be at least 8 characters</string>
+    <string name="error_passwords_do_not_match">Passwords do not match</string>
+    <string name="error_invalid_credentials">Invalid email or password</string>
+    <string name="error_network">Network error, please try again</string>
+    <string name="error_generic">Something went wrong, please try again</string>
+    <string name="error_session_expired">Session expired, please try again</string>
+    <string name="error_token_required">Token is required</string>
+    <string name="error_current_password_required">Current password is required</string>
+</resources>

@@ -1,5 +1,6 @@
 package io.mikoshift.natsu.core.domain.usecase
 
+import io.mikoshift.natsu.core.common.analytics.AnalyticsTracker
 import io.mikoshift.natsu.core.domain.repository.AuthRepository
 import io.mikoshift.natsu.core.domain.repository.DocumentRepository
 import io.mikoshift.natsu.core.domain.repository.SyncStatusRepository
@@ -10,6 +11,7 @@ class SyncDocumentsUseCase @Inject constructor(
     private val authRepository: AuthRepository,
     private val documentRepository: DocumentRepository,
     private val syncStatusRepository: SyncStatusRepository,
+    private val analyticsTracker: AnalyticsTracker,
 ) {
     suspend operator fun invoke(): Result<Unit> {
         if (authRepository.currentSession.value == null) {
@@ -22,6 +24,7 @@ class SyncDocumentsUseCase @Inject constructor(
                 onSuccess = { syncStatusRepository.setIdle() },
                 onFailure = { error ->
                     syncStatusRepository.setFailed(error.toUserMessage())
+                    analyticsTracker.track("sync_failed")
                 },
             )
         }

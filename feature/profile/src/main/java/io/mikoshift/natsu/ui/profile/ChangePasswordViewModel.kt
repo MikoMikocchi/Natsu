@@ -1,10 +1,13 @@
 package io.mikoshift.natsu.ui.profile
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.mikoshift.natsu.core.domain.usecase.ChangePasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.feature.profile.R
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +17,8 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ChangePasswordViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
+    private val changePassword: ChangePasswordUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChangePasswordUiState())
@@ -37,14 +41,18 @@ class ChangePasswordViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val currentPasswordError = if (state.currentPassword.isBlank()) "Current password is required" else null
+        val currentPasswordError = if (state.currentPassword.isBlank()) {
+            context.getString(R.string.error_current_password_required)
+        } else {
+            null
+        }
         val passwordError = if (state.password.length < 8) {
-            "Password must be at least 8 characters"
+            context.getString(R.string.error_password_min_length)
         } else {
             null
         }
         val passwordConfirmationError = if (state.passwordConfirmation != state.password) {
-            "Passwords do not match"
+            context.getString(R.string.error_passwords_do_not_match)
         } else {
             null
         }
@@ -72,7 +80,7 @@ class ChangePasswordViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            authRepository.changePassword(
+            changePassword(
                 currentPassword = state.currentPassword,
                 password = state.password,
                 passwordConfirmation = state.passwordConfirmation,
@@ -111,7 +119,7 @@ class ChangePasswordViewModel @Inject constructor(
             }
             is AuthError.NetworkFailure -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Network error, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_network))
                 }
             }
             else -> {
@@ -119,7 +127,7 @@ class ChangePasswordViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         generalError = (error as? AuthError.Unknown)?.errorMessage
-                            ?: "Something went wrong, please try again",
+                            ?: context.getString(R.string.error_generic),
                     )
                 }
             }

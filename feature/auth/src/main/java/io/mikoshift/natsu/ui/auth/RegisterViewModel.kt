@@ -1,11 +1,14 @@
 package io.mikoshift.natsu.ui.auth
 
+import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.mikoshift.natsu.core.domain.usecase.RegisterUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.feature.auth.R
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,14 +16,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Backs the registration screen. Performs client-side validation before ever hitting the
- * network, then delegates to [AuthRepository.register] and maps the resulting [AuthError]
- * (if any) onto [RegisterUiState]'s per-field error slots.
- */
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
+    private val register: RegisterUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -47,19 +46,23 @@ class RegisterViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val nameError = if (state.name.isBlank()) "Name is required" else null
+        val nameError = if (state.name.isBlank()) {
+            context.getString(R.string.error_name_required)
+        } else {
+            null
+        }
         val emailError = if (!Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
-            "Enter a valid email address"
+            context.getString(R.string.error_invalid_email)
         } else {
             null
         }
         val passwordError = if (state.password.length < 8) {
-            "Password must be at least 8 characters"
+            context.getString(R.string.error_password_min_length)
         } else {
             null
         }
         val passwordConfirmationError = if (state.passwordConfirmation != state.password) {
-            "Passwords do not match"
+            context.getString(R.string.error_passwords_do_not_match)
         } else {
             null
         }
@@ -89,16 +92,14 @@ class RegisterViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val result = authRepository.register(
+            register(
                 name = state.name,
                 email = state.email,
                 password = state.password,
                 passwordConfirmation = state.passwordConfirmation,
-            )
-
-            result.fold(
+            ).fold(
                 onSuccess = {
-                    _uiState.update { it.copy(isLoading = false, isRegistered = true) }
+                    _uiState.update { it.copy(isLoading = false) }
                 },
                 onFailure = { throwable ->
                     applyError(throwable as? AuthError)
@@ -130,25 +131,28 @@ class RegisterViewModel @Inject constructor(
             }
             is AuthError.Unauthorized -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Session expired, please try again")
+                    it.copy(
+                        isLoading = false,
+                        generalError = context.getString(R.string.error_session_expired),
+                    )
                 }
             }
             is AuthError.NetworkFailure -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Network error, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_network))
                 }
             }
             is AuthError.Unknown -> {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        generalError = error.errorMessage ?: "Something went wrong, please try again",
+                        generalError = error.errorMessage ?: context.getString(R.string.error_generic),
                     )
                 }
             }
             null -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Something went wrong, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_generic))
                 }
             }
         }

@@ -16,12 +16,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.feature.auth.R
+import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @Composable
 fun LoginScreen(
@@ -29,8 +33,26 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LoginScreenContent(
+        uiState = uiState,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onSubmit = viewModel::submit,
+        onNavigateToRegister = onNavigateToRegister,
+        onNavigateToForgotPassword = onNavigateToForgotPassword,
+    )
+}
 
+@Composable
+internal fun LoginScreenContent(
+    uiState: LoginUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -38,12 +60,12 @@ fun LoginScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(text = "Sign in", style = MaterialTheme.typography.headlineSmall)
+        Text(text = stringResource(R.string.sign_in_title), style = MaterialTheme.typography.headlineSmall)
 
         OutlinedTextField(
             value = uiState.email,
-            onValueChange = viewModel::onEmailChange,
-            label = { Text("Email") },
+            onValueChange = onEmailChange,
+            label = { Text(stringResource(R.string.email)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isError = uiState.emailError != null,
@@ -53,8 +75,8 @@ fun LoginScreen(
 
         OutlinedTextField(
             value = uiState.password,
-            onValueChange = viewModel::onPasswordChange,
-            label = { Text("Password") },
+            onValueChange = onPasswordChange,
+            label = { Text(stringResource(R.string.password)) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -71,7 +93,7 @@ fun LoginScreen(
         }
 
         Button(
-            onClick = viewModel::submit,
+            onClick = onSubmit,
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -81,7 +103,7 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             } else {
-                Text("Sign in")
+                Text(stringResource(R.string.sign_in))
             }
         }
 
@@ -89,14 +111,29 @@ fun LoginScreen(
             onClick = onNavigateToForgotPassword,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Forgot password?")
+            Text(stringResource(R.string.forgot_password))
         }
 
         TextButton(
             onClick = onNavigateToRegister,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Don't have an account? Sign up")
+            Text(stringResource(R.string.sign_up_prompt))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LoginScreenPreview() {
+    NatsuTheme {
+        LoginScreenContent(
+            uiState = LoginUiState(email = "test@example.com"),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onSubmit = {},
+            onNavigateToRegister = {},
+            onNavigateToForgotPassword = {},
+        )
     }
 }

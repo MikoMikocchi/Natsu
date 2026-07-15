@@ -1,10 +1,13 @@
 package io.mikoshift.natsu.ui.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.mikoshift.natsu.core.domain.repository.AuthRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.mikoshift.natsu.core.domain.usecase.LoginUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.feature.auth.R
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,15 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * Backs the login screen. Performs client-side validation before ever hitting the network,
- * then delegates to [AuthRepository.login] and maps the resulting [AuthError] (if any) onto
- * [LoginUiState]'s error slots. Invalid-credential errors from the backend land under the
- * `"base"` key, which is treated as [LoginUiState.generalError].
- */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context,
+    private val login: LoginUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -37,8 +35,16 @@ class LoginViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val emailError = if (state.email.isBlank()) "Email is required" else null
-        val passwordError = if (state.password.isBlank()) "Password is required" else null
+        val emailError = if (state.email.isBlank()) {
+            context.getString(R.string.error_email_required)
+        } else {
+            null
+        }
+        val passwordError = if (state.password.isBlank()) {
+            context.getString(R.string.error_password_required)
+        } else {
+            null
+        }
 
         if (emailError != null || passwordError != null) {
             _uiState.update {
@@ -52,11 +58,9 @@ class LoginViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val result = authRepository.login(email = state.email, password = state.password)
-
-            result.fold(
+            login(email = state.email, password = state.password).fold(
                 onSuccess = {
-                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                    _uiState.update { it.copy(isLoading = false) }
                 },
                 onFailure = { throwable ->
                     applyError(throwable as? AuthError)
@@ -86,25 +90,28 @@ class LoginViewModel @Inject constructor(
             }
             is AuthError.Unauthorized -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Invalid email or password")
+                    it.copy(
+                        isLoading = false,
+                        generalError = context.getString(R.string.error_invalid_credentials),
+                    )
                 }
             }
             is AuthError.NetworkFailure -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Network error, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_network))
                 }
             }
             is AuthError.Unknown -> {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        generalError = error.errorMessage ?: "Something went wrong, please try again",
+                        generalError = error.errorMessage ?: context.getString(R.string.error_generic),
                     )
                 }
             }
             null -> {
                 _uiState.update {
-                    it.copy(isLoading = false, generalError = "Something went wrong, please try again")
+                    it.copy(isLoading = false, generalError = context.getString(R.string.error_generic))
                 }
             }
         }

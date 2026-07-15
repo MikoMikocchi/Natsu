@@ -12,7 +12,7 @@ import io.mikoshift.natsu.data.remote.dto.SourceFormat
 @Database(
     entities = [DocumentEntity::class, SyncStateEntity::class],
     version = 1,
-    exportSchema = false,
+    exportSchema = true,
 )
 @TypeConverters(DocumentTypeConverters::class)
 abstract class NatsuDatabase : RoomDatabase() {

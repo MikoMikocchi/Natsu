@@ -1,14 +1,19 @@
 package io.mikoshift.natsu.ui.library
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.repository.DocumentRepository
 import io.mikoshift.natsu.core.domain.repository.SyncStatusRepository
+import io.mikoshift.natsu.core.domain.usecase.ImportDocumentUseCase
+import io.mikoshift.natsu.core.domain.usecase.ObserveLibraryUseCase
 import io.mikoshift.natsu.core.domain.usecase.SyncDocumentsUseCase
 import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.core.model.SyncState
+import io.mikoshift.natsu.feature.library.R
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,8 +25,11 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val documentRepository: DocumentRepository,
+    private val observeLibrary: ObserveLibraryUseCase,
     private val syncDocuments: SyncDocumentsUseCase,
+    private val importDocument: ImportDocumentUseCase,
     syncStatusRepository: SyncStatusRepository,
 ) : ViewModel() {
 
@@ -32,7 +40,7 @@ class LibraryViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            documentRepository.observeLibrary().collect { documents ->
+            observeLibrary().collect { documents ->
                 _uiState.update { state ->
                     state.copy(documents = documents.map { it.toListItem() })
                 }
@@ -55,7 +63,7 @@ class LibraryViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             error = (throwable as? DocumentError)?.toUserMessage()
-                                ?: "Sync failed",
+                                ?: context.getString(R.string.error_sync_failed),
                         )
                     }
                 },
@@ -89,7 +97,7 @@ class LibraryViewModel @Inject constructor(
                         it.copy(
                             isSearching = false,
                             error = (throwable as? DocumentError)?.toUserMessage()
-                                ?: "Search failed",
+                                ?: context.getString(R.string.error_search_failed),
                         )
                     }
                 },
@@ -100,15 +108,19 @@ class LibraryViewModel @Inject constructor(
     fun importDocument(uri: Uri) {
         if (_uiState.value.isImporting) return
         _uiState.update {
-            it.copy(isImporting = true, importStatusMessage = "Uploading...", error = null)
+            it.copy(
+                isImporting = true,
+                importStatusMessage = context.getString(R.string.import_uploading),
+                error = null,
+            )
         }
         viewModelScope.launch {
-            documentRepository.import(uri.toString()).fold(
+            importDocument(uri.toString()).fold(
                 onSuccess = { document ->
                     _uiState.update {
                         it.copy(
                             isImporting = false,
-                            importStatusMessage = "\"${document.title}\" imported",
+                            importStatusMessage = context.getString(R.string.import_success, document.title),
                         )
                     }
                 },
@@ -118,7 +130,7 @@ class LibraryViewModel @Inject constructor(
                             isImporting = false,
                             importStatusMessage = null,
                             error = (throwable as? DocumentError)?.toUserMessage()
-                                ?: "Import failed",
+                                ?: context.getString(R.string.error_import_failed),
                         )
                     }
                 },
@@ -144,7 +156,7 @@ class LibraryViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             error = (throwable as? DocumentError)?.toUserMessage()
-                                ?: "Delete failed",
+                                ?: context.getString(R.string.error_delete_failed),
                         )
                     }
                 },
