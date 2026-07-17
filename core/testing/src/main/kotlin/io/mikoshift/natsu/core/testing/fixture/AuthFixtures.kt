@@ -3,6 +3,7 @@ package io.mikoshift.natsu.core.testing.fixture
 import io.mikoshift.natsu.core.model.AuthSession
 import io.mikoshift.natsu.core.model.DeviceSession
 import io.mikoshift.natsu.core.model.User
+import java.time.Instant
 
 object AuthFixtures {
     fun session(
@@ -23,7 +24,7 @@ object AuthFixtures {
         id: Long = 1L,
         name: String = "Test User",
         email: String = "test@example.com",
-        createdAt: String = "2026-01-01",
+        createdAt: Instant = Instant.parse("2026-01-01T00:00:00Z"),
     ) = User(
         id = id,
         name = name,
@@ -34,7 +35,7 @@ object AuthFixtures {
     fun deviceSession(
         id: Long = 1L,
         name: String = "Pixel 8",
-        createdAt: String = "2026-01-01",
+        createdAt: Instant = Instant.parse("2026-01-01T00:00:00Z"),
         current: Boolean = true,
     ) = DeviceSession(
         id = id,

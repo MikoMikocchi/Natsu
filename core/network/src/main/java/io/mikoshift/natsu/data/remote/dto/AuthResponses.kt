@@ -1,5 +1,6 @@
 package io.mikoshift.natsu.data.remote.dto
 
+import java.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,9 +14,8 @@ data class UserResponse(
     val id: Long,
     val name: String,
     val email: String,
-    // ISO-8601 timestamp string from the backend; kept as String until a datetime
-    // library is wired up (a later subtask can parse it if needed).
-    @SerialName("created_at") val createdAt: String,
+    @Serializable(with = InstantIso8601Serializer::class)
+    @SerialName("created_at") val createdAt: Instant,
 )
 
 @Serializable
@@ -41,6 +41,7 @@ data class MessageResponse(
 data class DeviceSessionResponse(
     val id: Long,
     val name: String,
-    @SerialName("created_at") val createdAt: String,
+    @Serializable(with = InstantIso8601Serializer::class)
+    @SerialName("created_at") val createdAt: Instant,
     val current: Boolean,
 )

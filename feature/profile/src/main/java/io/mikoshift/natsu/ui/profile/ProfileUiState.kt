@@ -1,5 +1,15 @@
 package io.mikoshift.natsu.ui.profile
 
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+private val displayDateFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withZone(ZoneId.systemDefault())
+
+private fun Instant.toDisplayDate(): String = displayDateFormatter.format(this)
+
 data class UserUiModel(
     val displayName: String,
     val email: String,
@@ -16,13 +26,13 @@ data class SessionUiModel(
 fun io.mikoshift.natsu.core.model.User.toUiModel(): UserUiModel = UserUiModel(
     displayName = name,
     email = email,
-    memberSince = createdAt,
+    memberSince = createdAt.toDisplayDate(),
 )
 
 fun io.mikoshift.natsu.core.model.DeviceSession.toUiModel(): SessionUiModel = SessionUiModel(
     id = id,
     deviceName = name,
-    createdAt = createdAt,
+    createdAt = createdAt.toDisplayDate(),
     isCurrent = current,
 )
 
