@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +19,7 @@ class DocumentDaoTest {
 
     private lateinit var database: NatsuDatabase
     private lateinit var documentDao: DocumentDao
+    private lateinit var readingProgressDao: ReadingProgressDao
 
     @Before
     fun createDb() {
@@ -26,6 +28,7 @@ class DocumentDaoTest {
             NatsuDatabase::class.java,
         ).build()
         documentDao = database.documentDao()
+        readingProgressDao = database.readingProgressDao()
     }
 
     @After
@@ -34,7 +37,7 @@ class DocumentDaoTest {
     }
 
     @Test
-    fun upsert_andObserveLibrary_returnsDocument() = runTest {
+    fun upsert_andObserveLibrary_returnsDocumentWithProgress() = runTest {
         val entity = DocumentEntity(
             id = "doc-1",
             title = "Test Book",
@@ -43,9 +46,18 @@ class DocumentDaoTest {
             updatedAtMs = 100L,
         )
         documentDao.upsert(entity)
+        readingProgressDao.upsert(
+            ReadingProgressEntity(
+                documentId = "doc-1",
+                lastReadCharOffset = 42,
+                updatedAtMs = 500L,
+            ),
+        )
 
         val documents = documentDao.observeLibrary().first()
         assertEquals(1, documents.size)
-        assertEquals("Test Book", documents.first().title)
+        assertEquals("Test Book", documents.first().document.title)
+        assertNotNull(documents.first().progress)
+        assertEquals(42, documents.first().progress?.lastReadCharOffset)
     }
 }

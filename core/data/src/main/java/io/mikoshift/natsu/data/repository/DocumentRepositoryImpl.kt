@@ -10,7 +10,11 @@ import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.core.model.DocumentSearchResult
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
+import io.mikoshift.natsu.data.local.SyncOutboxStore
+import io.mikoshift.natsu.data.local.db.DocumentCacheDao
 import io.mikoshift.natsu.data.local.db.DocumentDao
+import io.mikoshift.natsu.data.local.db.ReadingProgressDao
+import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.mapper.toDomain
 import io.mikoshift.natsu.data.mapper.toEntity
 import io.mikoshift.natsu.data.remote.DocumentApi
@@ -35,7 +39,11 @@ class DocumentRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val documentApi: DocumentApi,
     private val documentDao: DocumentDao,
+    private val readingProgressDao: ReadingProgressDao,
+    private val documentCacheDao: DocumentCacheDao,
+    private val syncOutboxDao: SyncOutboxDao,
     private val syncCursorStore: SyncCursorStore,
+    private val syncOutboxStore: SyncOutboxStore,
     private val packageFileStore: PackageFileStore,
     private val syncEngine: DocumentSyncEngine,
     private val networkFactory: NetworkFactory,
@@ -73,9 +81,9 @@ class DocumentRepositoryImpl @Inject constructor(
         onSuccess = { response ->
             val body = response.body()
             if (response.isSuccessful && body != null) {
-                val document = body.document
-                documentDao.upsert(document.toEntity())
-                pollImportStatus(document.id)
+                val metadata = body.document
+                documentDao.upsert(metadata.toEntity())
+                pollImportStatus(metadata.id)
             } else {
                 Result.failure(mapErrorResponse(response))
             }
@@ -89,16 +97,20 @@ class DocumentRepositoryImpl @Inject constructor(
         documentDao.upsert(
             local.copy(
                 deleted = true,
-                isDirty = true,
                 updatedAtMs = now,
             ),
         )
+        syncOutboxStore.enqueueMetadata(id, now)
         packageFileStore.delete(id)
+        documentCacheDao.deleteByDocumentId(id)
         return syncEngine.sync()
     }
 
     override suspend fun clearOnLogout() {
         documentDao.deleteAll()
+        readingProgressDao.deleteAll()
+        documentCacheDao.deleteAll()
+        syncOutboxDao.deleteAll()
         packageFileStore.deleteAll()
         syncCursorStore.clear()
     }
@@ -111,16 +123,20 @@ class DocumentRepositoryImpl @Inject constructor(
             if (!response.isSuccessful || body == null) {
                 return Result.failure(mapErrorResponse(response))
             }
-            val document = body.document
-            documentDao.upsert(document.toEntity())
+            val metadata = body.document
+            documentDao.upsert(metadata.toEntity())
 
-            when (document.status) {
+            when (metadata.status) {
                 DocumentStatus.READY -> {
                     syncEngine.sync()
-                    return Result.success(document.toDomain())
+                    val withRelations = documentDao.getWithRelationsById(documentId)
+                    return Result.success(
+                        withRelations?.toDomain()
+                            ?: metadata.toDomain(),
+                    )
                 }
                 DocumentStatus.FAILED -> {
-                    return Result.failure(DocumentError.ImportFailed(document.importError))
+                    return Result.failure(DocumentError.ImportFailed(metadata.importError))
                 }
                 DocumentStatus.PENDING -> Unit
             }

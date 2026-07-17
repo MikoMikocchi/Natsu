@@ -13,26 +13,30 @@ enum class DocumentStatus {
 }
 
 data class Document(
-    val id: String,
-    val title: String,
-    val sourceFormat: SourceFormat,
-    val status: DocumentStatus,
-    val importError: String? = null,
-    val importedAt: Long = 0,
-    val charCount: Int = 0,
-    val lastReadCharOffset: Int = 0,
-    val lastReadSectionId: String? = null,
-    val lastReadBlockIndex: Int = 0,
-    val lastReadBlockCharOffset: Int = 0,
-    val updatedAtMs: Long = 0,
-    val packageSizeBytes: Long = 0,
-    val packageUpdatedAtMs: Long = 0,
-    val packageSha256: String? = null,
-    val deleted: Boolean = false,
-    val isDirty: Boolean = false,
-    val localPackagePath: String? = null,
-    val cachedPackageSha256: String? = null,
-)
+    val metadata: DocumentMetadata,
+    val progress: ReadingProgress? = null,
+    val cache: DocumentCache? = null,
+) {
+    val id: String get() = metadata.id
+    val title: String get() = metadata.title
+    val sourceFormat: SourceFormat get() = metadata.sourceFormat
+    val status: DocumentStatus get() = metadata.status
+    val importError: String? get() = metadata.importError
+    val importedAt: Long get() = metadata.importedAt
+    val charCount: Int get() = metadata.charCount
+    val updatedAtMs: Long get() = metadata.updatedAtMs
+    val packageSizeBytes: Long get() = metadata.packageSizeBytes
+    val packageUpdatedAtMs: Long get() = metadata.packageUpdatedAtMs
+    val packageSha256: String? get() = metadata.packageSha256
+    val deleted: Boolean get() = metadata.deleted
+    val lastReadCharOffset: Int get() = progress?.lastReadCharOffset ?: 0
+    val lastReadSectionId: String? get() = progress?.lastReadSectionId
+    val lastReadBlockIndex: Int get() = progress?.lastReadBlockIndex ?: 0
+    val lastReadBlockCharOffset: Int get() = progress?.lastReadBlockCharOffset ?: 0
+    val progressUpdatedAtMs: Long get() = progress?.updatedAtMs ?: 0
+    val localPackagePath: String? get() = cache?.localPackagePath
+    val cachedPackageSha256: String? get() = cache?.cachedPackageSha256
+}
 
 data class DocumentSearchMatch(
     val charOffset: Int,

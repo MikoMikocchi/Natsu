@@ -8,9 +8,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
-import io.mikoshift.natsu.data.local.TokenStore
+import io.mikoshift.natsu.data.local.SyncOutboxStore
+import io.mikoshift.natsu.data.local.db.DocumentCacheDao
 import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.local.db.NatsuDatabase
+import io.mikoshift.natsu.data.local.db.ReadingProgressDao
+import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.local.db.SyncStateDao
 import io.mikoshift.natsu.data.remote.AuthApi
 import io.mikoshift.natsu.data.remote.AuthInterceptor
@@ -33,12 +36,28 @@ object DataModule {
     fun provideDocumentDao(database: NatsuDatabase): DocumentDao = database.documentDao()
 
     @Provides
+    fun provideReadingProgressDao(database: NatsuDatabase): ReadingProgressDao =
+        database.readingProgressDao()
+
+    @Provides
+    fun provideDocumentCacheDao(database: NatsuDatabase): DocumentCacheDao =
+        database.documentCacheDao()
+
+    @Provides
+    fun provideSyncOutboxDao(database: NatsuDatabase): SyncOutboxDao = database.syncOutboxDao()
+
+    @Provides
     fun provideSyncStateDao(database: NatsuDatabase): SyncStateDao = database.syncStateDao()
 
     @Provides
     @Singleton
     fun provideSyncCursorStore(syncStateDao: SyncStateDao): SyncCursorStore =
         SyncCursorStore(syncStateDao)
+
+    @Provides
+    @Singleton
+    fun provideSyncOutboxStore(syncOutboxDao: SyncOutboxDao): SyncOutboxStore =
+        SyncOutboxStore(syncOutboxDao)
 
     @Provides
     @Singleton

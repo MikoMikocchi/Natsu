@@ -10,14 +10,23 @@ import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
 
 @Database(
-    entities = [DocumentEntity::class, SyncStateEntity::class],
-    version = 1,
+    entities = [
+        DocumentEntity::class,
+        ReadingProgressEntity::class,
+        DocumentCacheEntity::class,
+        SyncOutboxEntity::class,
+        SyncStateEntity::class,
+    ],
+    version = 2,
     exportSchema = true,
 )
-@TypeConverters(DocumentTypeConverters::class)
+@TypeConverters(NatsuTypeConverters::class)
 abstract class NatsuDatabase : RoomDatabase() {
 
     abstract fun documentDao(): DocumentDao
+    abstract fun readingProgressDao(): ReadingProgressDao
+    abstract fun documentCacheDao(): DocumentCacheDao
+    abstract fun syncOutboxDao(): SyncOutboxDao
     abstract fun syncStateDao(): SyncStateDao
 
     companion object {
@@ -26,11 +35,13 @@ abstract class NatsuDatabase : RoomDatabase() {
                 context.applicationContext,
                 NatsuDatabase::class.java,
                 "natsu.db",
-            ).build()
+            )
+                .fallbackToDestructiveMigration(dropAllTables = true)
+                .build()
     }
 }
 
-class DocumentTypeConverters {
+class NatsuTypeConverters {
     @TypeConverter
     fun fromSourceFormat(value: SourceFormat): String = value.name
 
@@ -42,4 +53,16 @@ class DocumentTypeConverters {
 
     @TypeConverter
     fun toDocumentStatus(value: String): DocumentStatus = DocumentStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromSyncEntityType(value: SyncEntityType): String = value.name
+
+    @TypeConverter
+    fun toSyncEntityType(value: String): SyncEntityType = SyncEntityType.valueOf(value)
+
+    @TypeConverter
+    fun fromSyncOutboxStatus(value: SyncOutboxStatus): String = value.name
+
+    @TypeConverter
+    fun toSyncOutboxStatus(value: String): SyncOutboxStatus = SyncOutboxStatus.valueOf(value)
 }

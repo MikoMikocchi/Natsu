@@ -1,9 +1,11 @@
 package io.mikoshift.natsu.data.remote
 
-import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentMetadataIndexResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentMetadataShowResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentMetadataSyncRequest
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentShowResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
+import io.mikoshift.natsu.data.remote.dto.ReadingProgressIndexResponse
+import io.mikoshift.natsu.data.remote.dto.ReadingProgressSyncRequest
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -17,30 +19,43 @@ import retrofit2.http.Query
 import retrofit2.http.Streaming
 
 /**
- * Retrofit definition of the backend's `/v1/documents` endpoints.
+ * Retrofit definition of the backend's document endpoints.
  *
- * Uses the authenticated OkHttpClient; [AuthInterceptor] attaches the Bearer token.
+ * Metadata and reading progress are synced on separate delta streams.
  */
 interface DocumentApi {
 
     @GET("documents")
-    suspend fun index(
+    suspend fun indexMetadata(
         @Query("since") since: Long,
         @Query("limit") limit: Int? = null,
-    ): Response<DocumentIndexResponse>
+    ): Response<DocumentMetadataIndexResponse>
+
+    @POST("documents/sync")
+    suspend fun syncMetadata(
+        @Body request: DocumentMetadataSyncRequest,
+    ): Response<DocumentMetadataIndexResponse>
+
+    @GET("reading-progress")
+    suspend fun indexProgress(
+        @Query("since") since: Long,
+        @Query("limit") limit: Int? = null,
+    ): Response<ReadingProgressIndexResponse>
+
+    @POST("reading-progress/sync")
+    suspend fun syncProgress(
+        @Body request: ReadingProgressSyncRequest,
+    ): Response<ReadingProgressIndexResponse>
 
     @GET("documents/search")
     suspend fun search(@Query("q") query: String): Response<DocumentSearchResponse>
 
     @GET("documents/{id}")
-    suspend fun show(@Path("id") id: String): Response<DocumentShowResponse>
-
-    @POST("documents/sync")
-    suspend fun sync(@Body request: DocumentSyncRequest): Response<DocumentIndexResponse>
+    suspend fun show(@Path("id") id: String): Response<DocumentMetadataShowResponse>
 
     @Multipart
     @POST("documents/import")
-    suspend fun importDocument(@Part file: MultipartBody.Part): Response<DocumentShowResponse>
+    suspend fun importDocument(@Part file: MultipartBody.Part): Response<DocumentMetadataShowResponse>
 
     @Streaming
     @GET("documents/{id}/package")

@@ -8,8 +8,8 @@ import androidx.room.Query
 @Dao
 interface SyncStateDao {
 
-    @Query("SELECT lastSinceMs FROM sync_state WHERE id = 1")
-    suspend fun getLastSinceMs(): Long?
+    @Query("SELECT * FROM sync_state WHERE id = 1")
+    suspend fun get(): SyncStateEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(state: SyncStateEntity)
