@@ -1,9 +1,11 @@
 package io.mikoshift.natsu.data.sync
 
+import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.SourceFormat
 import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.data.remote.dto.SourceFormat
+import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
+import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -63,7 +65,7 @@ class DocumentMergerTest {
         val server = sampleServer(
             updatedAtMs = 200,
             charCount = 0,
-            status = DocumentStatus.READY,
+            status = DocumentStatusDto.READY,
         )
 
         val merged = DocumentMerger.merge(server, local)
@@ -90,11 +92,11 @@ class DocumentMergerTest {
         title: String = "Title",
         packageSha256: String? = null,
         charCount: Int = 10,
-        status: DocumentStatus = DocumentStatus.PENDING,
+        status: DocumentStatusDto = DocumentStatusDto.PENDING,
     ) = DocumentResponse(
         id = "doc-1",
         title = title,
-        sourceFormat = SourceFormat.EPUB,
+        sourceFormat = SourceFormatDto.EPUB,
         status = status,
         updatedAtMs = updatedAtMs,
         charCount = charCount,

@@ -6,8 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.data.remote.dto.SourceFormat
+import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.SourceFormat
 
 @Database(
     entities = [DocumentEntity::class, SyncStateEntity::class],

@@ -3,10 +3,8 @@ package io.mikoshift.natsu.data.local.db
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import io.mikoshift.natsu.data.remote.dto.DocumentResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.data.remote.dto.DocumentSyncItemRequest
-import io.mikoshift.natsu.data.remote.dto.SourceFormat
+import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.SourceFormat
 
 @Entity(
     tableName = "documents",
@@ -32,44 +30,4 @@ data class DocumentEntity(
     val isDirty: Boolean = false,
     val localPackagePath: String? = null,
     val cachedPackageSha256: String? = null,
-)
-
-fun DocumentResponse.toEntity(
-    isDirty: Boolean = false,
-    localPackagePath: String? = null,
-    cachedPackageSha256: String? = null,
-): DocumentEntity = DocumentEntity(
-    id = id,
-    title = title,
-    sourceFormat = sourceFormat,
-    status = status,
-    importError = importError,
-    importedAt = importedAt,
-    charCount = charCount,
-    lastReadCharOffset = lastReadCharOffset,
-    lastReadSectionId = lastReadSectionId,
-    lastReadBlockIndex = lastReadBlockIndex,
-    lastReadBlockCharOffset = lastReadBlockCharOffset,
-    updatedAtMs = updatedAtMs,
-    packageSizeBytes = packageSizeBytes,
-    packageUpdatedAtMs = packageUpdatedAtMs,
-    packageSha256 = packageSha256,
-    deleted = deleted,
-    isDirty = isDirty,
-    localPackagePath = localPackagePath,
-    cachedPackageSha256 = cachedPackageSha256,
-)
-
-fun DocumentEntity.toSyncItemRequest(): DocumentSyncItemRequest = DocumentSyncItemRequest(
-    id = id,
-    title = title,
-    sourceFormat = sourceFormat,
-    importedAt = importedAt,
-    charCount = charCount,
-    lastReadCharOffset = lastReadCharOffset,
-    lastReadSectionId = lastReadSectionId,
-    lastReadBlockIndex = lastReadBlockIndex,
-    lastReadBlockCharOffset = lastReadBlockCharOffset,
-    updatedAtMs = updatedAtMs,
-    deleted = deleted,
 )

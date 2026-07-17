@@ -1,7 +1,8 @@
 package io.mikoshift.natsu.data.sync
 
 import io.mikoshift.natsu.data.local.db.DocumentEntity
-import io.mikoshift.natsu.data.local.db.toEntity
+import io.mikoshift.natsu.data.mapper.toDomain
+import io.mikoshift.natsu.data.mapper.toEntity
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 
 object DocumentMerger {
@@ -23,7 +24,7 @@ object DocumentMerger {
 
         if (local.isDirty) {
             return local.copy(
-                status = server.status,
+                status = server.status.toDomain(),
                 importError = server.importError,
                 packageSizeBytes = server.packageSizeBytes,
                 packageUpdatedAtMs = server.packageUpdatedAtMs,

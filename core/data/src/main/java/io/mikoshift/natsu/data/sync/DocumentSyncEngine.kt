@@ -4,8 +4,8 @@ import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
 import io.mikoshift.natsu.data.local.db.DocumentDao
-import io.mikoshift.natsu.data.local.db.toEntity
-import io.mikoshift.natsu.data.local.db.toSyncItemRequest
+import io.mikoshift.natsu.data.mapper.toEntity
+import io.mikoshift.natsu.data.mapper.toSyncItemRequest
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest

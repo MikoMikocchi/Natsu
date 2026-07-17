@@ -11,8 +11,8 @@ import io.mikoshift.natsu.core.model.DocumentSearchResult
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
 import io.mikoshift.natsu.data.local.db.DocumentDao
-import io.mikoshift.natsu.data.local.db.toEntity
 import io.mikoshift.natsu.data.mapper.toDomain
+import io.mikoshift.natsu.data.mapper.toEntity
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse

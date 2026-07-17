@@ -9,13 +9,14 @@ import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResult as DocumentSearchResultDto
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
+import io.mikoshift.natsu.data.remote.dto.DocumentSyncItemRequest
 import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
 fun DocumentEntity.toDomain(): Document = Document(
     id = id,
     title = title,
-    sourceFormat = sourceFormat.toDomain(),
-    status = status.toDomain(),
+    sourceFormat = sourceFormat,
+    status = status,
     importError = importError,
     importedAt = importedAt,
     charCount = charCount,
@@ -57,6 +58,46 @@ fun DocumentResponse.toDomain(
     isDirty = isDirty,
     localPackagePath = localPackagePath,
     cachedPackageSha256 = cachedPackageSha256,
+)
+
+fun DocumentResponse.toEntity(
+    isDirty: Boolean = false,
+    localPackagePath: String? = null,
+    cachedPackageSha256: String? = null,
+): DocumentEntity = DocumentEntity(
+    id = id,
+    title = title,
+    sourceFormat = sourceFormat.toDomain(),
+    status = status.toDomain(),
+    importError = importError,
+    importedAt = importedAt,
+    charCount = charCount,
+    lastReadCharOffset = lastReadCharOffset,
+    lastReadSectionId = lastReadSectionId,
+    lastReadBlockIndex = lastReadBlockIndex,
+    lastReadBlockCharOffset = lastReadBlockCharOffset,
+    updatedAtMs = updatedAtMs,
+    packageSizeBytes = packageSizeBytes,
+    packageUpdatedAtMs = packageUpdatedAtMs,
+    packageSha256 = packageSha256,
+    deleted = deleted,
+    isDirty = isDirty,
+    localPackagePath = localPackagePath,
+    cachedPackageSha256 = cachedPackageSha256,
+)
+
+fun DocumentEntity.toSyncItemRequest(): DocumentSyncItemRequest = DocumentSyncItemRequest(
+    id = id,
+    title = title,
+    sourceFormat = sourceFormat.toDto(),
+    importedAt = importedAt,
+    charCount = charCount,
+    lastReadCharOffset = lastReadCharOffset,
+    lastReadSectionId = lastReadSectionId,
+    lastReadBlockIndex = lastReadBlockIndex,
+    lastReadBlockCharOffset = lastReadBlockCharOffset,
+    updatedAtMs = updatedAtMs,
+    deleted = deleted,
 )
 
 fun DocumentSearchResultDto.toDomain(): DocumentSearchResult = DocumentSearchResult(
