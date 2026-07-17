@@ -16,7 +16,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,6 +24,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.core.ui.CollectEffects
 import io.mikoshift.natsu.feature.auth.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 
@@ -35,9 +35,9 @@ fun ResetPasswordScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            onNavigateToLogin()
+    CollectEffects(viewModel.effects) { effect ->
+        when (effect) {
+            ResetPasswordEffect.NavigateToLogin -> onNavigateToLogin()
         }
     }
 

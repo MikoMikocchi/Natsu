@@ -17,10 +17,12 @@ import io.mikoshift.natsu.core.model.SyncState
 import io.mikoshift.natsu.feature.library.R
 import javax.inject.Inject
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -37,6 +39,9 @@ class LibraryViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(LibraryUiState())
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
+
+    private val _effects = Channel<LibraryEffect>(Channel.BUFFERED)
+    val effects = _effects.receiveAsFlow()
 
     private var searchJob: Job? = null
 
@@ -58,16 +63,15 @@ class LibraryViewModel @Inject constructor(
 
     fun sync() {
         if (_uiState.value.isSyncing) return
-        _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
             syncDocuments().fold(
                 onFailure = { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            error = (throwable as? DocumentError)?.toUserMessage()
+                    sendEffect(
+                        LibraryEffect.ShowMessage(
+                            (throwable as? DocumentError)?.toUserMessage()
                                 ?: context.getString(R.string.error_sync_failed),
-                        )
-                    }
+                        ),
+                    )
                 },
                 onSuccess = {},
             )
@@ -75,7 +79,7 @@ class LibraryViewModel @Inject constructor(
     }
 
     fun onSearchQueryChange(query: String) {
-        _uiState.update { it.copy(searchQuery = query, error = null) }
+        _uiState.update { it.copy(searchQuery = query) }
         searchJob?.cancel()
         val trimmed = query.trim()
         if (trimmed.isEmpty()) {
@@ -95,13 +99,13 @@ class LibraryViewModel @Inject constructor(
                     }
                 },
                 onFailure = { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            isSearching = false,
-                            error = (throwable as? DocumentError)?.toUserMessage()
+                    _uiState.update { it.copy(isSearching = false) }
+                    sendEffect(
+                        LibraryEffect.ShowMessage(
+                            (throwable as? DocumentError)?.toUserMessage()
                                 ?: context.getString(R.string.error_search_failed),
-                        )
-                    }
+                        ),
+                    )
                 },
             )
         }
@@ -112,29 +116,31 @@ class LibraryViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 isImporting = true,
-                importStatusMessage = context.getString(R.string.import_uploading),
-                error = null,
+                importProgressMessage = context.getString(R.string.import_uploading),
             )
         }
         viewModelScope.launch {
             importDocument(uri.toString()).fold(
                 onSuccess = { document ->
                     _uiState.update {
-                        it.copy(
-                            isImporting = false,
-                            importStatusMessage = context.getString(R.string.import_success, document.title),
-                        )
+                        it.copy(isImporting = false, importProgressMessage = null)
                     }
+                    sendEffect(
+                        LibraryEffect.ShowMessage(
+                            context.getString(R.string.import_success, document.title),
+                        ),
+                    )
                 },
                 onFailure = { throwable ->
                     _uiState.update {
-                        it.copy(
-                            isImporting = false,
-                            importStatusMessage = null,
-                            error = (throwable as? DocumentError)?.toUserMessage()
-                                ?: context.getString(R.string.error_import_failed),
-                        )
+                        it.copy(isImporting = false, importProgressMessage = null)
                     }
+                    sendEffect(
+                        LibraryEffect.ShowMessage(
+                            (throwable as? DocumentError)?.toUserMessage()
+                                ?: context.getString(R.string.error_import_failed),
+                        ),
+                    )
                 },
             )
         }
@@ -155,23 +161,19 @@ class LibraryViewModel @Inject constructor(
             markDocumentDeleted(id).fold(
                 onSuccess = { sync() },
                 onFailure = { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            error = (throwable as? DocumentError)?.toUserMessage()
+                    sendEffect(
+                        LibraryEffect.ShowMessage(
+                            (throwable as? DocumentError)?.toUserMessage()
                                 ?: context.getString(R.string.error_delete_failed),
-                        )
-                    }
+                        ),
+                    )
                 },
             )
         }
     }
 
-    fun clearError() {
-        _uiState.update { it.copy(error = null) }
-    }
-
-    fun clearImportStatus() {
-        _uiState.update { it.copy(importStatusMessage = null) }
+    private fun sendEffect(effect: LibraryEffect) {
+        viewModelScope.launch { _effects.send(effect) }
     }
 
     private fun DocumentError.toUserMessage(): String = when (this) {

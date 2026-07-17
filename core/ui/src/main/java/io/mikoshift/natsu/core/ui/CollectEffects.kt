@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 @Composable
 fun <Effect> CollectEffects(
     effects: Flow<Effect>,
-    onEffect: (Effect) -> Unit,
+    onEffect: suspend (Effect) -> Unit,
 ) {
     LaunchedEffect(effects) {
-        effects.collect(onEffect)
+        effects.collect { effect -> onEffect(effect) }
     }
 }

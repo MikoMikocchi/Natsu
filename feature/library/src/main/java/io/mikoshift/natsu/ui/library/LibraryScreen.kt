@@ -35,7 +35,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.mikoshift.natsu.core.ui.CollectEffects
 import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
 import io.mikoshift.natsu.feature.library.R
@@ -66,17 +66,9 @@ fun LibraryScreen(
         }
     }
 
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            viewModel.clearError()
-        }
-    }
-
-    LaunchedEffect(uiState.importStatusMessage) {
-        uiState.importStatusMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            viewModel.clearImportStatus()
+    CollectEffects(viewModel.effects) { effect ->
+        when (effect) {
+            is LibraryEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.text)
         }
     }
 
@@ -171,7 +163,7 @@ internal fun LibraryScreenContent(
                 if (uiState.isImporting) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = uiState.importStatusMessage ?: stringResource(R.string.importing),
+                            text = uiState.importProgressMessage ?: stringResource(R.string.importing),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

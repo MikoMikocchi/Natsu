@@ -8,6 +8,9 @@ data class ResetPasswordUiState(
     val passwordError: String? = null,
     val passwordConfirmationError: String? = null,
     val generalError: String? = null,
-    val isSuccess: Boolean = false,
     val isLoading: Boolean = false,
 )
+
+sealed interface ResetPasswordEffect {
+    data object NavigateToLogin : ResetPasswordEffect
+}

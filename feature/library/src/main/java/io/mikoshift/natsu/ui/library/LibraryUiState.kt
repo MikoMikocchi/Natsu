@@ -12,10 +12,13 @@ data class LibraryUiState(
     val searchQuery: String = "",
     val searchResults: List<SearchResultItem>? = null,
     val isImporting: Boolean = false,
-    val error: String? = null,
-    val importStatusMessage: String? = null,
+    val importProgressMessage: String? = null,
     val deleteCandidateId: String? = null,
 )
+
+sealed interface LibraryEffect {
+    data class ShowMessage(val text: String) : LibraryEffect
+}
 
 data class DocumentListItem(
     val id: String,

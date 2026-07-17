@@ -27,7 +27,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -39,7 +38,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.mikoshift.natsu.core.ui.CollectEffects
 import io.mikoshift.natsu.feature.profile.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,13 +48,10 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
-            is ProfileEffect.ShowMessage -> scope.launch {
-                snackbarHostState.showSnackbar(effect.text)
-            }
+            is ProfileEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.text)
         }
     }
 

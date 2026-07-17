@@ -10,9 +10,11 @@ import io.mikoshift.natsu.core.domain.usecase.ResetPasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.auth.R
 import javax.inject.Inject
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -27,6 +29,9 @@ class ResetPasswordViewModel @Inject constructor(
         ResetPasswordUiState(token = savedStateHandle.get<String>("token").orEmpty()),
     )
     val uiState: StateFlow<ResetPasswordUiState> = _uiState.asStateFlow()
+
+    private val _effects = Channel<ResetPasswordEffect>(Channel.BUFFERED)
+    val effects = _effects.receiveAsFlow()
 
     fun onTokenChange(value: String) {
         _uiState.update { it.copy(token = value, tokenError = null, generalError = null) }
@@ -89,7 +94,8 @@ class ResetPasswordViewModel @Inject constructor(
                 passwordConfirmation = state.passwordConfirmation,
             ).fold(
                 onSuccess = {
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _uiState.update { it.copy(isLoading = false) }
+                    _effects.send(ResetPasswordEffect.NavigateToLogin)
                 },
                 onFailure = { throwable ->
                     applyError(throwable as? AuthError)
