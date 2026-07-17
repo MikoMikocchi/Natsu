@@ -43,6 +43,7 @@ class DocumentSyncEngineTest {
     private lateinit var syncOutboxStore: SyncOutboxStore
     private lateinit var syncCursorStore: SyncCursorStore
     private lateinit var packageFileStore: PackageFileStore
+    private lateinit var packageDownloadService: PackageDownloadService
     private lateinit var engine: DocumentSyncEngine
 
     @Before
@@ -55,6 +56,7 @@ class DocumentSyncEngineTest {
         syncOutboxStore = mockk(relaxed = true)
         syncCursorStore = mockk(relaxed = true)
         packageFileStore = mockk(relaxed = true)
+        packageDownloadService = mockk(relaxed = true)
 
         engine = DocumentSyncEngine(
             documentApi = documentApi,
@@ -65,6 +67,7 @@ class DocumentSyncEngineTest {
             syncOutboxStore = syncOutboxStore,
             syncCursorStore = syncCursorStore,
             packageFileStore = packageFileStore,
+            packageDownloadService = packageDownloadService,
         )
 
         stubEmptyPull()
@@ -277,7 +280,7 @@ class DocumentSyncEngineTest {
     }
 
     private fun stubEmptyPackageDownload() {
-        coEvery { documentDao.getDocumentsNeedingPackageDownload() } returns emptyList()
+        coEvery { packageDownloadService.downloadMissingPackages() } returns Unit
     }
 
     private fun stubSuccessfulMetadataSync() {

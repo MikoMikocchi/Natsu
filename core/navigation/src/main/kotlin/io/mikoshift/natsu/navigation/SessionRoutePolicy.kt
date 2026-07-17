@@ -8,6 +8,7 @@ val authenticatedRouteClasses: Set<KClass<out Any>> = setOf(
     HomeRoute::class,
     ProfileRoute::class,
     ChangePasswordRoute::class,
+    ReaderRoute::class,
 )
 
 val authOnlyRouteClasses: Set<KClass<out Any>> = setOf(

@@ -12,6 +12,7 @@ import io.mikoshift.natsu.core.testing.fixture.AuthFixtures
 import io.mikoshift.natsu.navigation.HomeRoute
 import io.mikoshift.natsu.navigation.LoginRoute
 import io.mikoshift.natsu.navigation.ProfileRoute
+import io.mikoshift.natsu.navigation.ReaderRoute
 import io.mikoshift.natsu.navigation.RegisterRoute
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 import org.junit.Assert.assertEquals
@@ -128,5 +129,6 @@ class NatsuNavHostTest {
         composable<RegisterRoute> { Text("Register screen") }
         composable<HomeRoute> { Text("Library") }
         composable<ProfileRoute> { Text("Profile") }
+        composable<ReaderRoute> { Text("Reader") }
     }
 }

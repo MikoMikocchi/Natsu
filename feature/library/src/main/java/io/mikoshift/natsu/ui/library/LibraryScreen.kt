@@ -2,6 +2,7 @@ package io.mikoshift.natsu.ui.library
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ import io.mikoshift.natsu.ui.theme.NatsuTheme
 fun LibraryScreen(
     viewModel: LibraryViewModel,
     onNavigateToProfile: () -> Unit,
+    onNavigateToReader: (documentId: String, initialCharOffset: Int?) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -69,6 +71,10 @@ fun LibraryScreen(
     CollectEffects(viewModel.effects) { effect ->
         when (effect) {
             is LibraryEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.text)
+            is LibraryEffect.NavigateToReader -> onNavigateToReader(
+                effect.documentId,
+                effect.initialCharOffset,
+            )
         }
     }
 
@@ -79,6 +85,8 @@ fun LibraryScreen(
         onImportClick = { importLauncher.launch(IMPORT_MIME_TYPES) },
         onSearchQueryChange = viewModel::onSearchQueryChange,
         onSync = viewModel::sync,
+        onOpenDocument = viewModel::openDocument,
+        onOpenSearchResult = viewModel::openSearchResult,
         onRequestDelete = viewModel::requestDelete,
         onConfirmDelete = viewModel::confirmDelete,
         onDismissDelete = viewModel::dismissDelete,
@@ -94,6 +102,8 @@ internal fun LibraryScreenContent(
     onImportClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onSync: () -> Unit,
+    onOpenDocument: (DocumentListItem) -> Unit,
+    onOpenSearchResult: (SearchResultItem) -> Unit,
     onRequestDelete: (String) -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -190,7 +200,10 @@ internal fun LibraryScreenContent(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 items(searchResults, key = { it.id }) { result ->
-                                    SearchResultCard(result = result)
+                                    SearchResultCard(
+                                        result = result,
+                                        onClick = { onOpenSearchResult(result) },
+                                    )
                                 }
                             }
                         }
@@ -204,6 +217,7 @@ internal fun LibraryScreenContent(
                             items(uiState.documents, key = { it.id }) { document ->
                                 DocumentCard(
                                     document = document,
+                                    onClick = { onOpenDocument(document) },
                                     onDelete = { onRequestDelete(document.id) },
                                 )
                             }
@@ -234,9 +248,14 @@ private fun EmptyState(message: String) {
 @Composable
 private fun DocumentCard(
     document: DocumentListItem,
+    onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -286,8 +305,15 @@ private fun DocumentCard(
 }
 
 @Composable
-private fun SearchResultCard(result: SearchResultItem) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun SearchResultCard(
+    result: SearchResultItem,
+    onClick: () -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -353,6 +379,8 @@ private fun LibraryScreenPreview() {
             onImportClick = {},
             onSearchQueryChange = {},
             onSync = {},
+            onOpenDocument = {},
+            onOpenSearchResult = {},
             onRequestDelete = {},
             onConfirmDelete = {},
             onDismissDelete = {},
@@ -371,6 +399,8 @@ private fun LibraryScreenEmptyPreview() {
             onImportClick = {},
             onSearchQueryChange = {},
             onSync = {},
+            onOpenDocument = {},
+            onOpenSearchResult = {},
             onRequestDelete = {},
             onConfirmDelete = {},
             onDismissDelete = {},

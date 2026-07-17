@@ -29,4 +29,6 @@
     <string name="format_epub">EPUB</string>
     <string name="format_markdown">Markdown</string>
     <string name="format_text">Text</string>
+    <string name="document_not_ready">Document is still being imported</string>
+    <string name="document_import_failed_open">Import failed for this document</string>
 </resources>

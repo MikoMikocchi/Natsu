@@ -13,6 +13,7 @@ import io.mikoshift.natsu.core.domain.usecase.ObserveSyncStatusUseCase
 import io.mikoshift.natsu.core.domain.usecase.SearchDocumentsUseCase
 import io.mikoshift.natsu.core.domain.usecase.SyncDocumentsUseCase
 import io.mikoshift.natsu.core.model.DocumentError
+import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SyncState
 import io.mikoshift.natsu.feature.library.R
 import javax.inject.Inject
@@ -154,6 +155,31 @@ class LibraryViewModel @Inject constructor(
         _uiState.update { it.copy(deleteCandidateId = null) }
     }
 
+    fun openDocument(document: DocumentListItem) {
+        when (document.status) {
+            DocumentStatus.READY -> sendEffect(
+                LibraryEffect.NavigateToReader(documentId = document.id),
+            )
+            DocumentStatus.PENDING -> sendEffect(
+                LibraryEffect.ShowMessage(context.getString(R.string.document_not_ready)),
+            )
+            DocumentStatus.FAILED -> sendEffect(
+                LibraryEffect.ShowMessage(
+                    document.importError ?: context.getString(R.string.document_import_failed_open),
+                ),
+            )
+        }
+    }
+
+    fun openSearchResult(result: SearchResultItem) {
+        sendEffect(
+            LibraryEffect.NavigateToReader(
+                documentId = result.id,
+                initialCharOffset = result.initialCharOffset,
+            ),
+        )
+    }
+
     fun confirmDelete() {
         val id = _uiState.value.deleteCandidateId ?: return
         _uiState.update { it.copy(deleteCandidateId = null) }
@@ -180,6 +206,7 @@ class LibraryViewModel @Inject constructor(
         is DocumentError.ValidationError -> fieldErrors.values.flatten().joinToString(", ")
         DocumentError.Unauthorized -> context.getString(R.string.error_session_expired)
         DocumentError.NetworkFailure -> context.getString(R.string.error_network)
+        DocumentError.PackageNotReady -> context.getString(R.string.document_not_ready)
         is DocumentError.ImportFailed -> reason ?: context.getString(R.string.error_import_failed)
         is DocumentError.Unknown -> errorMessage ?: context.getString(R.string.error_generic)
     }

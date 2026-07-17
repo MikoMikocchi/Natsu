@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_back">Back</string>
+    <string name="reader_table_of_contents">Table of contents</string>
+    <string name="reader_loading">Loading document…</string>
+    <string name="reader_downloading">Downloading package…</string>
+    <string name="reader_pending">Document is still being imported…</string>
+    <string name="reader_error">Could not open document</string>
+    <string name="reader_retry">Retry</string>
+    <string name="reader_not_found">Document not found</string>
+    <string name="reader_image_alt">Image</string>
+    <string name="error_network">Network error, please try again</string>
+    <string name="error_session_expired">Session expired, please sign in again</string>
+    <string name="error_generic">Something went wrong</string>
+</resources>

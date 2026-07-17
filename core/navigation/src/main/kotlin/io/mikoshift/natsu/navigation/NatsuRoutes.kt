@@ -22,3 +22,9 @@ data object ProfileRoute
 
 @Serializable
 data object ChangePasswordRoute
+
+@Serializable
+data class ReaderRoute(
+    val documentId: String,
+    val initialCharOffset: Int? = null,
+)

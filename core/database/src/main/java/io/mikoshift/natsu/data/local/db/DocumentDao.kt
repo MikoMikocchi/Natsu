@@ -29,6 +29,10 @@ interface DocumentDao {
     suspend fun getWithRelationsById(id: String): DocumentWithRelations?
 
     @Transaction
+    @Query("SELECT * FROM documents WHERE id = :id")
+    fun observeById(id: String): Flow<DocumentWithRelations?>
+
+    @Transaction
     @Query(
         """
         SELECT d.* FROM documents d

@@ -65,6 +65,7 @@ dependencies {
     implementation(project(":feature:auth"))
     implementation(project(":feature:library"))
     implementation(project(":feature:profile"))
+    implementation(project(":feature:reader"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

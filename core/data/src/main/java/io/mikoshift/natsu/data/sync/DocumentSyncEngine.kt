@@ -34,13 +34,14 @@ class DocumentSyncEngine @Inject constructor(
     private val syncOutboxStore: SyncOutboxStore,
     private val syncCursorStore: SyncCursorStore,
     private val packageFileStore: PackageFileStore,
+    private val packageDownloadService: PackageDownloadService,
 ) {
 
     suspend fun sync(): Result<Unit> = runCatching {
         val metadataCursor = pullMetadata()
         val progressCursor = pullProgress()
         pushOutbox()
-        downloadMissingPackages()
+        packageDownloadService.downloadMissingPackages()
         metadataCursor?.let { syncCursorStore.setMetadataSinceMs(it) }
         progressCursor?.let { syncCursorStore.setProgressSinceMs(it) }
     }.fold(
@@ -267,31 +268,6 @@ class DocumentSyncEngine @Inject constructor(
         for (serverProgress in body.progress) {
             readingProgressDao.upsert(serverProgress.toEntity())
             syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverProgress.documentId)
-        }
-    }
-
-    private suspend fun downloadMissingPackages() {
-        val pending = documentDao.getDocumentsNeedingPackageDownload()
-        for (documentWithRelations in pending) {
-            val document = documentWithRelations.document
-            val sha256 = document.packageSha256 ?: continue
-            val response = documentApi.downloadPackage(document.id)
-            if (!response.isSuccessful) {
-                throw mapErrorResponse(response)
-            }
-            val body = response.body() ?: throw DocumentError.Unknown("Empty package response")
-            try {
-                val path = packageFileStore.save(document.id, body)
-                documentCacheDao.upsert(
-                    DocumentCacheEntity(
-                        documentId = document.id,
-                        localPackagePath = path,
-                        cachedPackageSha256 = sha256,
-                    ),
-                )
-            } finally {
-                body.close()
-            }
         }
     }
 

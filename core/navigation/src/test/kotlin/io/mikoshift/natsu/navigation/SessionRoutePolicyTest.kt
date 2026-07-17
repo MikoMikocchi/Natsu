@@ -13,6 +13,7 @@ class SessionRoutePolicyTest {
         assertTrue(isAuthenticatedRoute(HomeRoute::class))
         assertTrue(isAuthenticatedRoute(ProfileRoute::class))
         assertTrue(isAuthenticatedRoute(ChangePasswordRoute::class))
+        assertTrue(isAuthenticatedRoute(ReaderRoute::class))
         assertFalse(isAuthenticatedRoute(LoginRoute::class))
     }
 

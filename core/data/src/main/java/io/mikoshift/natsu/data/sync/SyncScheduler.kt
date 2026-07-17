@@ -16,6 +16,19 @@ import javax.inject.Singleton
 class SyncScheduler @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
+    fun scheduleImmediateSync() {
+        val request = OneTimeWorkRequestBuilder<DocumentSyncWorker>()
+            .setConstraints(SyncPolicy.immediateConstraints())
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            IMMEDIATE_SYNC_WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
+    }
+
     fun scheduleOnAppStart() {
         val request = OneTimeWorkRequestBuilder<DocumentSyncWorker>()
             .setConstraints(SyncPolicy.immediateConstraints())

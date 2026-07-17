@@ -21,7 +21,12 @@ import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus
+import io.mikoshift.natsu.core.model.content.ReadingPosition
+import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
+import io.mikoshift.natsu.data.pkg.PackageAssetStore
 import io.mikoshift.natsu.data.sync.DocumentSyncEngine
+import io.mikoshift.natsu.data.sync.PackageDownloadService
+import io.mikoshift.natsu.data.sync.SyncScheduler
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,12 +50,18 @@ class DocumentRepositoryImpl @Inject constructor(
     private val syncCursorStore: SyncCursorStore,
     private val syncOutboxStore: SyncOutboxStore,
     private val packageFileStore: PackageFileStore,
+    private val packageAssetStore: PackageAssetStore,
+    private val packageDownloadService: PackageDownloadService,
     private val syncEngine: DocumentSyncEngine,
+    private val syncScheduler: SyncScheduler,
     private val networkFactory: NetworkFactory,
 ) : DocumentRepository {
 
     override fun observeLibrary(): Flow<List<Document>> =
         documentDao.observeLibrary().map { documents -> documents.map { it.toDomain() } }
+
+    override fun observeDocument(id: String): Flow<Document?> =
+        documentDao.observeById(id).map { relations -> relations?.toDomain() }
 
     override suspend fun sync(): Result<Unit> = syncEngine.sync()
 
@@ -102,9 +113,31 @@ class DocumentRepositoryImpl @Inject constructor(
         )
         syncOutboxStore.enqueueMetadata(id, now)
         packageFileStore.delete(id)
+        packageAssetStore.deleteDocumentAssets(id)
         documentCacheDao.deleteByDocumentId(id)
         return syncEngine.sync()
     }
+
+    override suspend fun ensurePackageDownloaded(id: String): Result<Unit> =
+        packageDownloadService.download(id)
+
+    override suspend fun updateReadingProgress(id: String, position: ReadingPosition): Result<Unit> =
+        runCatching {
+            val now = System.currentTimeMillis()
+            readingProgressDao.upsert(
+                ReadingProgressEntity(
+                    documentId = id,
+                    lastReadCharOffset = position.globalCharOffset,
+                    lastReadSectionId = position.sectionId,
+                    lastReadBlockIndex = position.blockIndex,
+                    lastReadBlockCharOffset = position.blockCharOffset,
+                    updatedAtMs = now,
+                    clientUpdatedAtMs = now,
+                ),
+            )
+            syncOutboxStore.enqueueProgress(id, now)
+            syncScheduler.scheduleImmediateSync()
+        }
 
     override suspend fun clearOnLogout() {
         documentDao.deleteAll()
@@ -112,6 +145,7 @@ class DocumentRepositoryImpl @Inject constructor(
         documentCacheDao.deleteAll()
         syncOutboxDao.deleteAll()
         packageFileStore.deleteAll()
+        packageAssetStore.deleteAll()
         syncCursorStore.clear()
     }
 
