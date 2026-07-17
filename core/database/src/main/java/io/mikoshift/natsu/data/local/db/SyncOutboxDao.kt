@@ -40,6 +40,9 @@ interface SyncOutboxDao {
         lastError: String?,
     )
 
+    @Query("UPDATE sync_outbox SET status = 'PENDING', lastError = NULL WHERE status = 'IN_PROGRESS'")
+    suspend fun resetInProgressToPending()
+
     @Query("DELETE FROM sync_outbox WHERE entityType = :entityType AND entityId = :entityId")
     suspend fun deleteByEntity(entityType: SyncEntityType, entityId: String)
 
