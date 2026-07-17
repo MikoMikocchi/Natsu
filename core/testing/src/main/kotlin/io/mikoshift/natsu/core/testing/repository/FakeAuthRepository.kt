@@ -18,7 +18,17 @@ class FakeAuthRepository(
     override val isLoggedIn: Flow<Boolean> = currentSession.map { it != null }
 
     var loginResult: Result<Unit> = Result.success(Unit)
+    var getUserResult: Result<User> = Result.failure(UnsupportedOperationException())
+    var getSessionsResult: Result<List<DeviceSession>> = Result.failure(UnsupportedOperationException())
+    var changePasswordResult: Result<String> = Result.failure(UnsupportedOperationException())
+    var deleteAccountResult: Result<Unit> = Result.success(Unit)
+    var revokeSessionResult: Result<Unit> = Result.success(Unit)
+
     var loginCalls: List<Pair<String, String>> = emptyList()
+        private set
+    var deleteAccountCalls: List<String> = emptyList()
+        private set
+    var revokeSessionCalls: List<Pair<Long, Boolean>> = emptyList()
         private set
 
     fun setSession(session: AuthSession?) {
@@ -42,7 +52,7 @@ class FakeAuthRepository(
         return Result.success(Unit)
     }
 
-    override suspend fun getUser(): Result<User> = Result.failure(UnsupportedOperationException())
+    override suspend fun getUser(): Result<User> = getUserResult
 
     override suspend fun forgotPassword(email: String): Result<String> =
         Result.failure(UnsupportedOperationException())
@@ -57,13 +67,17 @@ class FakeAuthRepository(
         currentPassword: String,
         password: String,
         passwordConfirmation: String,
-    ): Result<String> = Result.failure(UnsupportedOperationException())
+    ): Result<String> = changePasswordResult
 
-    override suspend fun deleteAccount(password: String): Result<Unit> = Result.success(Unit)
+    override suspend fun deleteAccount(password: String): Result<Unit> {
+        deleteAccountCalls = deleteAccountCalls + password
+        return deleteAccountResult
+    }
 
-    override suspend fun getSessions(): Result<List<DeviceSession>> =
-        Result.failure(UnsupportedOperationException())
+    override suspend fun getSessions(): Result<List<DeviceSession>> = getSessionsResult
 
-    override suspend fun revokeSession(id: Long, isCurrentSession: Boolean): Result<Unit> =
-        Result.success(Unit)
+    override suspend fun revokeSession(id: Long, isCurrentSession: Boolean): Result<Unit> {
+        revokeSessionCalls = revokeSessionCalls + (id to isCurrentSession)
+        return revokeSessionResult
+    }
 }
