@@ -6,18 +6,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import io.mikoshift.natsu.feature.auth.authGraph
 import io.mikoshift.natsu.feature.library.libraryGraph
 import io.mikoshift.natsu.feature.profile.profileGraph
-import io.mikoshift.natsu.navigation.ChangePasswordRoute
 import io.mikoshift.natsu.navigation.HomeRoute
 import io.mikoshift.natsu.navigation.LoginRoute
-import io.mikoshift.natsu.navigation.ProfileRoute
-import io.mikoshift.natsu.navigation.RegisterRoute
+import io.mikoshift.natsu.navigation.matchesAuthOnlyRoute
+import io.mikoshift.natsu.navigation.matchesAuthenticatedRoute
 
 @Composable
 fun NatsuNavHost(
@@ -42,20 +40,13 @@ fun NatsuNavHost(
         val destination = navController.currentBackStackEntry?.destination ?: return@LaunchedEffect
 
         when {
-            session == null && (
-                destination.hasRoute<HomeRoute>() ||
-                    destination.hasRoute<ProfileRoute>() ||
-                    destination.hasRoute<ChangePasswordRoute>()
-                ) -> {
+            session == null && destination.matchesAuthenticatedRoute() -> {
                 navController.navigate(LoginRoute) {
                     popUpTo(HomeRoute) { inclusive = true }
                     launchSingleTop = true
                 }
             }
-            session != null && (
-                destination.hasRoute<LoginRoute>() ||
-                    destination.hasRoute<RegisterRoute>()
-                ) -> {
+            session != null && destination.matchesAuthOnlyRoute() -> {
                 navController.navigate(HomeRoute) {
                     popUpTo(LoginRoute) { inclusive = true }
                     launchSingleTop = true

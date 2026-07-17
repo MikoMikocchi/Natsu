@@ -1,12 +1,30 @@
 package io.mikoshift.natsu.navigation
 
-fun isAuthenticatedRoute(routeClass: kotlin.reflect.KClass<*>): Boolean =
-    routeClass == HomeRoute::class ||
-        routeClass == ProfileRoute::class ||
-        routeClass == ChangePasswordRoute::class
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
+import kotlin.reflect.KClass
 
-fun isAuthOnlyRoute(routeClass: kotlin.reflect.KClass<*>): Boolean =
-    routeClass == LoginRoute::class ||
-        routeClass == RegisterRoute::class ||
-        routeClass == ForgotPasswordRoute::class ||
-        routeClass == ResetPasswordRoute::class
+val authenticatedRouteClasses: Set<KClass<out Any>> = setOf(
+    HomeRoute::class,
+    ProfileRoute::class,
+    ChangePasswordRoute::class,
+)
+
+val authOnlyRouteClasses: Set<KClass<out Any>> = setOf(
+    LoginRoute::class,
+    RegisterRoute::class,
+    ForgotPasswordRoute::class,
+    ResetPasswordRoute::class,
+)
+
+fun isAuthenticatedRoute(routeClass: KClass<*>): Boolean =
+    routeClass in authenticatedRouteClasses
+
+fun isAuthOnlyRoute(routeClass: KClass<*>): Boolean =
+    routeClass in authOnlyRouteClasses
+
+fun NavDestination.matchesAuthenticatedRoute(): Boolean =
+    authenticatedRouteClasses.any { routeClass -> hasRoute(routeClass) }
+
+fun NavDestination.matchesAuthOnlyRoute(): Boolean =
+    authOnlyRouteClasses.any { routeClass -> hasRoute(routeClass) }
