@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -14,18 +15,24 @@ import io.mikoshift.natsu.feature.library.libraryGraph
 import io.mikoshift.natsu.feature.profile.profileGraph
 import io.mikoshift.natsu.navigation.HomeRoute
 import io.mikoshift.natsu.navigation.LoginRoute
-import io.mikoshift.natsu.navigation.matchesAuthOnlyRoute
-import io.mikoshift.natsu.navigation.matchesAuthenticatedRoute
+import io.mikoshift.natsu.navigation.SessionRedirect
+import io.mikoshift.natsu.navigation.resolveSessionRedirect
+import io.mikoshift.natsu.navigation.startDestinationForSession
 
 @Composable
 fun NatsuNavHost(
     deepLinkTrigger: Int = 0,
-    rootViewModel: RootViewModel = hiltViewModel(),
+    sessionHost: SessionHost = hiltViewModel<RootViewModel>(),
+    navGraphBuilder: NavGraphBuilder.(NavHostController) -> Unit = { navController ->
+        authGraph(navController)
+        libraryGraph(navController)
+        profileGraph(navController)
+    },
 ) {
     val navController: NavHostController = rememberNavController()
     val context = LocalContext.current
-    val session by rootViewModel.session.collectAsStateWithLifecycle()
-    val startDestination = if (session != null) HomeRoute else LoginRoute
+    val session by sessionHost.session.collectAsStateWithLifecycle()
+    val startDestination = startDestinationForSession(session != null)
 
     LaunchedEffect(deepLinkTrigger) {
         val activity = context as? android.app.Activity ?: return@LaunchedEffect
@@ -34,24 +41,23 @@ fun NatsuNavHost(
 
     LaunchedEffect(session) {
         if (session == null) {
-            rootViewModel.onSessionCleared()
+            sessionHost.onSessionCleared()
         }
 
-        val destination = navController.currentBackStackEntry?.destination ?: return@LaunchedEffect
-
-        when {
-            session == null && destination.matchesAuthenticatedRoute() -> {
+        when (resolveSessionRedirect(hasSession = session != null, destination = navController.currentBackStackEntry?.destination)) {
+            SessionRedirect.ToLogin -> {
                 navController.navigate(LoginRoute) {
                     popUpTo(HomeRoute) { inclusive = true }
                     launchSingleTop = true
                 }
             }
-            session != null && destination.matchesAuthOnlyRoute() -> {
+            SessionRedirect.ToHome -> {
                 navController.navigate(HomeRoute) {
                     popUpTo(LoginRoute) { inclusive = true }
                     launchSingleTop = true
                 }
             }
+            null -> Unit
         }
     }
 
@@ -59,8 +65,6 @@ fun NatsuNavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
-        authGraph(navController)
-        libraryGraph(navController)
-        profileGraph(navController)
+        navGraphBuilder(navController)
     }
 }

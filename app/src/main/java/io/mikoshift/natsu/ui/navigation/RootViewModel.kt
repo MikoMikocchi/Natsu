@@ -14,11 +14,11 @@ import kotlinx.coroutines.launch
 class RootViewModel @Inject constructor(
     observeSession: ObserveSessionUseCase,
     private val clearDocumentsOnLogout: ClearDocumentsOnLogoutUseCase,
-) : ViewModel() {
+) : ViewModel(), SessionHost {
 
-    val session: StateFlow<AuthSession?> = observeSession()
+    override val session: StateFlow<AuthSession?> = observeSession()
 
-    fun onSessionCleared() {
+    override fun onSessionCleared() {
         viewModelScope.launch {
             clearDocumentsOnLogout()
         }
