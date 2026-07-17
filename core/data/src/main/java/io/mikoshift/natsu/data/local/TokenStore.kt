@@ -36,28 +36,46 @@ class TokenStore @Inject constructor(
 
     suspend fun saveSession(session: AuthSession) {
         withContext(Dispatchers.IO) {
-            prefs.edit()
-                .putString(KEY_ACCESS_TOKEN, session.accessToken)
-                .putString(KEY_REFRESH_TOKEN, session.refreshToken)
-                .putLong(KEY_USER_ID, session.userId)
-                .putString(KEY_USER_NAME, session.userName)
-                .putString(KEY_USER_EMAIL, session.userEmail)
-                .putLong(KEY_SAVED_AT_MS, System.currentTimeMillis())
-                .apply()
+            writeSessionToPrefs(session)
         }
+        _sessionFlow.value = session
+    }
+
+    fun saveSessionBlocking(session: AuthSession) {
+        writeSessionToPrefs(session)
         _sessionFlow.value = session
     }
 
     suspend fun clearSession() {
         withContext(Dispatchers.IO) {
-            prefs.edit().clear().apply()
+            clearPrefs()
         }
+        _sessionFlow.value = null
+    }
+
+    fun clearSessionBlocking() {
+        clearPrefs()
         _sessionFlow.value = null
     }
 
     fun getAccessTokenBlocking(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
 
     fun getRefreshTokenBlocking(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
+
+    private fun writeSessionToPrefs(session: AuthSession) {
+        prefs.edit()
+            .putString(KEY_ACCESS_TOKEN, session.accessToken)
+            .putString(KEY_REFRESH_TOKEN, session.refreshToken)
+            .putLong(KEY_USER_ID, session.userId)
+            .putString(KEY_USER_NAME, session.userName)
+            .putString(KEY_USER_EMAIL, session.userEmail)
+            .putLong(KEY_SAVED_AT_MS, System.currentTimeMillis())
+            .apply()
+    }
+
+    private fun clearPrefs() {
+        prefs.edit().clear().apply()
+    }
 
     private fun readSession(): AuthSession? {
         val accessToken = prefs.getString(KEY_ACCESS_TOKEN, null) ?: return null
