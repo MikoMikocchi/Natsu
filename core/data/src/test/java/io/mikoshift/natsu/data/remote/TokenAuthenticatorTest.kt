@@ -1,5 +1,6 @@
 package io.mikoshift.natsu.data.remote
 
+import io.mikoshift.natsu.core.model.AuthSession
 import io.mikoshift.natsu.data.local.TokenStore
 import io.mockk.every
 import io.mockk.mockk
@@ -34,17 +35,18 @@ class TokenAuthenticatorTest {
 
         tokenStore = mockk(relaxed = true)
         every { tokenStore.getRefreshTokenBlocking() } returns REFRESH_TOKEN
+        every { tokenStore.getSessionBlocking() } returns EXISTING_SESSION
 
         val networkFactory = NetworkFactory(
             baseUrl = mockWebServer.url("/v1/").toString(),
+            rootBaseUrl = mockWebServer.url("/").toString(),
             isDebugBuild = false,
         )
-        val refreshApi = networkFactory.createAuthApi(
-            networkFactory.createRetrofit(networkFactory.createUnauthenticatedOkHttpClient()),
-        )
+        val oauthApi = networkFactory.createUnauthenticatedOAuthApi()
         tokenAuthenticator = TokenAuthenticator(
             tokenStore = tokenStore,
-            refreshApi = refreshApi,
+            oauthApi = oauthApi,
+            clientId = CLIENT_ID,
         )
     }
 
@@ -73,7 +75,7 @@ class TokenAuthenticatorTest {
 
         mockWebServer.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
-                if (!request.path!!.endsWith("auth/refresh")) {
+                if (!request.path!!.endsWith("oauth2/token")) {
                     return MockResponse().setResponseCode(404)
                 }
 
@@ -117,15 +119,10 @@ class TokenAuthenticatorTest {
             .setBody(
                 """
                 {
-                  "token": "$accessToken",
+                  "access_token": "$accessToken",
                   "refresh_token": "rotated-refresh-token",
-                  "user": {
-                    "id": 1,
-                    "name": "Test User",
-                    "email": "test@example.com",
-                    "created_at": "2026-01-01"
-                  },
-                  "server_time_ms": 1000
+                  "token_type": "Bearer",
+                  "expires_in": 3600
                 }
                 """.trimIndent(),
             )
@@ -146,8 +143,16 @@ class TokenAuthenticatorTest {
     }
 
     private companion object {
+        const val CLIENT_ID = "natsu-mobile"
         const val REFRESH_TOKEN = "refresh-token"
         const val NEW_ACCESS_TOKEN = "new-access-token"
         const val PARALLEL_CALLS = 8
+        val EXISTING_SESSION = AuthSession(
+            accessToken = "old-access-token",
+            refreshToken = REFRESH_TOKEN,
+            userId = 1L,
+            userName = "Test User",
+            userEmail = "test@example.com",
+        )
     }
 }

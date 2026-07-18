@@ -3,14 +3,19 @@ package io.mikoshift.natsu.ui.profile
 import android.content.Context
 import app.cash.turbine.test
 import io.mikoshift.natsu.core.domain.usecase.DeleteAccountUseCase
+import io.mikoshift.natsu.core.domain.usecase.ListDictionariesUseCase
 import io.mikoshift.natsu.core.domain.usecase.LogoutUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveSessionsUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveUserProfileUseCase
 import io.mikoshift.natsu.core.domain.usecase.RevokeSessionUseCase
+import io.mikoshift.natsu.core.domain.usecase.ToggleDictionaryUseCase
 import io.mikoshift.natsu.core.model.AuthError
+import io.mikoshift.natsu.core.model.DictionaryPage
+import io.mikoshift.natsu.core.model.DictionaryPagination
 import io.mikoshift.natsu.core.testing.fixture.AuthFixtures
 import io.mikoshift.natsu.core.testing.repository.FakeAuthRepository
 import io.mikoshift.natsu.feature.profile.R
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +39,8 @@ class ProfileViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var authRepository: FakeAuthRepository
+    private lateinit var listDictionaries: ListDictionariesUseCase
+    private lateinit var toggleDictionary: ToggleDictionaryUseCase
     private lateinit var viewModel: ProfileViewModel
 
     @Before
@@ -50,10 +57,21 @@ class ProfileViewModelTest {
             getUserResult = Result.success(AuthFixtures.user(name = "Alice"))
             getSessionsResult = Result.success(
                 listOf(
-                    AuthFixtures.deviceSession(id = 1L, name = "Phone", current = true),
-                    AuthFixtures.deviceSession(id = 2L, name = "Tablet", current = false),
+                    AuthFixtures.deviceSession(id = "session-1", name = "Phone", current = true),
+                    AuthFixtures.deviceSession(id = "session-2", name = "Tablet", current = false),
                 ),
             )
+        }
+        listDictionaries = mockk {
+            coEvery { this@mockk.invoke(any(), any()) } returns Result.success(
+                DictionaryPage(
+                    dictionaries = emptyList(),
+                    pagination = DictionaryPagination(1, 50, 0, 0),
+                ),
+            )
+        }
+        toggleDictionary = mockk {
+            coEvery { this@mockk.invoke(any()) } returns Result.success(Unit)
         }
     }
 
@@ -158,11 +176,11 @@ class ProfileViewModelTest {
         createViewModel()
         advanceUntilIdle()
 
-        viewModel.revokeSession(sessionId = 2L, isCurrent = false)
+        viewModel.revokeSession(sessionId = "session-2", isCurrent = false)
         advanceUntilIdle()
 
         assertNull(viewModel.uiState.value.revokingSessionId)
-        assertEquals(listOf(2L to false), authRepository.revokeSessionCalls)
+        assertEquals(listOf("session-2" to false), authRepository.revokeSessionCalls)
     }
 
     @Test
@@ -173,7 +191,7 @@ class ProfileViewModelTest {
         createViewModel()
         advanceUntilIdle()
 
-        viewModel.revokeSession(sessionId = 2L, isCurrent = false)
+        viewModel.revokeSession(sessionId = "session-2", isCurrent = false)
         advanceUntilIdle()
 
         assertNull(viewModel.uiState.value.revokingSessionId)
@@ -203,6 +221,8 @@ class ProfileViewModelTest {
             logoutUseCase = LogoutUseCase(authRepository),
             deleteAccount = DeleteAccountUseCase(authRepository),
             revokeSession = RevokeSessionUseCase(authRepository),
+            listDictionaries = listDictionaries,
+            toggleDictionary = toggleDictionary,
         )
     }
 }

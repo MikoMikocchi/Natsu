@@ -19,7 +19,8 @@ class PackageParserTest {
     @Before
     fun setUp() {
         val networkFactory = NetworkFactory(
-            baseUrl = "https://example.com/",
+            baseUrl = "https://example.com/v1/",
+            rootBaseUrl = "https://example.com/",
             isDebugBuild = false,
         )
         parser = PackageParser(

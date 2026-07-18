@@ -4,9 +4,15 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import io.mikoshift.natsu.core.domain.repository.DocumentPackageRepository
 import io.mikoshift.natsu.core.domain.usecase.EnsurePackageDownloadedUseCase
+import io.mikoshift.natsu.core.domain.usecase.LookupWordUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveDocumentUseCase
+import io.mikoshift.natsu.core.domain.usecase.ObserveReaderSettingsUseCase
 import io.mikoshift.natsu.core.domain.usecase.OpenDocumentPackageUseCase
+import io.mikoshift.natsu.core.domain.usecase.UpdateReaderSettingsUseCase
 import io.mikoshift.natsu.core.domain.usecase.UpdateReadingProgressUseCase
+import io.mikoshift.natsu.core.model.FuriganaMode
+import io.mikoshift.natsu.core.model.ReaderSettings
+import io.mikoshift.natsu.core.model.ReaderTheme
 import io.mikoshift.natsu.core.model.Document
 import io.mikoshift.natsu.core.model.DocumentMetadata
 import io.mikoshift.natsu.core.model.DocumentStatus
@@ -40,7 +46,18 @@ class ReaderViewModelTest {
     private lateinit var ensurePackageDownloaded: EnsurePackageDownloadedUseCase
     private lateinit var openDocumentPackage: OpenDocumentPackageUseCase
     private lateinit var updateReadingProgress: UpdateReadingProgressUseCase
+    private lateinit var observeReaderSettings: ObserveReaderSettingsUseCase
+    private lateinit var updateReaderSettings: UpdateReaderSettingsUseCase
+    private lateinit var lookupWord: LookupWordUseCase
     private lateinit var documentPackageRepository: DocumentPackageRepository
+
+    private val defaultReaderSettings = ReaderSettings(
+        fontSizeSp = 16.0,
+        lineSpacingMultiplier = 1.5,
+        theme = ReaderTheme.LIGHT,
+        furiganaMode = FuriganaMode.OFF,
+        updatedAtMs = 0L,
+    )
 
     @Before
     fun setUp() {
@@ -50,7 +67,12 @@ class ReaderViewModelTest {
         ensurePackageDownloaded = mockk()
         openDocumentPackage = mockk()
         updateReadingProgress = mockk()
+        observeReaderSettings = mockk()
+        updateReaderSettings = mockk()
+        lookupWord = mockk()
         documentPackageRepository = mockk(relaxed = true)
+        every { observeReaderSettings() } returns flowOf(defaultReaderSettings)
+        coEvery { observeReaderSettings.refresh() } returns Result.success(defaultReaderSettings)
     }
 
     @After
@@ -115,6 +137,9 @@ class ReaderViewModelTest {
             ensurePackageDownloaded = ensurePackageDownloaded,
             openDocumentPackage = openDocumentPackage,
             updateReadingProgress = updateReadingProgress,
+            observeReaderSettings = observeReaderSettings,
+            updateReaderSettings = updateReaderSettings,
+            lookupWord = lookupWord,
             documentPackageRepository = documentPackageRepository,
             savedStateHandle = savedStateHandle,
         )

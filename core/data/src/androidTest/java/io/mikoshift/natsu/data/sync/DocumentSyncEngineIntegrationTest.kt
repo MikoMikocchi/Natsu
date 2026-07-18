@@ -13,9 +13,8 @@ import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.NatsuDatabase
 import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
 import io.mikoshift.natsu.data.remote.FakeDocumentApi
-import io.mikoshift.natsu.data.remote.dto.DocumentMetadataResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
-import io.mikoshift.natsu.data.remote.dto.ReadingProgressResponse
 import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
@@ -40,6 +39,7 @@ class DocumentSyncEngineIntegrationTest {
     private lateinit var syncCursorStore: SyncCursorStore
     private lateinit var syncOutboxStore: SyncOutboxStore
     private lateinit var packageFileStore: PackageFileStore
+    private lateinit var packageDownloadService: PackageDownloadService
     private lateinit var engine: DocumentSyncEngine
 
     @Before
@@ -54,6 +54,12 @@ class DocumentSyncEngineIntegrationTest {
         syncCursorStore = SyncCursorStore(database.syncStateDao())
         syncOutboxStore = SyncOutboxStore(database.syncOutboxDao())
         packageFileStore = PackageFileStore(context)
+        packageDownloadService = PackageDownloadService(
+            documentApi = fakeApi.asDocumentApi(),
+            documentDao = database.documentDao(),
+            documentCacheDao = database.documentCacheDao(),
+            packageFileStore = packageFileStore,
+        )
 
         engine = DocumentSyncEngine(
             documentApi = fakeApi.asDocumentApi(),
@@ -64,6 +70,7 @@ class DocumentSyncEngineIntegrationTest {
             syncOutboxStore = syncOutboxStore,
             syncCursorStore = syncCursorStore,
             packageFileStore = packageFileStore,
+            packageDownloadService = packageDownloadService,
         )
     }
 
@@ -74,21 +81,15 @@ class DocumentSyncEngineIntegrationTest {
     }
 
     @Test
-    fun sync_fullCycle_pullsMetadataAndProgress_pushesOutbox_downloadsPackage_commitsCursors() = runTest {
+    fun sync_fullCycle_pullsDocuments_pushesOutbox_downloadsPackage_commitsCursor() = runTest {
         fakeApi.serverTimeMs = 5_000L
         fakeApi.putDocument(
             serverDocument(
                 id = "doc-remote",
                 title = "Remote Book",
                 updatedAtMs = 2_000L,
-                packageSha256 = "sha-new",
-            ),
-        )
-        fakeApi.putProgress(
-            ReadingProgressResponse(
-                documentId = "doc-remote",
                 lastReadCharOffset = 100,
-                updatedAtMs = 3_000L,
+                packageSha256 = "sha-new",
             ),
         )
         fakeApi.putPackage("doc-remote", byteArrayOf(1, 2, 3, 4))
@@ -110,7 +111,7 @@ class DocumentSyncEngineIntegrationTest {
         assertEquals("Remote Book", database.documentDao().getById("doc-remote")?.title)
         assertEquals(100, database.readingProgressDao().getByDocumentId("doc-remote")?.lastReadCharOffset)
         assertEquals("Local Edit", fakeApi.getDocument("doc-local")?.title)
-        assertEquals(1, fakeApi.syncMetadataCallCount)
+        assertEquals(1, fakeApi.syncDocumentsCallCount)
         assertEquals(1, fakeApi.downloadPackageCallCount)
 
         val cache = database.documentCacheDao().getByDocumentId("doc-remote")
@@ -120,40 +121,7 @@ class DocumentSyncEngineIntegrationTest {
         assertTrue(packageFileStore.getPath("doc-remote") != null)
 
         assertEquals(0, database.syncOutboxDao().getPending().size)
-        assertEquals(5_000L, syncCursorStore.getMetadataSinceMs())
-        assertEquals(5_000L, syncCursorStore.getProgressSinceMs())
-    }
-
-    @Test
-    fun sync_pullMetadataWithPendingOutbox_keepsLocalTitleWhileApplyingPackageFields() = runTest {
-        fakeApi.serverTimeMs = 2_000L
-        fakeApi.putDocument(
-            serverDocument(
-                id = "doc-1",
-                title = "Server Title",
-                updatedAtMs = 500L,
-                packageSha256 = "sha-from-server",
-            ),
-        )
-
-        database.documentDao().upsert(
-            DocumentEntity(
-                id = "doc-1",
-                title = "Local Title",
-                sourceFormat = SourceFormat.EPUB,
-                status = DocumentStatus.READY,
-                updatedAtMs = 1_000L,
-            ),
-        )
-        syncOutboxStore.enqueueMetadata("doc-1", nowMs = 1L)
-
-        val result = engine.sync()
-
-        assertTrue(result.isSuccess)
-        val local = database.documentDao().getById("doc-1")
-        assertEquals("Local Title", local?.title)
-        assertEquals("sha-from-server", local?.packageSha256)
-        assertTrue(syncOutboxStore.hasPendingMetadata("doc-1"))
+        assertEquals(5_000L, syncCursorStore.getDocumentsSinceMs())
     }
 
     @Test
@@ -208,7 +176,7 @@ class DocumentSyncEngineIntegrationTest {
     }
 
     @Test
-    fun sync_pushFailure_doesNotCommitCursors() = runTest {
+    fun sync_pushFailure_doesNotCommitCursor() = runTest {
         fakeApi.serverTimeMs = 6_000L
         fakeApi.putDocument(
             serverDocument(
@@ -227,47 +195,14 @@ class DocumentSyncEngineIntegrationTest {
             ),
         )
         syncOutboxStore.enqueueMetadata("doc-local", nowMs = 1L)
-        fakeApi.syncMetadataFailure = IOException("network down")
+        fakeApi.syncDocumentsFailure = IOException("network down")
 
         val result = engine.sync()
 
         assertTrue(result.isFailure)
         assertEquals("Remote", database.documentDao().getById("doc-remote")?.title)
-        assertEquals(0L, syncCursorStore.getMetadataSinceMs())
-        assertEquals(0L, syncCursorStore.getProgressSinceMs())
+        assertEquals(0L, syncCursorStore.getDocumentsSinceMs())
         assertEquals(1, database.syncOutboxDao().getPending().size)
-    }
-
-    @Test
-    fun sync_secondRun_usesCommittedCursorForIncrementalPull() = runTest {
-        fakeApi.serverTimeMs = 2_000L
-        fakeApi.putDocument(
-            serverDocument(
-                id = "doc-old",
-                title = "Old",
-                updatedAtMs = 1_000L,
-            ),
-        )
-
-        val firstResult = engine.sync()
-        assertTrue(firstResult.isSuccess)
-        assertEquals(2_000L, syncCursorStore.getMetadataSinceMs())
-
-        fakeApi.serverTimeMs = 4_000L
-        fakeApi.putDocument(
-            serverDocument(
-                id = "doc-new",
-                title = "New",
-                updatedAtMs = 3_000L,
-            ),
-        )
-
-        val secondResult = engine.sync()
-
-        assertTrue(secondResult.isSuccess)
-        assertEquals(listOf(2_000L), fakeApi.metadataPullSinceValues.drop(1))
-        assertNotNull(database.documentDao().getById("doc-new"))
-        assertEquals(4_000L, syncCursorStore.getMetadataSinceMs())
     }
 
     @Test
@@ -294,22 +229,24 @@ class DocumentSyncEngineIntegrationTest {
         val result = engine.sync()
 
         assertTrue(result.isSuccess)
-        assertEquals(250, fakeApi.getProgress("doc-1")?.lastReadCharOffset)
+        assertEquals(250, fakeApi.getDocument("doc-1")?.lastReadCharOffset)
         assertFalse(syncOutboxStore.hasPendingProgress("doc-1"))
-        assertEquals(1, fakeApi.syncProgressCallCount)
+        assertEquals(1, fakeApi.syncDocumentsCallCount)
     }
 
     private fun serverDocument(
         id: String,
         title: String,
         updatedAtMs: Long,
+        lastReadCharOffset: Int = 0,
         packageSha256: String? = null,
         deleted: Boolean = false,
-    ) = DocumentMetadataResponse(
+    ) = DocumentResponse(
         id = id,
         title = title,
         sourceFormat = SourceFormatDto.EPUB,
         status = DocumentStatusDto.READY,
+        lastReadCharOffset = lastReadCharOffset,
         updatedAtMs = updatedAtMs,
         packageSha256 = packageSha256,
         deleted = deleted,
