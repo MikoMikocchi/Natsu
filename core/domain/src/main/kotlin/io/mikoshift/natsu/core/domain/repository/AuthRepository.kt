@@ -41,5 +41,5 @@ interface AuthRepository {
 
     suspend fun getSessions(): Result<List<DeviceSession>>
 
-    suspend fun revokeSession(id: Long, isCurrentSession: Boolean): Result<Unit>
+    suspend fun revokeSession(id: String, isCurrentSession: Boolean): Result<Unit>
 }

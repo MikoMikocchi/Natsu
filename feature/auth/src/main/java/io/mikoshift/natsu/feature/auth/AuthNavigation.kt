@@ -1,6 +1,9 @@
 package io.mikoshift.natsu.feature.auth
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -30,6 +33,14 @@ fun NavGraphBuilder.authGraph(navController: NavHostController) {
 
     composable<RegisterRoute> {
         val viewModel: RegisterViewModel = hiltViewModel()
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        LaunchedEffect(uiState.registrationSucceeded) {
+            if (uiState.registrationSucceeded) {
+                navController.navigate(LoginRoute) {
+                    popUpTo(RegisterRoute) { inclusive = true }
+                }
+            }
+        }
         RegisterScreen(
             viewModel = viewModel,
             onNavigateToLogin = { navController.navigate(LoginRoute) },

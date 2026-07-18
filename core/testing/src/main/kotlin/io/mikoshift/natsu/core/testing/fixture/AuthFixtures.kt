@@ -33,7 +33,7 @@ object AuthFixtures {
     )
 
     fun deviceSession(
-        id: Long = 1L,
+        id: String = "session-1",
         name: String = "Pixel 8",
         createdAt: Instant = Instant.parse("2026-01-01T00:00:00Z"),
         current: Boolean = true,

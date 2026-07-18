@@ -3,16 +3,29 @@ package io.mikoshift.natsu.data.mapper
 import io.mikoshift.natsu.core.model.AuthSession
 import io.mikoshift.natsu.core.model.DeviceSession
 import io.mikoshift.natsu.core.model.User
-import io.mikoshift.natsu.data.remote.dto.AuthResponse
 import io.mikoshift.natsu.data.remote.dto.DeviceSessionResponse
+import io.mikoshift.natsu.data.remote.dto.TokenResponse
+import io.mikoshift.natsu.data.remote.dto.UserInfoResponse
 import io.mikoshift.natsu.data.remote.dto.UserResponse
 
-fun AuthResponse.toSession(): AuthSession = AuthSession(
-    accessToken = token,
+fun TokenResponse.toSession(userInfo: UserInfoResponse): AuthSession = AuthSession(
+    accessToken = accessToken,
     refreshToken = refreshToken,
-    userId = user.id,
-    userName = user.name,
-    userEmail = user.email,
+    userId = userInfo.sub.toLong(),
+    userName = userInfo.name,
+    userEmail = userInfo.email,
+)
+
+fun TokenResponse.mergeTokens(existing: AuthSession): AuthSession = existing.copy(
+    accessToken = accessToken,
+    refreshToken = refreshToken,
+)
+
+fun UserInfoResponse.toDomain(): User = User(
+    id = sub.toLong(),
+    name = name,
+    email = email,
+    createdAt = null,
 )
 
 fun UserResponse.toDomain(): User = User(

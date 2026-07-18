@@ -1,21 +1,19 @@
 package io.mikoshift.natsu.data.remote
 
-import io.mikoshift.natsu.data.remote.dto.AuthResponse
 import io.mikoshift.natsu.data.remote.dto.ChangePasswordRequest
 import io.mikoshift.natsu.data.remote.dto.DeleteAccountRequest
 import io.mikoshift.natsu.data.remote.dto.DeviceSessionResponse
 import io.mikoshift.natsu.data.remote.dto.ForgotPasswordRequest
 import io.mikoshift.natsu.data.remote.dto.LoginRequest
 import io.mikoshift.natsu.data.remote.dto.MessageResponse
-import io.mikoshift.natsu.data.remote.dto.RefreshRequest
 import io.mikoshift.natsu.data.remote.dto.RegisterRequest
+import io.mikoshift.natsu.data.remote.dto.RegisterResponse
 import io.mikoshift.natsu.data.remote.dto.ResetPasswordRequest
-import io.mikoshift.natsu.data.remote.dto.UserShowResponse
+import io.mikoshift.natsu.data.remote.dto.TokenResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -30,31 +28,16 @@ import retrofit2.http.Path
 interface AuthApi {
 
     @POST("auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
 
     @POST("auth/login")
-    suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
-
-    @POST("auth/logout")
-    suspend fun logout(@Header("Authorization") authHeader: String): Response<Unit>
-
-    @POST("auth/refresh")
-    suspend fun refresh(@Body request: RefreshRequest): Response<AuthResponse>
-
-    @GET("auth/user")
-    suspend fun getUser(@Header("Authorization") authHeader: String): Response<UserShowResponse>
+    suspend fun login(@Body request: LoginRequest): Response<TokenResponse>
 
     @DELETE("auth/account")
-    suspend fun deleteAccount(
-        @Header("Authorization") authHeader: String,
-        @Body request: DeleteAccountRequest,
-    ): Response<Unit>
+    suspend fun deleteAccount(@Body request: DeleteAccountRequest): Response<Unit>
 
     @PATCH("auth/password")
-    suspend fun changePassword(
-        @Header("Authorization") authHeader: String,
-        @Body request: ChangePasswordRequest,
-    ): Response<MessageResponse>
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<MessageResponse>
 
     @POST("auth/password/forgot")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<MessageResponse>
@@ -63,11 +46,8 @@ interface AuthApi {
     suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<MessageResponse>
 
     @GET("auth/sessions")
-    suspend fun getSessions(@Header("Authorization") authHeader: String): Response<List<DeviceSessionResponse>>
+    suspend fun getSessions(): Response<List<DeviceSessionResponse>>
 
     @DELETE("auth/sessions/{id}")
-    suspend fun revokeSession(
-        @Header("Authorization") authHeader: String,
-        @Path("id") id: Long,
-    ): Response<Unit>
+    suspend fun revokeSession(@Path("id") id: String): Response<Unit>
 }

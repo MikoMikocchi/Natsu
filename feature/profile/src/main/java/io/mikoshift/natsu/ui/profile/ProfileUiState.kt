@@ -13,11 +13,11 @@ private fun Instant.toDisplayDate(): String = displayDateFormatter.format(this)
 data class UserUiModel(
     val displayName: String,
     val email: String,
-    val memberSince: String,
+    val memberSince: String?,
 )
 
 data class SessionUiModel(
-    val id: Long,
+    val id: String,
     val deviceName: String,
     val createdAt: String,
     val isCurrent: Boolean,
@@ -26,7 +26,7 @@ data class SessionUiModel(
 fun io.mikoshift.natsu.core.model.User.toUiModel(): UserUiModel = UserUiModel(
     displayName = name,
     email = email,
-    memberSince = createdAt.toDisplayDate(),
+    memberSince = createdAt?.toDisplayDate(),
 )
 
 fun io.mikoshift.natsu.core.model.DeviceSession.toUiModel(): SessionUiModel = SessionUiModel(
@@ -36,16 +36,36 @@ fun io.mikoshift.natsu.core.model.DeviceSession.toUiModel(): SessionUiModel = Se
     isCurrent = current,
 )
 
+data class DictionaryUiModel(
+    val id: String,
+    val title: String,
+    val termCount: Int,
+    val enabled: Boolean,
+    val isToggling: Boolean,
+)
+
+fun io.mikoshift.natsu.core.model.Dictionary.toUiModel(isToggling: Boolean = false): DictionaryUiModel =
+    DictionaryUiModel(
+        id = id,
+        title = title,
+        termCount = termCount,
+        enabled = enabled,
+        isToggling = isToggling,
+    )
+
 data class ProfileUiState(
     val user: UserUiModel? = null,
     val sessions: List<SessionUiModel> = emptyList(),
+    val dictionaries: List<DictionaryUiModel> = emptyList(),
+    val isLoadingDictionaries: Boolean = false,
+    val togglingDictionaryId: String? = null,
     val deletePassword: String = "",
     val deletePasswordError: String? = null,
     val isLoadingUser: Boolean = false,
     val isLoadingSessions: Boolean = false,
     val isDeletingAccount: Boolean = false,
     val isLoggingOut: Boolean = false,
-    val revokingSessionId: Long? = null,
+    val revokingSessionId: String? = null,
     val generalError: String? = null,
     val showDeleteDialog: Boolean = false,
 )

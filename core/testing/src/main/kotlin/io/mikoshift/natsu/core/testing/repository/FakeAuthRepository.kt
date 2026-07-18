@@ -28,7 +28,7 @@ class FakeAuthRepository(
         private set
     var deleteAccountCalls: List<String> = emptyList()
         private set
-    var revokeSessionCalls: List<Pair<Long, Boolean>> = emptyList()
+    var revokeSessionCalls: List<Pair<String, Boolean>> = emptyList()
         private set
 
     fun setSession(session: AuthSession?) {
@@ -76,7 +76,7 @@ class FakeAuthRepository(
 
     override suspend fun getSessions(): Result<List<DeviceSession>> = getSessionsResult
 
-    override suspend fun revokeSession(id: Long, isCurrentSession: Boolean): Result<Unit> {
+    override suspend fun revokeSession(id: String, isCurrentSession: Boolean): Result<Unit> {
         revokeSessionCalls = revokeSessionCalls + (id to isCurrentSession)
         return revokeSessionResult
     }

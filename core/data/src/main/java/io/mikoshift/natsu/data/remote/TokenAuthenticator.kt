@@ -1,9 +1,9 @@
 package io.mikoshift.natsu.data.remote
 
+import io.mikoshift.natsu.core.common.di.OAuthClientId
 import io.mikoshift.natsu.data.local.TokenStore
-import io.mikoshift.natsu.data.mapper.toSession
-import io.mikoshift.natsu.data.remote.dto.RefreshRequest
-import io.mikoshift.natsu.di.UnauthenticatedAuthApi
+import io.mikoshift.natsu.data.mapper.mergeTokens
+import io.mikoshift.natsu.di.UnauthenticatedOAuthApi
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CompletableDeferred
@@ -18,7 +18,8 @@ import okhttp3.Route
 @Singleton
 class TokenAuthenticator @Inject constructor(
     private val tokenStore: TokenStore,
-    @UnauthenticatedAuthApi private val refreshApi: AuthApi,
+    @UnauthenticatedOAuthApi private val oauthApi: OAuthApi,
+    @OAuthClientId private val clientId: String,
 ) : Authenticator {
 
     private val refreshMutex = Mutex()
@@ -67,21 +68,25 @@ class TokenAuthenticator @Inject constructor(
     }
 
     private suspend fun performRefresh(): String? {
-        val refreshToken = tokenStore.getRefreshTokenBlocking() ?: run {
+        val existingSession = tokenStore.getSessionBlocking() ?: run {
+            tokenStore.clearSessionBlocking()
+            return null
+        }
+        val refreshToken = existingSession.refreshToken
+
+        val refreshResponse = oauthApi.refresh(
+            clientId = clientId,
+            refreshToken = refreshToken,
+        )
+        val tokenResponse = refreshResponse.body()
+        if (!refreshResponse.isSuccessful || tokenResponse == null) {
             tokenStore.clearSessionBlocking()
             return null
         }
 
-        val refreshResponse = refreshApi.refresh(RefreshRequest(refreshToken = refreshToken))
-        val authResponse = refreshResponse.body()
-        if (!refreshResponse.isSuccessful || authResponse == null) {
-            tokenStore.clearSessionBlocking()
-            return null
-        }
-
-        val session = authResponse.toSession()
-        tokenStore.saveSessionBlocking(session)
-        return session.accessToken
+        val updatedSession = tokenResponse.mergeTokens(existingSession)
+        tokenStore.saveSessionBlocking(updatedSession)
+        return updatedSession.accessToken
     }
 
     private fun responseChainLength(response: Response): Int {

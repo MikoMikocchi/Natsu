@@ -1,5 +1,6 @@
 package io.mikoshift.natsu.data.repository
 
+import io.mikoshift.natsu.core.common.di.OAuthClientId
 import io.mikoshift.natsu.core.domain.repository.AuthRepository
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.core.model.AuthSession
@@ -10,8 +11,9 @@ import io.mikoshift.natsu.data.mapper.toDomain
 import io.mikoshift.natsu.data.mapper.toSession
 import io.mikoshift.natsu.data.remote.AuthApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
+import io.mikoshift.natsu.data.remote.OAuthApi
+import io.mikoshift.natsu.data.remote.UserInfoApi
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse
-import io.mikoshift.natsu.data.remote.dto.AuthResponse
 import io.mikoshift.natsu.data.remote.dto.ChangePasswordRequest
 import io.mikoshift.natsu.data.remote.dto.DeleteAccountRequest
 import io.mikoshift.natsu.data.remote.dto.ForgotPasswordRequest
@@ -19,8 +21,10 @@ import io.mikoshift.natsu.data.remote.dto.LoginRequest
 import io.mikoshift.natsu.data.remote.dto.MessageResponse
 import io.mikoshift.natsu.data.remote.dto.RegisterRequest
 import io.mikoshift.natsu.data.remote.dto.ResetPasswordRequest
+import io.mikoshift.natsu.data.remote.dto.TokenResponse
 import io.mikoshift.natsu.di.AuthenticatedAuthApi
 import io.mikoshift.natsu.di.UnauthenticatedAuthApi
+import io.mikoshift.natsu.di.UnauthenticatedOAuthApi
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,8 +38,11 @@ import retrofit2.Response
 class AuthRepositoryImpl @Inject constructor(
     @UnauthenticatedAuthApi private val unauthenticatedApi: AuthApi,
     @AuthenticatedAuthApi private val authenticatedApi: AuthApi,
+    @UnauthenticatedOAuthApi private val oauthApi: OAuthApi,
+    private val userInfoApi: UserInfoApi,
     private val tokenStore: TokenStore,
     private val networkFactory: NetworkFactory,
+    @OAuthClientId private val clientId: String,
 ) : AuthRepository {
 
     override val isLoggedIn: Flow<Boolean> = tokenStore.sessionFlow.map { it != null }
@@ -57,7 +64,13 @@ class AuthRepositoryImpl @Inject constructor(
             ),
         )
     }.fold(
-        onSuccess = { response -> handleAuthResponse(response).map { } },
+        onSuccess = { response ->
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(mapErrorResponse(response))
+            }
+        },
         onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
     )
 
@@ -69,36 +82,28 @@ class AuthRepositoryImpl @Inject constructor(
             ),
         )
     }.fold(
-        onSuccess = { response -> handleAuthResponse(response).map { } },
+        onSuccess = { response -> handleLoginResponse(response).map { } },
         onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
     )
 
     override suspend fun logout(): Result<Unit> {
-        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
-        val result = runCatching {
-            authenticatedApi.logout(authHeader)
-        }.fold(
-            onSuccess = { response ->
-                if (response.isSuccessful || response.code() == 401) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(mapErrorResponse(response))
-                }
-            },
-            onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
-        )
+        val refreshToken = tokenStore.getRefreshTokenBlocking()
+        if (refreshToken != null) {
+            runCatching {
+                oauthApi.revoke(clientId = clientId, token = refreshToken)
+            }
+        }
         tokenStore.clearSession()
-        return result
+        return Result.success(Unit)
     }
 
     override suspend fun getUser(): Result<User> = runCatching {
-        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
-        authenticatedApi.getUser(authHeader)
+        userInfoApi.getUserInfo()
     }.fold(
         onSuccess = { response ->
             val body = response.body()
             if (response.isSuccessful && body != null) {
-                Result.success(body.user.toDomain())
+                Result.success(body.toDomain())
             } else {
                 Result.failure(mapErrorResponse(response))
             }
@@ -135,9 +140,7 @@ class AuthRepositoryImpl @Inject constructor(
         password: String,
         passwordConfirmation: String,
     ): Result<String> = runCatching {
-        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
         authenticatedApi.changePassword(
-            authHeader,
             ChangePasswordRequest(
                 currentPassword = currentPassword,
                 password = password,
@@ -150,9 +153,8 @@ class AuthRepositoryImpl @Inject constructor(
     )
 
     override suspend fun deleteAccount(password: String): Result<Unit> {
-        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
         val result = runCatching {
-            authenticatedApi.deleteAccount(authHeader, DeleteAccountRequest(password = password))
+            authenticatedApi.deleteAccount(DeleteAccountRequest(password = password))
         }.fold(
             onSuccess = { response ->
                 if (response.isSuccessful) {
@@ -170,8 +172,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSessions(): Result<List<DeviceSession>> = runCatching {
-        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
-        authenticatedApi.getSessions(authHeader)
+        authenticatedApi.getSessions()
     }.fold(
         onSuccess = { response ->
             val body = response.body()
@@ -184,10 +185,9 @@ class AuthRepositoryImpl @Inject constructor(
         onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
     )
 
-    override suspend fun revokeSession(id: Long, isCurrentSession: Boolean): Result<Unit> {
-        val authHeader = tokenStore.sessionFlow.value?.accessToken?.let { "Bearer $it" } ?: ""
+    override suspend fun revokeSession(id: String, isCurrentSession: Boolean): Result<Unit> {
         val result = runCatching {
-            authenticatedApi.revokeSession(authHeader, id)
+            authenticatedApi.revokeSession(id)
         }.fold(
             onSuccess = { response ->
                 if (response.isSuccessful) {
@@ -204,22 +204,27 @@ class AuthRepositoryImpl @Inject constructor(
         return result
     }
 
+    private suspend fun handleLoginResponse(response: Response<TokenResponse>): Result<AuthSession> {
+        val tokenBody = response.body()
+        if (!response.isSuccessful || tokenBody == null) {
+            return Result.failure(mapErrorResponse(response))
+        }
+
+        val userInfoResponse = userInfoApi.getUserInfo("Bearer ${tokenBody.accessToken}")
+        val userInfoBody = userInfoResponse.body()
+        if (!userInfoResponse.isSuccessful || userInfoBody == null) {
+            return Result.failure(mapErrorResponse(userInfoResponse))
+        }
+
+        val session = tokenBody.toSession(userInfoBody)
+        tokenStore.saveSession(session)
+        return Result.success(session)
+    }
+
     private fun mapMessageResponse(response: Response<MessageResponse>): Result<String> {
         val body = response.body()
         return if (response.isSuccessful && body != null) {
             Result.success(body.message)
-        } else {
-            Result.failure(mapErrorResponse(response))
-        }
-    }
-
-    private suspend fun handleAuthResponse(
-        response: Response<AuthResponse>,
-    ): Result<AuthResponse> {
-        val body = response.body()
-        return if (response.isSuccessful && body != null) {
-            tokenStore.saveSession(body.toSession())
-            Result.success(body)
         } else {
             Result.failure(mapErrorResponse(response))
         }

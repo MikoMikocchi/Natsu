@@ -99,7 +99,7 @@ class RegisterViewModel @Inject constructor(
                 passwordConfirmation = state.passwordConfirmation,
             ).fold(
                 onSuccess = {
-                    _uiState.update { it.copy(isLoading = false) }
+                    _uiState.update { it.copy(isLoading = false, registrationSucceeded = true) }
                 },
                 onFailure = { throwable ->
                     applyError(throwable as? AuthError)

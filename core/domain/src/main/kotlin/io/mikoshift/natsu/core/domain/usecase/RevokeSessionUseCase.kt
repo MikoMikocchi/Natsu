@@ -6,6 +6,6 @@ import javax.inject.Inject
 class RevokeSessionUseCase @Inject constructor(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(sessionId: Long, isCurrentSession: Boolean): Result<Unit> =
+    suspend operator fun invoke(sessionId: String, isCurrentSession: Boolean): Result<Unit> =
         authRepository.revokeSession(id = sessionId, isCurrentSession = isCurrentSession)
 }

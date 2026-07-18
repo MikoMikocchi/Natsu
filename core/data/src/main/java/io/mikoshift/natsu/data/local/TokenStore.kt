@@ -62,6 +62,8 @@ class TokenStore @Inject constructor(
 
     fun getRefreshTokenBlocking(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
 
+    fun getSessionBlocking(): AuthSession? = readSession()
+
     private fun writeSessionToPrefs(session: AuthSession) {
         prefs.edit()
             .putString(KEY_ACCESS_TOKEN, session.accessToken)
