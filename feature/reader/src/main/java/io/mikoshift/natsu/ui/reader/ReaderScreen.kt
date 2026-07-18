@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,10 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.mikoshift.natsu.core.ui.CollectEffects
 import io.mikoshift.natsu.feature.reader.R
 import io.mikoshift.natsu.ui.reader.components.BlockContent
+import io.mikoshift.natsu.ui.reader.components.DictionaryLookupSheet
+import io.mikoshift.natsu.ui.reader.components.ReaderSettingsSheet
 import io.mikoshift.natsu.ui.reader.components.TocSheet
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -66,6 +70,14 @@ fun ReaderScreen(
         onRetry = viewModel::retry,
         onToggleToc = viewModel::toggleToc,
         onDismissToc = viewModel::dismissToc,
+        onToggleSettings = viewModel::toggleSettings,
+        onDismissSettings = viewModel::dismissSettings,
+        onFontSizeChange = viewModel::onFontSizeChange,
+        onLineSpacingChange = viewModel::onLineSpacingChange,
+        onThemeChange = viewModel::onThemeChange,
+        onFuriganaModeChange = viewModel::onFuriganaModeChange,
+        onLookupText = viewModel::lookupText,
+        onDismissLookup = viewModel::dismissLookup,
         onSectionSelected = { sectionId ->
             viewModel.scrollTargetForSection(sectionId)
         },
@@ -82,6 +94,14 @@ internal fun ReaderScreenContent(
     onRetry: () -> Unit,
     onToggleToc: () -> Unit,
     onDismissToc: () -> Unit,
+    onToggleSettings: () -> Unit,
+    onDismissSettings: () -> Unit,
+    onFontSizeChange: (Double) -> Unit,
+    onLineSpacingChange: (Double) -> Unit,
+    onThemeChange: (io.mikoshift.natsu.core.model.ReaderTheme) -> Unit,
+    onFuriganaModeChange: (io.mikoshift.natsu.core.model.FuriganaMode) -> Unit,
+    onLookupText: (String) -> Unit,
+    onDismissLookup: () -> Unit,
     onSectionSelected: (String) -> Int,
     onVisibleBlockChanged: (String, Int, Int) -> Unit,
 ) {
@@ -104,6 +124,27 @@ internal fun ReaderScreenContent(
             }
     }
 
+    if (uiState.lookupQuery != null) {
+        DictionaryLookupSheet(
+            query = uiState.lookupQuery,
+            isLoading = uiState.lookupLoading,
+            results = uiState.lookupResults,
+            errorMessage = uiState.lookupErrorMessage,
+            onDismiss = onDismissLookup,
+        )
+    }
+
+    if (uiState.showSettings) {
+        ReaderSettingsSheet(
+            settings = uiState.readerSettings,
+            onDismiss = onDismissSettings,
+            onFontSizeChange = onFontSizeChange,
+            onLineSpacingChange = onLineSpacingChange,
+            onThemeChange = onThemeChange,
+            onFuriganaModeChange = onFuriganaModeChange,
+        )
+    }
+
     if (uiState.showToc && uiState.toc.isNotEmpty()) {
         TocSheet(
             toc = uiState.toc,
@@ -121,8 +162,16 @@ internal fun ReaderScreenContent(
         }
     }
 
+    val themeColors = uiState.readerSettings.theme.toColors()
+    val bodyStyle = MaterialTheme.typography.bodyLarge.copy(
+        fontSize = uiState.readerSettings.fontSizeSp.sp,
+        lineHeight = (uiState.readerSettings.fontSizeSp * uiState.readerSettings.lineSpacingMultiplier).sp,
+        color = themeColors.onBackground,
+    )
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = themeColors.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -141,6 +190,14 @@ internal fun ReaderScreenContent(
                     }
                 },
                 actions = {
+                    if (uiState.contentState == ReaderContentState.Ready) {
+                        IconButton(onClick = onToggleSettings) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.reader_settings),
+                            )
+                        }
+                    }
                     if (uiState.contentState == ReaderContentState.Ready && uiState.toc.isNotEmpty()) {
                         IconButton(onClick = onToggleToc) {
                             Icon(
@@ -178,10 +235,16 @@ internal fun ReaderScreenContent(
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(
+                    (4 * uiState.readerSettings.lineSpacingMultiplier).dp,
+                ),
             ) {
                 items(uiState.blocks, key = { it.id }) { block ->
-                    BlockContent(item = block)
+                    BlockContent(
+                        item = block,
+                        bodyStyle = bodyStyle,
+                        onLongPressText = onLookupText,
+                    )
                 }
             }
         }
@@ -256,6 +319,14 @@ private fun ReaderReadyPreview() {
             onRetry = {},
             onToggleToc = {},
             onDismissToc = {},
+            onToggleSettings = {},
+            onDismissSettings = {},
+            onFontSizeChange = {},
+            onLineSpacingChange = {},
+            onThemeChange = {},
+            onFuriganaModeChange = {},
+            onLookupText = {},
+            onDismissLookup = {},
             onSectionSelected = { 0 },
             onVisibleBlockChanged = { _, _, _ -> },
         )

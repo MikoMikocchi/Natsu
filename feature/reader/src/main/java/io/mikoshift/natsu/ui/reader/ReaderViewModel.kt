@@ -9,10 +9,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.repository.DocumentPackageRepository
 import io.mikoshift.natsu.core.domain.usecase.EnsurePackageDownloadedUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveDocumentUseCase
+import io.mikoshift.natsu.core.domain.usecase.LookupWordUseCase
+import io.mikoshift.natsu.core.domain.usecase.ObserveReaderSettingsUseCase
 import io.mikoshift.natsu.core.domain.usecase.OpenDocumentPackageUseCase
+import io.mikoshift.natsu.core.domain.usecase.UpdateReaderSettingsUseCase
 import io.mikoshift.natsu.core.domain.usecase.UpdateReadingProgressUseCase
 import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.FuriganaMode
+import io.mikoshift.natsu.core.model.ReaderTheme
 import io.mikoshift.natsu.core.model.content.ImageBlock
 import io.mikoshift.natsu.core.model.content.PlainTextIndex
 import io.mikoshift.natsu.core.model.content.ReadingPosition
@@ -38,6 +43,9 @@ class ReaderViewModel @Inject constructor(
     private val ensurePackageDownloaded: EnsurePackageDownloadedUseCase,
     private val openDocumentPackage: OpenDocumentPackageUseCase,
     private val updateReadingProgress: UpdateReadingProgressUseCase,
+    private val observeReaderSettings: ObserveReaderSettingsUseCase,
+    private val updateReaderSettings: UpdateReaderSettingsUseCase,
+    private val lookupWord: LookupWordUseCase,
     private val documentPackageRepository: DocumentPackageRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -65,7 +73,115 @@ class ReaderViewModel @Inject constructor(
                 )
             }
         } else {
+            observeSettings()
             loadDocument()
+        }
+    }
+
+    private fun observeSettings() {
+        viewModelScope.launch {
+            observeReaderSettings().collect { settings ->
+                settings?.let { value ->
+                    _uiState.update { it.copy(readerSettings = value) }
+                }
+            }
+        }
+        viewModelScope.launch {
+            observeReaderSettings.refresh()
+        }
+    }
+
+    fun toggleSettings() {
+        _uiState.update { it.copy(showSettings = !it.showSettings) }
+    }
+
+    fun dismissSettings() {
+        _uiState.update { it.copy(showSettings = false) }
+    }
+
+    fun onFontSizeChange(value: Double) {
+        updateSetting(fontSizeSp = value)
+    }
+
+    fun onLineSpacingChange(value: Double) {
+        updateSetting(lineSpacingMultiplier = value)
+    }
+
+    fun onThemeChange(theme: ReaderTheme) {
+        updateSetting(theme = theme)
+    }
+
+    fun onFuriganaModeChange(mode: FuriganaMode) {
+        updateSetting(furiganaMode = mode)
+    }
+
+    fun lookupText(text: String) {
+        val query = extractLookupQuery(text) ?: return
+        _uiState.update {
+            it.copy(
+                lookupQuery = query,
+                lookupLoading = true,
+                lookupResults = emptyList(),
+                lookupErrorMessage = null,
+            )
+        }
+        viewModelScope.launch {
+            lookupWord(query).fold(
+                onSuccess = { results ->
+                    _uiState.update {
+                        it.copy(
+                            lookupLoading = false,
+                            lookupResults = results,
+                        )
+                    }
+                },
+                onFailure = { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            lookupLoading = false,
+                            lookupErrorMessage = throwable.message ?: context.getString(R.string.error_generic),
+                        )
+                    }
+                },
+            )
+        }
+    }
+
+    fun dismissLookup() {
+        _uiState.update {
+            it.copy(
+                lookupQuery = null,
+                lookupLoading = false,
+                lookupResults = emptyList(),
+                lookupErrorMessage = null,
+            )
+        }
+    }
+
+    private fun updateSetting(
+        fontSizeSp: Double? = null,
+        lineSpacingMultiplier: Double? = null,
+        theme: ReaderTheme? = null,
+        furiganaMode: FuriganaMode? = null,
+    ) {
+        val current = _uiState.value.readerSettings
+        _uiState.update {
+            it.copy(
+                readerSettings = current.copy(
+                    fontSizeSp = fontSizeSp ?: current.fontSizeSp,
+                    lineSpacingMultiplier = lineSpacingMultiplier ?: current.lineSpacingMultiplier,
+                    theme = theme ?: current.theme,
+                    furiganaMode = furiganaMode ?: current.furiganaMode,
+                ),
+            )
+        }
+        viewModelScope.launch {
+            updateReaderSettings(
+                fontSizeSp = fontSizeSp,
+                lineSpacingMultiplier = lineSpacingMultiplier,
+                theme = theme,
+                furiganaMode = furiganaMode,
+            )
         }
     }
 

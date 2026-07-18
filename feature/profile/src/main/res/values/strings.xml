@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="account">Account</string>
+    <string name="dictionaries">Dictionaries</string>
+    <string name="no_dictionaries">No dictionaries available</string>
+    <string name="dictionary_term_count">%1$d terms</string>
     <string name="active_sessions">Active sessions</string>
     <string name="no_active_sessions">No active sessions</string>
 

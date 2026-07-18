@@ -1,5 +1,6 @@
 package io.mikoshift.natsu.ui.reader.components
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -19,25 +20,45 @@ import io.mikoshift.natsu.ui.reader.ReaderBlockItem
 fun BlockContent(
     item: ReaderBlockItem,
     modifier: Modifier = Modifier,
+    bodyStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge,
+    onLongPressText: ((String) -> Unit)? = null,
 ) {
+    val longPressModifier = if (onLongPressText != null) {
+        modifier.combinedClickable(
+            onClick = {},
+            onLongClick = {
+                when (val block = item.block) {
+                    is ParagraphBlock -> onLongPressText(block.text)
+                    is HeadingBlock -> onLongPressText(block.text)
+                    is BlockquoteBlock -> onLongPressText(block.text)
+                    is ListItemBlock -> onLongPressText(block.text)
+                    else -> Unit
+                }
+            },
+        )
+    } else {
+        modifier
+    }
+
     when (val block = item.block) {
         is ParagraphBlock -> MarkedText(
             text = block.text,
             marks = block.marks,
-            modifier = modifier.padding(vertical = 4.dp),
+            modifier = longPressModifier.padding(vertical = 4.dp),
+            style = bodyStyle,
         )
         is HeadingBlock -> MarkedText(
             text = block.text,
             marks = block.marks,
-            modifier = modifier.padding(vertical = 8.dp),
-            style = headingStyle(block.level),
+            modifier = longPressModifier.padding(vertical = 8.dp),
+            style = headingStyle(block.level, bodyStyle),
         )
         is BlockquoteBlock -> MarkedText(
             text = block.text,
             marks = block.marks,
-            modifier = modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = longPressModifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
+            style = bodyStyle.copy(
+                color = bodyStyle.color.copy(alpha = 0.75f),
             ),
         )
         is ListItemBlock -> {
@@ -50,7 +71,8 @@ fun BlockContent(
                         end = mark.end + prefix.length,
                     )
                 },
-                modifier = modifier.padding(start = (block.level * 16).dp, top = 2.dp, bottom = 2.dp),
+                modifier = longPressModifier.padding(start = (block.level * 16).dp, top = 2.dp, bottom = 2.dp),
+                style = bodyStyle,
             )
         }
         is ImageBlock -> PackageImage(
@@ -63,9 +85,10 @@ fun BlockContent(
 }
 
 @Composable
-private fun headingStyle(level: Int): androidx.compose.ui.text.TextStyle = when (level) {
-    1 -> MaterialTheme.typography.headlineMedium
-    2 -> MaterialTheme.typography.headlineSmall
-    3 -> MaterialTheme.typography.titleLarge
-    else -> MaterialTheme.typography.titleMedium
-}
+private fun headingStyle(level: Int, bodyStyle: androidx.compose.ui.text.TextStyle): androidx.compose.ui.text.TextStyle =
+    when (level) {
+        1 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.6f)
+        2 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.4f)
+        3 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.2f)
+        else -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.1f)
+    }

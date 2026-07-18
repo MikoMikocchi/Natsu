@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.DeleteAccountUseCase
+import io.mikoshift.natsu.core.domain.usecase.ListDictionariesUseCase
 import io.mikoshift.natsu.core.domain.usecase.LogoutUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveSessionsUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveUserProfileUseCase
 import io.mikoshift.natsu.core.domain.usecase.RevokeSessionUseCase
+import io.mikoshift.natsu.core.domain.usecase.ToggleDictionaryUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.profile.R
 import javax.inject.Inject
@@ -29,6 +31,8 @@ class ProfileViewModel @Inject constructor(
     private val logoutUseCase: LogoutUseCase,
     private val deleteAccount: DeleteAccountUseCase,
     private val revokeSession: RevokeSessionUseCase,
+    private val listDictionaries: ListDictionariesUseCase,
+    private val toggleDictionary: ToggleDictionaryUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -44,6 +48,7 @@ class ProfileViewModel @Inject constructor(
     fun refresh() {
         loadUser()
         loadSessions()
+        loadDictionaries()
     }
 
     fun onDeletePasswordChange(value: String) {
@@ -88,7 +93,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun revokeSession(sessionId: Long, isCurrent: Boolean) {
+    fun revokeSession(sessionId: String, isCurrent: Boolean) {
         _uiState.update { it.copy(revokingSessionId = sessionId, generalError = null) }
         viewModelScope.launch {
             revokeSession(sessionId = sessionId, isCurrentSession = isCurrent).fold(
@@ -100,6 +105,48 @@ class ProfileViewModel @Inject constructor(
                 },
                 onFailure = { throwable ->
                     _uiState.update { it.copy(revokingSessionId = null) }
+                    applyError(throwable as? AuthError)
+                },
+            )
+        }
+    }
+
+    fun toggleDictionary(id: String, enabled: Boolean) {
+        if (_uiState.value.togglingDictionaryId != null) return
+        _uiState.update { state ->
+            state.copy(
+                togglingDictionaryId = id,
+                dictionaries = state.dictionaries.map { dictionary ->
+                    if (dictionary.id == id) dictionary.copy(isToggling = true) else dictionary
+                },
+            )
+        }
+        viewModelScope.launch {
+            toggleDictionary(id).fold(
+                onSuccess = { loadDictionaries() },
+                onFailure = { throwable ->
+                    _uiState.update { it.copy(togglingDictionaryId = null) }
+                    applyError(throwable as? AuthError)
+                },
+            )
+        }
+    }
+
+    private fun loadDictionaries() {
+        _uiState.update { it.copy(isLoadingDictionaries = true) }
+        viewModelScope.launch {
+            listDictionaries().fold(
+                onSuccess = { page ->
+                    _uiState.update {
+                        it.copy(
+                            isLoadingDictionaries = false,
+                            togglingDictionaryId = null,
+                            dictionaries = page.dictionaries.map { dictionary -> dictionary.toUiModel() },
+                        )
+                    }
+                },
+                onFailure = { throwable ->
+                    _uiState.update { it.copy(isLoadingDictionaries = false, togglingDictionaryId = null) }
                     applyError(throwable as? AuthError)
                 },
             )

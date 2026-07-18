@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -64,6 +65,7 @@ fun ProfileScreen(
         onDismissDeleteDialog = viewModel::dismissDeleteDialog,
         onDeleteAccount = viewModel::deleteAccount,
         onRevokeSession = viewModel::revokeSession,
+        onToggleDictionary = viewModel::toggleDictionary,
         onLogout = viewModel::logout,
         onShowDeleteDialog = viewModel::showDeleteDialog,
     )
@@ -79,7 +81,8 @@ internal fun ProfileScreenContent(
     onDeletePasswordChange: (String) -> Unit,
     onDismissDeleteDialog: () -> Unit,
     onDeleteAccount: () -> Unit,
-    onRevokeSession: (Long, Boolean) -> Unit,
+    onRevokeSession: (String, Boolean) -> Unit,
+    onToggleDictionary: (String, Boolean) -> Unit,
     onLogout: () -> Unit,
     onShowDeleteDialog: () -> Unit,
 ) {
@@ -151,10 +154,12 @@ internal fun ProfileScreenContent(
             } else {
                 Text(text = uiState.user?.displayName.orEmpty(), style = MaterialTheme.typography.headlineSmall)
                 Text(text = uiState.user?.email.orEmpty())
-                Text(
-                    text = stringResource(R.string.created_at, uiState.user?.memberSince.orEmpty()),
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                uiState.user?.memberSince?.let { memberSince ->
+                    Text(
+                        text = stringResource(R.string.created_at, memberSince),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
 
             Button(
@@ -162,6 +167,26 @@ internal fun ProfileScreenContent(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(stringResource(R.string.change_password))
+            }
+
+            HorizontalDivider()
+
+            Text(text = stringResource(R.string.dictionaries), style = MaterialTheme.typography.titleMedium)
+
+            if (uiState.isLoadingDictionaries && uiState.dictionaries.isEmpty()) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            } else if (uiState.dictionaries.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.no_dictionaries),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            } else {
+                uiState.dictionaries.forEach { dictionary ->
+                    DictionaryRow(
+                        dictionary = dictionary,
+                        onToggle = { onToggleDictionary(dictionary.id, !dictionary.enabled) },
+                    )
+                }
             }
 
             HorizontalDivider()
@@ -217,6 +242,31 @@ internal fun ProfileScreenContent(
 }
 
 @Composable
+private fun DictionaryRow(
+    dictionary: DictionaryUiModel,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = dictionary.title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = stringResource(R.string.dictionary_term_count, dictionary.termCount),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        Switch(
+            checked = dictionary.enabled,
+            onCheckedChange = { onToggle() },
+            enabled = !dictionary.isToggling,
+        )
+    }
+}
+
+@Composable
 private fun SessionRow(
     session: SessionUiModel,
     isRevoking: Boolean,
@@ -264,7 +314,7 @@ private fun ProfileScreenPreview() {
                 ),
                 sessions = listOf(
                     SessionUiModel(
-                        id = 1,
+                        id = "session-1",
                         deviceName = "Pixel 8",
                         createdAt = "2026-07-01",
                         isCurrent = true,
@@ -278,6 +328,7 @@ private fun ProfileScreenPreview() {
             onDismissDeleteDialog = {},
             onDeleteAccount = {},
             onRevokeSession = { _, _ -> },
+            onToggleDictionary = { _, _ -> },
             onLogout = {},
             onShowDeleteDialog = {},
         )
@@ -303,6 +354,7 @@ private fun ProfileScreenEmptySessionsPreview() {
             onDismissDeleteDialog = {},
             onDeleteAccount = {},
             onRevokeSession = { _, _ -> },
+            onToggleDictionary = { _, _ -> },
             onLogout = {},
             onShowDeleteDialog = {},
         )
