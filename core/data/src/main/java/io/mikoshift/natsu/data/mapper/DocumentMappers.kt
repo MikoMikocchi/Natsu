@@ -12,12 +12,10 @@ import io.mikoshift.natsu.data.local.db.DocumentCacheEntity
 import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.DocumentWithRelations
 import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
-import io.mikoshift.natsu.data.remote.dto.DocumentMetadataResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentMetadataSyncItemRequest
+import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResult as DocumentSearchResultDto
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
-import io.mikoshift.natsu.data.remote.dto.ReadingProgressResponse
-import io.mikoshift.natsu.data.remote.dto.ReadingProgressSyncItemRequest
+import io.mikoshift.natsu.data.remote.dto.DocumentSyncItemRequest
 import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
 fun DocumentWithRelations.toDomain(): Document = Document(
@@ -57,7 +55,7 @@ fun DocumentCacheEntity.toDomain(): DocumentCache = DocumentCache(
     cachedPackageSha256 = cachedPackageSha256,
 )
 
-fun DocumentMetadataResponse.toEntity(): DocumentEntity = DocumentEntity(
+fun DocumentResponse.toDocumentEntity(): DocumentEntity = DocumentEntity(
     id = id,
     title = title,
     sourceFormat = sourceFormat.toDomain(),
@@ -72,44 +70,54 @@ fun DocumentMetadataResponse.toEntity(): DocumentEntity = DocumentEntity(
     deleted = deleted,
 )
 
-fun ReadingProgressResponse.toEntity(): ReadingProgressEntity = ReadingProgressEntity(
-    documentId = documentId,
+fun DocumentResponse.toProgressEntity(): ReadingProgressEntity = ReadingProgressEntity(
+    documentId = id,
     lastReadCharOffset = lastReadCharOffset,
     lastReadSectionId = lastReadSectionId,
     lastReadBlockIndex = lastReadBlockIndex,
     lastReadBlockCharOffset = lastReadBlockCharOffset,
     updatedAtMs = updatedAtMs,
-    clientUpdatedAtMs = clientUpdatedAtMs,
+    clientUpdatedAtMs = updatedAtMs,
 )
 
-fun DocumentMetadataResponse.toDomain(
+fun DocumentResponse.toEntities(): Pair<DocumentEntity, ReadingProgressEntity> =
+    toDocumentEntity() to toProgressEntity()
+
+fun DocumentResponse.toEntity(): DocumentEntity = toDocumentEntity()
+
+fun DocumentResponse.toDomain(
     progress: ReadingProgress? = null,
     cache: DocumentCache? = null,
 ): Document = Document(
-    metadata = toEntity().toDomain(),
+    metadata = toDocumentEntity().toDomain(),
     progress = progress,
     cache = cache,
 )
 
-fun DocumentEntity.toSyncItemRequest(): DocumentMetadataSyncItemRequest = DocumentMetadataSyncItemRequest(
-    id = id,
-    title = title,
-    sourceFormat = sourceFormat.toDto(),
-    importedAt = importedAt,
-    charCount = charCount,
-    updatedAtMs = updatedAtMs,
-    deleted = deleted,
-)
-
-fun ReadingProgressEntity.toSyncItemRequest(): ReadingProgressSyncItemRequest = ReadingProgressSyncItemRequest(
-    documentId = documentId,
-    lastReadCharOffset = lastReadCharOffset,
-    lastReadSectionId = lastReadSectionId,
-    lastReadBlockIndex = lastReadBlockIndex,
-    lastReadBlockCharOffset = lastReadBlockCharOffset,
-    updatedAtMs = updatedAtMs,
-    clientUpdatedAtMs = clientUpdatedAtMs,
-)
+fun DocumentEntity.toSyncItemRequest(progress: ReadingProgressEntity?): DocumentSyncItemRequest {
+    val progressEntity = progress ?: ReadingProgressEntity(
+        documentId = id,
+        lastReadCharOffset = 0,
+        lastReadSectionId = null,
+        lastReadBlockIndex = 0,
+        lastReadBlockCharOffset = 0,
+        updatedAtMs = 0,
+        clientUpdatedAtMs = 0,
+    )
+    return DocumentSyncItemRequest(
+        id = id,
+        title = title,
+        sourceFormat = sourceFormat.toDto(),
+        importedAt = importedAt,
+        charCount = charCount,
+        lastReadCharOffset = progressEntity.lastReadCharOffset,
+        lastReadSectionId = progressEntity.lastReadSectionId,
+        lastReadBlockIndex = progressEntity.lastReadBlockIndex,
+        lastReadBlockCharOffset = progressEntity.lastReadBlockCharOffset,
+        updatedAtMs = maxOf(updatedAtMs, progressEntity.updatedAtMs),
+        deleted = deleted,
+    )
+}
 
 fun DocumentSearchResultDto.toDomain(): DocumentSearchResult = DocumentSearchResult(
     id = id,

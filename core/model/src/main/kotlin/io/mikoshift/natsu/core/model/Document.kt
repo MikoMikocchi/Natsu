@@ -4,6 +4,9 @@ enum class SourceFormat {
     EPUB,
     MARKDOWN,
     PLAIN_TEXT,
+    FB2,
+    DOCX,
+    RTF,
 }
 
 enum class DocumentStatus {

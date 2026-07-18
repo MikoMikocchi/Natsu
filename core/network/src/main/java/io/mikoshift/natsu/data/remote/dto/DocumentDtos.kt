@@ -8,6 +8,9 @@ enum class SourceFormat {
     @SerialName("EPUB") EPUB,
     @SerialName("MARKDOWN") MARKDOWN,
     @SerialName("PLAIN_TEXT") PLAIN_TEXT,
+    @SerialName("FB2") FB2,
+    @SerialName("DOCX") DOCX,
+    @SerialName("RTF") RTF,
 }
 
 @Serializable
@@ -18,7 +21,7 @@ enum class DocumentStatus {
 }
 
 @Serializable
-data class DocumentMetadataResponse(
+data class DocumentResponse(
     val id: String,
     val title: String,
     @SerialName("source_format") val sourceFormat: SourceFormat,
@@ -26,6 +29,10 @@ data class DocumentMetadataResponse(
     @SerialName("import_error") val importError: String? = null,
     @SerialName("imported_at") val importedAt: Long = 0,
     @SerialName("char_count") val charCount: Int = 0,
+    @SerialName("last_read_char_offset") val lastReadCharOffset: Int = 0,
+    @SerialName("last_read_section_id") val lastReadSectionId: String? = null,
+    @SerialName("last_read_block_index") val lastReadBlockIndex: Int = 0,
+    @SerialName("last_read_block_char_offset") val lastReadBlockCharOffset: Int = 0,
     @SerialName("updated_at_ms") val updatedAtMs: Long = 0,
     @SerialName("package_size_bytes") val packageSizeBytes: Long = 0,
     @SerialName("package_updated_at_ms") val packageUpdatedAtMs: Long = 0,
@@ -34,64 +41,35 @@ data class DocumentMetadataResponse(
 )
 
 @Serializable
-data class DocumentMetadataIndexResponse(
-    val documents: List<DocumentMetadataResponse>,
+data class DocumentIndexResponse(
+    val documents: List<DocumentResponse>,
     @SerialName("server_time_ms") val serverTimeMs: Long,
 )
 
 @Serializable
-data class DocumentMetadataShowResponse(
-    val document: DocumentMetadataResponse,
+data class DocumentShowResponse(
+    val document: DocumentResponse,
     @SerialName("server_time_ms") val serverTimeMs: Long,
 )
 
 @Serializable
-data class DocumentMetadataSyncItemRequest(
+data class DocumentSyncItemRequest(
     val id: String,
     val title: String? = null,
     @SerialName("source_format") val sourceFormat: SourceFormat,
     @SerialName("imported_at") val importedAt: Long,
     @SerialName("char_count") val charCount: Int,
-    @SerialName("updated_at_ms") val updatedAtMs: Long,
-    val deleted: Boolean,
-)
-
-@Serializable
-data class DocumentMetadataSyncRequest(
-    val documents: List<DocumentMetadataSyncItemRequest>,
-)
-
-@Serializable
-data class ReadingProgressResponse(
-    @SerialName("document_id") val documentId: String,
-    @SerialName("last_read_char_offset") val lastReadCharOffset: Int = 0,
-    @SerialName("last_read_section_id") val lastReadSectionId: String? = null,
-    @SerialName("last_read_block_index") val lastReadBlockIndex: Int = 0,
-    @SerialName("last_read_block_char_offset") val lastReadBlockCharOffset: Int = 0,
-    @SerialName("updated_at_ms") val updatedAtMs: Long = 0,
-    @SerialName("client_updated_at_ms") val clientUpdatedAtMs: Long = 0,
-)
-
-@Serializable
-data class ReadingProgressIndexResponse(
-    @SerialName("progress") val progress: List<ReadingProgressResponse>,
-    @SerialName("server_time_ms") val serverTimeMs: Long,
-)
-
-@Serializable
-data class ReadingProgressSyncItemRequest(
-    @SerialName("document_id") val documentId: String,
     @SerialName("last_read_char_offset") val lastReadCharOffset: Int,
     @SerialName("last_read_section_id") val lastReadSectionId: String? = null,
     @SerialName("last_read_block_index") val lastReadBlockIndex: Int,
     @SerialName("last_read_block_char_offset") val lastReadBlockCharOffset: Int,
     @SerialName("updated_at_ms") val updatedAtMs: Long,
-    @SerialName("client_updated_at_ms") val clientUpdatedAtMs: Long,
+    val deleted: Boolean,
 )
 
 @Serializable
-data class ReadingProgressSyncRequest(
-    val progress: List<ReadingProgressSyncItemRequest>,
+data class DocumentSyncRequest(
+    val documents: List<DocumentSyncItemRequest>,
 )
 
 @Serializable

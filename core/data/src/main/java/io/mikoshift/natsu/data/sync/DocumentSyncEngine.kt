@@ -12,13 +12,11 @@ import io.mikoshift.natsu.data.local.db.SyncEntityType
 import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.local.db.SyncOutboxEntity
 import io.mikoshift.natsu.data.local.db.SyncOutboxStatus
-import io.mikoshift.natsu.data.mapper.toEntity
+import io.mikoshift.natsu.data.mapper.toEntities
 import io.mikoshift.natsu.data.mapper.toSyncItemRequest
 import io.mikoshift.natsu.data.remote.DocumentApi
-import io.mikoshift.natsu.data.remote.dto.DocumentMetadataIndexResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentMetadataSyncRequest
-import io.mikoshift.natsu.data.remote.dto.ReadingProgressIndexResponse
-import io.mikoshift.natsu.data.remote.dto.ReadingProgressSyncRequest
+import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,12 +36,10 @@ class DocumentSyncEngine @Inject constructor(
 ) {
 
     suspend fun sync(): Result<Unit> = runCatching {
-        val metadataCursor = pullMetadata()
-        val progressCursor = pullProgress()
+        val documentsCursor = pullDocuments()
         pushOutbox()
         packageDownloadService.downloadMissingPackages()
-        metadataCursor?.let { syncCursorStore.setMetadataSinceMs(it) }
-        progressCursor?.let { syncCursorStore.setProgressSinceMs(it) }
+        documentsCursor?.let { syncCursorStore.setDocumentsSinceMs(it) }
     }.fold(
         onSuccess = { Result.success(Unit) },
         onFailure = { throwable ->
@@ -55,24 +51,38 @@ class DocumentSyncEngine @Inject constructor(
         },
     )
 
-    private suspend fun pullMetadata(): Long? {
-        val since = syncCursorStore.getMetadataSinceMs()
-        val response = documentApi.indexMetadata(since = since)
+    private suspend fun pullDocuments(): Long? {
+        val since = syncCursorStore.getDocumentsSinceMs()
+        val response = documentApi.indexDocuments(since = since)
         val body = requireSuccess(response)
         var maxUpdatedAtMs = since
 
         for (serverDoc in body.documents) {
-            val local = documentDao.getById(serverDoc.id)
-            val hasPending = syncOutboxStore.hasPendingMetadata(serverDoc.id)
-            val merged = MetadataMerger.merge(serverDoc, local, hasPending)
-            documentDao.upsert(merged)
+            val localDocument = documentDao.getById(serverDoc.id)
+            val localProgress = readingProgressDao.getByDocumentId(serverDoc.id)
+            val hasPendingMetadata = syncOutboxStore.hasPendingMetadata(serverDoc.id)
+            val hasPendingProgress = syncOutboxStore.hasPendingProgress(serverDoc.id)
+            val (mergedDocument, mergedProgress) = DocumentMerger.merge(
+                server = serverDoc,
+                localDocument = localDocument,
+                localProgress = localProgress,
+                hasPendingMetadata = hasPendingMetadata,
+                hasPendingProgress = hasPendingProgress,
+            )
+            documentDao.upsert(mergedDocument)
+            readingProgressDao.upsert(mergedProgress)
 
             if (serverDoc.updatedAtMs > maxUpdatedAtMs) {
                 maxUpdatedAtMs = serverDoc.updatedAtMs
             }
 
-            if (serverDoc.updatedAtMs > (local?.updatedAtMs ?: 0L)) {
+            val localMaxTs = maxOf(
+                localDocument?.updatedAtMs ?: 0L,
+                localProgress?.updatedAtMs ?: 0L,
+            )
+            if (serverDoc.updatedAtMs > localMaxTs) {
                 syncOutboxStore.clearEntity(SyncEntityType.METADATA, serverDoc.id)
+                syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverDoc.id)
             }
 
             if (serverDoc.deleted) {
@@ -87,57 +97,27 @@ class DocumentSyncEngine @Inject constructor(
         return newCursor.takeIf { it > since }
     }
 
-    private suspend fun pullProgress(): Long? {
-        val since = syncCursorStore.getProgressSinceMs()
-        val response = documentApi.indexProgress(since = since)
-        val body = requireSuccess(response)
-        var maxUpdatedAtMs = since
-
-        for (serverProgress in body.progress) {
-            val local = readingProgressDao.getByDocumentId(serverProgress.documentId)
-            val hasPending = syncOutboxStore.hasPendingProgress(serverProgress.documentId)
-            val merged = ProgressMerger.merge(serverProgress, local, hasPending)
-            readingProgressDao.upsert(merged)
-
-            if (serverProgress.updatedAtMs > maxUpdatedAtMs) {
-                maxUpdatedAtMs = serverProgress.updatedAtMs
-            }
-
-            if (serverProgress.updatedAtMs > (local?.updatedAtMs ?: 0L)) {
-                syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverProgress.documentId)
-            }
-        }
-
-        val newCursor = maxOf(maxUpdatedAtMs, body.serverTimeMs)
-        return newCursor.takeIf { it > since }
-    }
-
     private suspend fun pushOutbox() {
         syncOutboxDao.resetInProgressToPending()
 
         val pending = syncOutboxDao.getPending()
         if (pending.isEmpty()) return
 
-        val metadataEntries = pending.filter { it.entityType == SyncEntityType.METADATA }
-        val progressEntries = pending.filter { it.entityType == SyncEntityType.PROGRESS }
-
-        pushMetadata(metadataEntries)
-        pushProgress(progressEntries)
-    }
-
-    private suspend fun pushMetadata(entries: List<SyncOutboxEntity>) {
-        if (entries.isEmpty()) return
-
-        entries.chunked(MAX_SYNC_BATCH).forEach { batch ->
-            pushMetadataBatch(batch)
+        val documentIds = pending.map { it.entityId }.distinct()
+        documentIds.chunked(MAX_SYNC_BATCH).forEach { batchIds ->
+            pushDocumentsBatch(batchIds, pending)
         }
     }
 
-    private suspend fun pushMetadataBatch(batch: List<SyncOutboxEntity>) {
-        val attemptsById = batch.associate { entry ->
+    private suspend fun pushDocumentsBatch(
+        documentIds: List<String>,
+        pending: List<SyncOutboxEntity>,
+    ) {
+        val batchEntries = pending.filter { it.entityId in documentIds }
+        val attemptsById = batchEntries.associate { entry ->
             entry.id to entry.attempts + 1
         }
-        batch.forEach { entry ->
+        batchEntries.forEach { entry ->
             syncOutboxDao.updateStatus(
                 id = entry.id,
                 status = SyncOutboxStatus.IN_PROGRESS,
@@ -146,79 +126,29 @@ class DocumentSyncEngine @Inject constructor(
             )
         }
 
-        val (syncedEntries, orphanedEntries) = batch.partition { entry ->
-            documentDao.getById(entry.entityId) != null
+        val syncItems = documentIds.mapNotNull { documentId ->
+            val document = documentDao.getById(documentId) ?: run {
+                syncOutboxStore.clearEntity(SyncEntityType.METADATA, documentId)
+                syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, documentId)
+                return@mapNotNull null
+            }
+            val progress = readingProgressDao.getByDocumentId(documentId)
+            document.toSyncItemRequest(progress)
         }
-        orphanedEntries.forEach { entry ->
-            syncOutboxStore.clearEntity(SyncEntityType.METADATA, entry.entityId)
-        }
-        if (syncedEntries.isEmpty()) return
 
-        val request = DocumentMetadataSyncRequest(
-            documents = syncedEntries.mapNotNull { entry ->
-                documentDao.getById(entry.entityId)?.toSyncItemRequest()
-            },
-        )
+        if (syncItems.isEmpty()) return
+
+        val request = DocumentSyncRequest(documents = syncItems)
 
         try {
-            // Push is idempotent: the server resolves conflicts by updatedAtMs (LWW).
-            val response = documentApi.syncMetadata(request)
+            val response = documentApi.syncDocuments(request)
             val body = requireSuccess(response)
-            applyMetadataSyncResponse(body)
-            syncedEntries.forEach { entry ->
-                syncOutboxStore.clearEntity(SyncEntityType.METADATA, entry.entityId)
+            applySyncResponse(body)
+            batchEntries.forEach { entry ->
+                syncOutboxStore.clearEntity(entry.entityType, entry.entityId)
             }
         } catch (error: Exception) {
-            markBatchFailed(syncedEntries, attemptsById, error)
-            throw error
-        }
-    }
-
-    private suspend fun pushProgress(entries: List<SyncOutboxEntity>) {
-        if (entries.isEmpty()) return
-
-        entries.chunked(MAX_SYNC_BATCH).forEach { batch ->
-            pushProgressBatch(batch)
-        }
-    }
-
-    private suspend fun pushProgressBatch(batch: List<SyncOutboxEntity>) {
-        val attemptsById = batch.associate { entry ->
-            entry.id to entry.attempts + 1
-        }
-        batch.forEach { entry ->
-            syncOutboxDao.updateStatus(
-                id = entry.id,
-                status = SyncOutboxStatus.IN_PROGRESS,
-                attempts = attemptsById.getValue(entry.id),
-                lastError = null,
-            )
-        }
-
-        val (syncedEntries, orphanedEntries) = batch.partition { entry ->
-            readingProgressDao.getByDocumentId(entry.entityId) != null
-        }
-        orphanedEntries.forEach { entry ->
-            syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, entry.entityId)
-        }
-        if (syncedEntries.isEmpty()) return
-
-        val request = ReadingProgressSyncRequest(
-            progress = syncedEntries.mapNotNull { entry ->
-                readingProgressDao.getByDocumentId(entry.entityId)?.toSyncItemRequest()
-            },
-        )
-
-        try {
-            // Push is idempotent: the server resolves conflicts by updatedAtMs (LWW).
-            val response = documentApi.syncProgress(request)
-            val body = requireSuccess(response)
-            applyProgressSyncResponse(body)
-            syncedEntries.forEach { entry ->
-                syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, entry.entityId)
-            }
-        } catch (error: Exception) {
-            markBatchFailed(syncedEntries, attemptsById, error)
+            markBatchFailed(batchEntries, attemptsById, error)
             throw error
         }
     }
@@ -239,13 +169,15 @@ class DocumentSyncEngine @Inject constructor(
         }
     }
 
-    private suspend fun applyMetadataSyncResponse(body: DocumentMetadataIndexResponse) {
+    private suspend fun applySyncResponse(body: DocumentIndexResponse) {
         for (serverDoc in body.documents) {
             val localCache = documentCacheDao.getByDocumentId(serverDoc.id)
             val keepPackage = serverDoc.packageSha256 != null &&
                 serverDoc.packageSha256 == localCache?.cachedPackageSha256
 
-            documentDao.upsert(serverDoc.toEntity())
+            val (documentEntity, progressEntity) = serverDoc.toEntities()
+            documentDao.upsert(documentEntity)
+            readingProgressDao.upsert(progressEntity)
 
             if (keepPackage && localCache != null) {
                 documentCacheDao.upsert(localCache)
@@ -254,20 +186,13 @@ class DocumentSyncEngine @Inject constructor(
             }
 
             syncOutboxStore.clearEntity(SyncEntityType.METADATA, serverDoc.id)
+            syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverDoc.id)
 
             if (serverDoc.deleted) {
                 readingProgressDao.deleteByDocumentId(serverDoc.id)
                 documentCacheDao.deleteByDocumentId(serverDoc.id)
-                syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverDoc.id)
                 packageFileStore.delete(serverDoc.id)
             }
-        }
-    }
-
-    private suspend fun applyProgressSyncResponse(body: ReadingProgressIndexResponse) {
-        for (serverProgress in body.progress) {
-            readingProgressDao.upsert(serverProgress.toEntity())
-            syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverProgress.documentId)
         }
     }
 

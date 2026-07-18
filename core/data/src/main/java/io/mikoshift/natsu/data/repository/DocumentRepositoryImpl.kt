@@ -16,7 +16,7 @@ import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.local.db.ReadingProgressDao
 import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.mapper.toDomain
-import io.mikoshift.natsu.data.mapper.toEntity
+import io.mikoshift.natsu.data.mapper.toEntities
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse
@@ -93,7 +93,9 @@ class DocumentRepositoryImpl @Inject constructor(
             val body = response.body()
             if (response.isSuccessful && body != null) {
                 val metadata = body.document
-                documentDao.upsert(metadata.toEntity())
+                val (documentEntity, progressEntity) = metadata.toEntities()
+                documentDao.upsert(documentEntity)
+                readingProgressDao.upsert(progressEntity)
                 pollImportStatus(metadata.id)
             } else {
                 Result.failure(mapErrorResponse(response))
@@ -158,7 +160,9 @@ class DocumentRepositoryImpl @Inject constructor(
                 return Result.failure(mapErrorResponse(response))
             }
             val metadata = body.document
-            documentDao.upsert(metadata.toEntity())
+            val (documentEntity, progressEntity) = metadata.toEntities()
+            documentDao.upsert(documentEntity)
+            readingProgressDao.upsert(progressEntity)
 
             when (metadata.status) {
                 DocumentStatus.READY -> {

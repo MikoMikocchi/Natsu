@@ -344,6 +344,9 @@ private fun SourceFormat.label(): String = when (this) {
     SourceFormat.EPUB -> stringResource(R.string.format_epub)
     SourceFormat.MARKDOWN -> stringResource(R.string.format_markdown)
     SourceFormat.PLAIN_TEXT -> stringResource(R.string.format_text)
+    SourceFormat.FB2 -> stringResource(R.string.format_fb2)
+    SourceFormat.DOCX -> stringResource(R.string.format_docx)
+    SourceFormat.RTF -> stringResource(R.string.format_rtf)
 }
 
 private val IMPORT_MIME_TYPES = arrayOf(

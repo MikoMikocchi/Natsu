@@ -5,18 +5,11 @@ import io.mikoshift.natsu.data.local.db.SyncStateEntity
 
 class SyncCursorStore(private val syncStateDao: SyncStateDao) {
 
-    suspend fun getMetadataSinceMs(): Long = syncStateDao.get()?.metadataSinceMs ?: 0L
+    suspend fun getDocumentsSinceMs(): Long = syncStateDao.get()?.documentsSinceMs ?: 0L
 
-    suspend fun getProgressSinceMs(): Long = syncStateDao.get()?.progressSinceMs ?: 0L
-
-    suspend fun setMetadataSinceMs(value: Long) {
+    suspend fun setDocumentsSinceMs(value: Long) {
         val current = syncStateDao.get() ?: SyncStateEntity()
-        syncStateDao.upsert(current.copy(metadataSinceMs = value))
-    }
-
-    suspend fun setProgressSinceMs(value: Long) {
-        val current = syncStateDao.get() ?: SyncStateEntity()
-        syncStateDao.upsert(current.copy(progressSinceMs = value))
+        syncStateDao.upsert(current.copy(documentsSinceMs = value))
     }
 
     suspend fun clear() {
