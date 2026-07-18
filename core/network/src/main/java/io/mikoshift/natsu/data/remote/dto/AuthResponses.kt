@@ -19,17 +19,24 @@ data class UserResponse(
 )
 
 @Serializable
-data class AuthResponse(
-    val token: String,
+data class TokenResponse(
+    @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
+    @SerialName("token_type") val tokenType: String,
+    @SerialName("expires_in") val expiresIn: Long,
+)
+
+@Serializable
+data class RegisterResponse(
     val user: UserResponse,
     @SerialName("server_time_ms") val serverTimeMs: Long,
 )
 
 @Serializable
-data class UserShowResponse(
-    val user: UserResponse,
-    @SerialName("server_time_ms") val serverTimeMs: Long,
+data class UserInfoResponse(
+    val sub: String,
+    val email: String,
+    val name: String,
 )
 
 @Serializable
@@ -39,7 +46,7 @@ data class MessageResponse(
 
 @Serializable
 data class DeviceSessionResponse(
-    val id: Long,
+    val id: String,
     val name: String,
     @Serializable(with = InstantIso8601Serializer::class)
     @SerialName("created_at") val createdAt: Instant,

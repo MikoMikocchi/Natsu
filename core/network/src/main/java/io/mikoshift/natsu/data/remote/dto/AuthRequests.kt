@@ -23,11 +23,6 @@ data class LoginRequest(
 )
 
 @Serializable
-data class RefreshRequest(
-    @SerialName("refresh_token") val refreshToken: String,
-)
-
-@Serializable
 data class ChangePasswordRequest(
     @SerialName("current_password") val currentPassword: String,
     val password: String,

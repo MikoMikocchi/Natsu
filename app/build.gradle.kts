@@ -18,6 +18,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "OAUTH_CLIENT_ID", "\"natsu-mobile\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -27,14 +28,17 @@ android {
         create("dev") {
             dimension = "environment"
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/v1/\"")
+            buildConfigField("String", "ROOT_BASE_URL", "\"http://10.0.2.2:3000/\"")
         }
         create("staging") {
             dimension = "environment"
             buildConfigField("String", "BASE_URL", "\"https://staging-api.natsu.mikoshift.io/v1/\"")
+            buildConfigField("String", "ROOT_BASE_URL", "\"https://staging-api.natsu.mikoshift.io/\"")
         }
         create("prod") {
             dimension = "environment"
             buildConfigField("String", "BASE_URL", "\"https://api.natsu.mikoshift.io/v1/\"")
+            buildConfigField("String", "ROOT_BASE_URL", "\"https://api.natsu.mikoshift.io/\"")
         }
     }
 

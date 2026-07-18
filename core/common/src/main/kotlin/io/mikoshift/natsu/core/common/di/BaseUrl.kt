@@ -8,4 +8,12 @@ annotation class BaseUrl
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
+annotation class RootBaseUrl
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class OAuthClientId
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
 annotation class IsDebugBuild

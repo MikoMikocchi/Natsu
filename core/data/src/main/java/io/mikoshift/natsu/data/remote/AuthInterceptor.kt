@@ -31,7 +31,8 @@ class AuthInterceptor @Inject constructor(
         val UNAUTHENTICATED_PATH_SUFFIXES = listOf(
             "auth/register",
             "auth/login",
-            "auth/refresh",
+            "oauth2/token",
+            "oauth2/revoke",
             "auth/password/forgot",
             "auth/password/reset",
         )

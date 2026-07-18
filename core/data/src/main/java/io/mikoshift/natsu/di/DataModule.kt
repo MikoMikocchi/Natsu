@@ -17,9 +17,13 @@ import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.local.db.SyncStateDao
 import io.mikoshift.natsu.data.remote.AuthApi
 import io.mikoshift.natsu.data.remote.AuthInterceptor
+import io.mikoshift.natsu.data.remote.DictionaryApi
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
+import io.mikoshift.natsu.data.remote.OAuthApi
+import io.mikoshift.natsu.data.remote.ReaderSettingApi
 import io.mikoshift.natsu.data.remote.TokenAuthenticator
+import io.mikoshift.natsu.data.remote.UserInfoApi
 import javax.inject.Singleton
 
 @Module
@@ -73,6 +77,11 @@ object DataModule {
         )
 
     @Provides
+    @UnauthenticatedOAuthApi
+    fun provideUnauthenticatedOAuthApi(networkFactory: NetworkFactory): OAuthApi =
+        networkFactory.createUnauthenticatedOAuthApi()
+
+    @Provides
     @AuthenticatedAuthApi
     fun provideAuthenticatedAuthApi(
         networkFactory: NetworkFactory,
@@ -81,10 +90,42 @@ object DataModule {
     ): AuthApi = networkFactory.createAuthenticatedAuthApi(authInterceptor, tokenAuthenticator)
 
     @Provides
+    @AuthenticatedOAuthApi
+    fun provideAuthenticatedOAuthApi(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): OAuthApi = networkFactory.createAuthenticatedOAuthApi(authInterceptor, tokenAuthenticator)
+
+    @Provides
+    @Singleton
+    fun provideUserInfoApi(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): UserInfoApi = networkFactory.createAuthenticatedUserInfoApi(authInterceptor, tokenAuthenticator)
+
+    @Provides
     @Singleton
     fun provideDocumentApi(
         networkFactory: NetworkFactory,
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator,
     ): DocumentApi = networkFactory.createAuthenticatedDocumentApi(authInterceptor, tokenAuthenticator)
+
+    @Provides
+    @Singleton
+    fun provideReaderSettingApi(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): ReaderSettingApi = networkFactory.createAuthenticatedReaderSettingApi(authInterceptor, tokenAuthenticator)
+
+    @Provides
+    @Singleton
+    fun provideDictionaryApi(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): DictionaryApi = networkFactory.createAuthenticatedDictionaryApi(authInterceptor, tokenAuthenticator)
 }
