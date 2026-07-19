@@ -23,3 +23,6 @@
 # OkHttp
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Tink / security-crypto
+-dontwarn com.google.errorprone.annotations.**

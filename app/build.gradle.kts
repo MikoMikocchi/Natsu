@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.module.graph.assert)
 }
 
 android {
@@ -60,6 +61,51 @@ android {
         compose = true
         buildConfig = true
     }
+}
+
+moduleGraphAssert {
+    maxHeight = 4
+    allowed = arrayOf(
+        ":app -> :.*",
+        ":core:data -> :core:.*",
+        ":core:domain -> :core:model",
+        ":core:domain -> :core:common",
+        ":core:testing -> :core:.*",
+        ":feature:.* -> :core:domain",
+        ":feature:.* -> :core:model",
+        ":feature:.* -> :core:ui",
+        ":feature:.* -> :core:navigation",
+        ":core:database -> :core:model",
+    )
+    restricted = arrayOf(
+        ":core:domain -X> :core:data",
+        ":core:domain -X> :core:network",
+        ":core:domain -X> :core:database",
+        ":core:domain -X> :feature:.*",
+        ":core:model -X> :core:.*",
+        ":core:model -X> :feature:.*",
+        ":core:model -X> :app",
+        ":core:common -X> :core:.*",
+        ":core:common -X> :feature:.*",
+        ":core:common -X> :app",
+        ":feature:.* -X> :core:data",
+        ":feature:.* -X> :core:network",
+        ":feature:.* -X> :core:database",
+        ":core:ui -X> :core:.*",
+        ":core:ui -X> :feature:.*",
+        ":core:ui -X> :app",
+        ":core:navigation -X> :core:.*",
+        ":core:navigation -X> :feature:.*",
+        ":core:navigation -X> :app",
+        ":core:network -X> :core:.*",
+        ":core:network -X> :feature:.*",
+        ":core:network -X> :app",
+        ":core:database -X> :core:domain",
+        ":core:database -X> :core:data",
+        ":core:database -X> :core:network",
+        ":core:database -X> :feature:.*",
+        ":core:database -X> :app",
+    )
 }
 
 dependencies {
