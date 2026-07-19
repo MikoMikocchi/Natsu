@@ -62,52 +62,6 @@ class NetworkFactory @Inject constructor(
             .authenticator(tokenAuthenticator)
             .build()
 
-    fun createAuthenticatedRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        val contentType = "application/json".toMediaType()
-        return Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(json.asConverterFactory(contentType))
-            .build()
-    }
-
-    fun createAuthenticatedRootRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        val contentType = "application/json".toMediaType()
-        return Retrofit.Builder()
-            .baseUrl(rootBaseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(json.asConverterFactory(contentType))
-            .build()
-    }
-
-    fun createAuthenticatedAuthApi(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): AuthApi = createAuthApi(
-        createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)),
-    )
-
-    fun createAuthenticatedDocumentApi(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): DocumentApi = createDocumentApi(
-        createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)),
-    )
-
-    fun createAuthenticatedReaderSettingApi(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): ReaderSettingApi = createReaderSettingApi(
-        createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)),
-    )
-
-    fun createAuthenticatedDictionaryApi(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): DictionaryApi = createDictionaryApi(
-        createAuthenticatedRetrofit(createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)),
-    )
-
     fun createDictionaryApi(retrofit: Retrofit): DictionaryApi = retrofit.create(DictionaryApi::class.java)
 
     fun createReaderSettingApi(retrofit: Retrofit): ReaderSettingApi =
@@ -115,20 +69,6 @@ class NetworkFactory @Inject constructor(
 
     fun createUnauthenticatedOAuthApi(): OAuthApi = createOAuthApi(
         createRootRetrofit(createUnauthenticatedOkHttpClient()),
-    )
-
-    fun createAuthenticatedUserInfoApi(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): UserInfoApi = createUserInfoApi(
-        createAuthenticatedRootRetrofit(createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)),
-    )
-
-    fun createAuthenticatedOAuthApi(
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): OAuthApi = createOAuthApi(
-        createAuthenticatedRootRetrofit(createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)),
     )
 
     private fun loggingInterceptor(): HttpLoggingInterceptor =

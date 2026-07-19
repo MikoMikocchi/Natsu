@@ -24,7 +24,9 @@ import io.mikoshift.natsu.data.remote.OAuthApi
 import io.mikoshift.natsu.data.remote.ReaderSettingApi
 import io.mikoshift.natsu.data.remote.TokenAuthenticator
 import io.mikoshift.natsu.data.remote.UserInfoApi
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
+import retrofit2.Retrofit
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -70,6 +72,32 @@ object DataModule {
     ): PackageFileStore = PackageFileStore(context)
 
     @Provides
+    @Singleton
+    @AuthenticatedOkHttpClient
+    fun provideAuthenticatedOkHttpClient(
+        networkFactory: NetworkFactory,
+        authInterceptor: AuthInterceptor,
+        tokenAuthenticator: TokenAuthenticator,
+    ): OkHttpClient =
+        networkFactory.createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)
+
+    @Provides
+    @Singleton
+    @AuthenticatedRetrofit
+    fun provideAuthenticatedRetrofit(
+        networkFactory: NetworkFactory,
+        @AuthenticatedOkHttpClient okHttpClient: OkHttpClient,
+    ): Retrofit = networkFactory.createRetrofit(okHttpClient)
+
+    @Provides
+    @Singleton
+    @AuthenticatedRootRetrofit
+    fun provideAuthenticatedRootRetrofit(
+        networkFactory: NetworkFactory,
+        @AuthenticatedOkHttpClient okHttpClient: OkHttpClient,
+    ): Retrofit = networkFactory.createRootRetrofit(okHttpClient)
+
+    @Provides
     @UnauthenticatedAuthApi
     fun provideUnauthenticatedAuthApi(networkFactory: NetworkFactory): AuthApi =
         networkFactory.createAuthApi(
@@ -85,47 +113,41 @@ object DataModule {
     @AuthenticatedAuthApi
     fun provideAuthenticatedAuthApi(
         networkFactory: NetworkFactory,
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): AuthApi = networkFactory.createAuthenticatedAuthApi(authInterceptor, tokenAuthenticator)
+        @AuthenticatedRetrofit retrofit: Retrofit,
+    ): AuthApi = networkFactory.createAuthApi(retrofit)
 
     @Provides
     @AuthenticatedOAuthApi
     fun provideAuthenticatedOAuthApi(
         networkFactory: NetworkFactory,
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): OAuthApi = networkFactory.createAuthenticatedOAuthApi(authInterceptor, tokenAuthenticator)
+        @AuthenticatedRootRetrofit retrofit: Retrofit,
+    ): OAuthApi = networkFactory.createOAuthApi(retrofit)
 
     @Provides
     @Singleton
     fun provideUserInfoApi(
         networkFactory: NetworkFactory,
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): UserInfoApi = networkFactory.createAuthenticatedUserInfoApi(authInterceptor, tokenAuthenticator)
+        @AuthenticatedRootRetrofit retrofit: Retrofit,
+    ): UserInfoApi = networkFactory.createUserInfoApi(retrofit)
 
     @Provides
     @Singleton
     fun provideDocumentApi(
         networkFactory: NetworkFactory,
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): DocumentApi = networkFactory.createAuthenticatedDocumentApi(authInterceptor, tokenAuthenticator)
+        @AuthenticatedRetrofit retrofit: Retrofit,
+    ): DocumentApi = networkFactory.createDocumentApi(retrofit)
 
     @Provides
     @Singleton
     fun provideReaderSettingApi(
         networkFactory: NetworkFactory,
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): ReaderSettingApi = networkFactory.createAuthenticatedReaderSettingApi(authInterceptor, tokenAuthenticator)
+        @AuthenticatedRetrofit retrofit: Retrofit,
+    ): ReaderSettingApi = networkFactory.createReaderSettingApi(retrofit)
 
     @Provides
     @Singleton
     fun provideDictionaryApi(
         networkFactory: NetworkFactory,
-        authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator,
-    ): DictionaryApi = networkFactory.createAuthenticatedDictionaryApi(authInterceptor, tokenAuthenticator)
+        @AuthenticatedRetrofit retrofit: Retrofit,
+    ): DictionaryApi = networkFactory.createDictionaryApi(retrofit)
 }
