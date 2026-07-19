@@ -7,6 +7,4 @@ import kotlinx.serialization.Serializable
  * Returned on 400/422 responses; parsed from the error body rather than a 2xx response.
  */
 @Serializable
-data class ApiErrorResponse(
-    val errors: Map<String, List<String>>,
-)
+data class ApiErrorResponse(val errors: Map<String, List<String>>)

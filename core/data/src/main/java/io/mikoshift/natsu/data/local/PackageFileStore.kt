@@ -1,13 +1,12 @@
 package io.mikoshift.natsu.data.local
 
 import android.content.Context
-import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
+import java.io.File
 
 class PackageFileStore(context: Context) {
-
     private val packagesDir: File = File(context.filesDir, "packages").apply { mkdirs() }
 
     fun getPackageFile(id: String): File = File(packagesDir, "$id.zip")

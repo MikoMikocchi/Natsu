@@ -7,12 +7,14 @@ import io.mikoshift.natsu.data.local.db.DocumentCacheDao
 import io.mikoshift.natsu.data.local.db.DocumentCacheEntity
 import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.remote.DocumentApi
+import retrofit2.Response
 import javax.inject.Inject
 import javax.inject.Singleton
-import retrofit2.Response
 
 @Singleton
-class PackageDownloadService @Inject constructor(
+class PackageDownloadService
+@Inject
+constructor(
     private val documentApi: DocumentApi,
     private val documentDao: DocumentDao,
     private val documentCacheDao: DocumentCacheDao,
@@ -26,13 +28,15 @@ class PackageDownloadService @Inject constructor(
     }
 
     suspend fun download(documentId: String): Result<Unit> = runCatching {
-        val document = documentDao.getById(documentId)
-            ?: throw DocumentError.Unknown("Document not found")
+        val document =
+            documentDao.getById(documentId)
+                ?: throw DocumentError.Unknown("Document not found")
         if (document.status != DocumentStatus.READY) {
             throw DocumentError.PackageNotReady
         }
-        val sha256 = document.packageSha256
-            ?: throw DocumentError.PackageNotReady
+        val sha256 =
+            document.packageSha256
+                ?: throw DocumentError.PackageNotReady
 
         val cache = documentCacheDao.getByDocumentId(documentId)
         if (cache?.cachedPackageSha256 == sha256 && packageFileStore.getPath(documentId) != null) {
@@ -58,10 +62,9 @@ class PackageDownloadService @Inject constructor(
         }
     }
 
-    private fun <T> mapErrorResponse(response: Response<T>): DocumentError =
-        if (response.code() == 401) {
-            DocumentError.Unauthorized
-        } else {
-            DocumentError.Unknown(response.message())
-        }
+    private fun <T> mapErrorResponse(response: Response<T>): DocumentError = if (response.code() == 401) {
+        DocumentError.Unauthorized
+    } else {
+        DocumentError.Unknown(response.message())
+    }
 }

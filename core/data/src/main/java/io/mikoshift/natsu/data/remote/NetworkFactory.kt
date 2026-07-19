@@ -4,31 +4,33 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import io.mikoshift.natsu.core.common.di.BaseUrl
 import io.mikoshift.natsu.core.common.di.IsDebugBuild
 import io.mikoshift.natsu.core.common.di.RootBaseUrl
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
-class NetworkFactory @Inject constructor(
+class NetworkFactory
+@Inject
+constructor(
     @BaseUrl private val baseUrl: String,
     @RootBaseUrl private val rootBaseUrl: String,
     @IsDebugBuild private val isDebugBuild: Boolean,
 ) {
-
     val json: Json = Json { ignoreUnknownKeys = true }
 
-    fun createUnauthenticatedOkHttpClient(): OkHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor())
-            .build()
+    fun createUnauthenticatedOkHttpClient(): OkHttpClient = OkHttpClient
+        .Builder()
+        .addInterceptor(loggingInterceptor())
+        .build()
 
     fun createRetrofit(okHttpClient: OkHttpClient): Retrofit {
         val contentType = "application/json".toMediaType()
-        return Retrofit.Builder()
+        return Retrofit
+            .Builder()
             .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
@@ -37,7 +39,8 @@ class NetworkFactory @Inject constructor(
 
     fun createRootRetrofit(okHttpClient: OkHttpClient): Retrofit {
         val contentType = "application/json".toMediaType()
-        return Retrofit.Builder()
+        return Retrofit
+            .Builder()
             .baseUrl(rootBaseUrl)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
@@ -55,28 +58,27 @@ class NetworkFactory @Inject constructor(
     fun createAuthenticatedOkHttpClient(
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator,
-    ): OkHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor())
-            .addInterceptor(authInterceptor)
-            .authenticator(tokenAuthenticator)
-            .build()
+    ): OkHttpClient = OkHttpClient
+        .Builder()
+        .addInterceptor(loggingInterceptor())
+        .addInterceptor(authInterceptor)
+        .authenticator(tokenAuthenticator)
+        .build()
 
     fun createDictionaryApi(retrofit: Retrofit): DictionaryApi = retrofit.create(DictionaryApi::class.java)
 
-    fun createReaderSettingApi(retrofit: Retrofit): ReaderSettingApi =
-        retrofit.create(ReaderSettingApi::class.java)
+    fun createReaderSettingApi(retrofit: Retrofit): ReaderSettingApi = retrofit.create(ReaderSettingApi::class.java)
 
     fun createUnauthenticatedOAuthApi(): OAuthApi = createOAuthApi(
         createRootRetrofit(createUnauthenticatedOkHttpClient()),
     )
 
-    private fun loggingInterceptor(): HttpLoggingInterceptor =
-        HttpLoggingInterceptor().apply {
-            level = if (isDebugBuild) {
+    private fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
+        level =
+            if (isDebugBuild) {
                 HttpLoggingInterceptor.Level.BODY
             } else {
                 HttpLoggingInterceptor.Level.NONE
             }
-        }
+    }
 }

@@ -5,8 +5,4 @@ enum class MarkType {
     ITALIC,
 }
 
-data class Mark(
-    val type: MarkType,
-    val start: Int,
-    val end: Int,
-)
+data class Mark(val type: MarkType, val start: Int, val end: Int)

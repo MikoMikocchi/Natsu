@@ -5,24 +5,24 @@ import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
 class DocumentMergerTest {
-
     @Test
     fun merge_whenServerIsNewer_appliesFullSnapshot() {
         val server = sampleServer(updatedAtMs = 200L, title = "Server title")
         val local = sampleLocal(updatedAtMs = 100L, title = "Local title")
 
-        val (document, progress) = DocumentMerger.merge(
-            server = server,
-            localDocument = local,
-            localProgress = sampleProgress(updatedAtMs = 100L),
-            hasPendingMetadata = false,
-            hasPendingProgress = false,
-        )
+        val (document, progress) =
+            DocumentMerger.merge(
+                server = server,
+                localDocument = local,
+                localProgress = sampleProgress(updatedAtMs = 100L),
+                hasPendingMetadata = false,
+                hasPendingProgress = false,
+            )
 
         assertEquals("Server title", document.title)
         assertEquals(200L, progress.updatedAtMs)
@@ -30,21 +30,23 @@ class DocumentMergerTest {
 
     @Test
     fun merge_whenPendingMetadata_keepsLocalTitleButTakesServerPackageFields() {
-        val server = sampleServer(
-            updatedAtMs = 100L,
-            title = "Server title",
-            packageSha256 = "abc",
-            charCount = 42,
-        )
+        val server =
+            sampleServer(
+                updatedAtMs = 100L,
+                title = "Server title",
+                packageSha256 = "abc",
+                charCount = 42,
+            )
         val local = sampleLocal(updatedAtMs = 200L, title = "Local title")
 
-        val (document, _) = DocumentMerger.merge(
-            server = server,
-            localDocument = local,
-            localProgress = sampleProgress(updatedAtMs = 50L),
-            hasPendingMetadata = true,
-            hasPendingProgress = false,
-        )
+        val (document, _) =
+            DocumentMerger.merge(
+                server = server,
+                localDocument = local,
+                localProgress = sampleProgress(updatedAtMs = 50L),
+                hasPendingMetadata = true,
+                hasPendingProgress = false,
+            )
 
         assertEquals("Local title", document.title)
         assertEquals("abc", document.packageSha256)
@@ -56,13 +58,14 @@ class DocumentMergerTest {
         val server = sampleServer(updatedAtMs = 100L, lastReadCharOffset = 10)
         val localProgress = sampleProgress(updatedAtMs = 200L, lastReadCharOffset = 99)
 
-        val (_, progress) = DocumentMerger.merge(
-            server = server,
-            localDocument = sampleLocal(updatedAtMs = 50L, title = "Local title"),
-            localProgress = localProgress,
-            hasPendingMetadata = false,
-            hasPendingProgress = true,
-        )
+        val (_, progress) =
+            DocumentMerger.merge(
+                server = server,
+                localDocument = sampleLocal(updatedAtMs = 50L, title = "Local title"),
+                localProgress = localProgress,
+                hasPendingMetadata = false,
+                hasPendingProgress = true,
+            )
 
         assertEquals(99, progress.lastReadCharOffset)
     }
@@ -96,10 +99,7 @@ class DocumentMergerTest {
         deleted = false,
     )
 
-    private fun sampleProgress(
-        updatedAtMs: Long,
-        lastReadCharOffset: Int = 0,
-    ) = ReadingProgressEntity(
+    private fun sampleProgress(updatedAtMs: Long, lastReadCharOffset: Int = 0) = ReadingProgressEntity(
         documentId = DOC_ID,
         lastReadCharOffset = lastReadCharOffset,
         lastReadBlockIndex = 0,

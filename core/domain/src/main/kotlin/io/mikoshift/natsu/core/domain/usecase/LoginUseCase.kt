@@ -4,7 +4,9 @@ import io.mikoshift.natsu.core.common.analytics.AnalyticsTracker
 import io.mikoshift.natsu.core.domain.repository.AuthRepository
 import javax.inject.Inject
 
-class LoginUseCase @Inject constructor(
+class LoginUseCase
+@Inject
+constructor(
     private val authRepository: AuthRepository,
     private val analyticsTracker: AnalyticsTracker,
 ) {

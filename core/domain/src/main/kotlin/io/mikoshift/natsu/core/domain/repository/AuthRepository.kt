@@ -10,12 +10,7 @@ interface AuthRepository {
     val isLoggedIn: Flow<Boolean>
     val currentSession: StateFlow<AuthSession?>
 
-    suspend fun register(
-        name: String,
-        email: String,
-        password: String,
-        passwordConfirmation: String,
-    ): Result<Unit>
+    suspend fun register(name: String, email: String, password: String, passwordConfirmation: String): Result<Unit>
 
     suspend fun login(email: String, password: String): Result<Unit>
 
@@ -25,17 +20,9 @@ interface AuthRepository {
 
     suspend fun forgotPassword(email: String): Result<String>
 
-    suspend fun resetPassword(
-        token: String,
-        password: String,
-        passwordConfirmation: String,
-    ): Result<String>
+    suspend fun resetPassword(token: String, password: String, passwordConfirmation: String): Result<String>
 
-    suspend fun changePassword(
-        currentPassword: String,
-        password: String,
-        passwordConfirmation: String,
-    ): Result<String>
+    suspend fun changePassword(currentPassword: String, password: String, passwordConfirmation: String): Result<String>
 
     suspend fun deleteAccount(password: String): Result<Unit>
 

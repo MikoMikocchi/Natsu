@@ -10,12 +10,12 @@ import io.mikoshift.natsu.core.domain.usecase.ObserveReaderSettingsUseCase
 import io.mikoshift.natsu.core.domain.usecase.OpenDocumentPackageUseCase
 import io.mikoshift.natsu.core.domain.usecase.UpdateReaderSettingsUseCase
 import io.mikoshift.natsu.core.domain.usecase.UpdateReadingProgressUseCase
-import io.mikoshift.natsu.core.model.FuriganaMode
-import io.mikoshift.natsu.core.model.ReaderSettings
-import io.mikoshift.natsu.core.model.ReaderTheme
 import io.mikoshift.natsu.core.model.Document
 import io.mikoshift.natsu.core.model.DocumentMetadata
 import io.mikoshift.natsu.core.model.DocumentStatus
+import io.mikoshift.natsu.core.model.FuriganaMode
+import io.mikoshift.natsu.core.model.ReaderSettings
+import io.mikoshift.natsu.core.model.ReaderTheme
 import io.mikoshift.natsu.core.model.SourceFormat
 import io.mikoshift.natsu.core.model.content.DocumentPackage
 import io.mikoshift.natsu.core.model.content.ManifestSection
@@ -39,7 +39,6 @@ import org.junit.Before
 import org.junit.Test
 
 class ReaderViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var observeDocument: ObserveDocumentUseCase
@@ -51,13 +50,14 @@ class ReaderViewModelTest {
     private lateinit var lookupWord: LookupWordUseCase
     private lateinit var documentPackageRepository: DocumentPackageRepository
 
-    private val defaultReaderSettings = ReaderSettings(
-        fontSizeSp = 16.0,
-        lineSpacingMultiplier = 1.5,
-        theme = ReaderTheme.LIGHT,
-        furiganaMode = FuriganaMode.OFF,
-        updatedAtMs = 0L,
-    )
+    private val defaultReaderSettings =
+        ReaderSettings(
+            fontSizeSp = 16.0,
+            lineSpacingMultiplier = 1.5,
+            theme = ReaderTheme.LIGHT,
+            furiganaMode = FuriganaMode.OFF,
+            updatedAtMs = 0L,
+        )
 
     @Before
     fun setUp() {
@@ -125,12 +125,13 @@ class ReaderViewModelTest {
     }
 
     private fun createViewModel(): ReaderViewModel {
-        val savedStateHandle = SavedStateHandle(
-            mapOf(
-                "documentId" to "doc-1",
-                "initialCharOffset" to null,
-            ),
-        )
+        val savedStateHandle =
+            SavedStateHandle(
+                mapOf(
+                    "documentId" to "doc-1",
+                    "initialCharOffset" to null,
+                ),
+            )
         return ReaderViewModel(
             context = context,
             observeDocument = observeDocument,
@@ -146,7 +147,8 @@ class ReaderViewModelTest {
     }
 
     private fun sampleDocument(): Document = Document(
-        metadata = DocumentMetadata(
+        metadata =
+        DocumentMetadata(
             id = "doc-1",
             title = "My Book",
             sourceFormat = SourceFormat.EPUB,
@@ -155,7 +157,8 @@ class ReaderViewModelTest {
     )
 
     private fun samplePackage(): DocumentPackage = DocumentPackage(
-        manifest = PackageManifest(
+        manifest =
+        PackageManifest(
             schemaVersion = 2,
             title = "My Book",
             authors = emptyList(),
@@ -163,7 +166,8 @@ class ReaderViewModelTest {
             coverAssetId = null,
             sourceFormat = SourceFormat.EPUB,
             toc = emptyList(),
-            sections = listOf(
+            sections =
+            listOf(
                 ManifestSection(
                     id = "section-0",
                     title = "Chapter",
@@ -173,10 +177,12 @@ class ReaderViewModelTest {
                 ),
             ),
         ),
-        sections = mapOf(
-            "section-0" to listOf(
-                ParagraphBlock(id = "b0", text = "Hello"),
-            ),
+        sections =
+        mapOf(
+            "section-0" to
+                listOf(
+                    ParagraphBlock(id = "b0", text = "Hello"),
+                ),
         ),
     )
 }

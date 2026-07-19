@@ -1,9 +1,5 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-}
-
-kotlin {
-    jvmToolchain(11)
+    id("natsu.jvm.library")
 }
 
 dependencies {

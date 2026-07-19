@@ -5,15 +5,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class ReaderThemeDto {
-    @SerialName("LIGHT") LIGHT,
-    @SerialName("DARK") DARK,
-    @SerialName("SEPIA") SEPIA,
+    @SerialName("LIGHT")
+    LIGHT,
+
+    @SerialName("DARK")
+    DARK,
+
+    @SerialName("SEPIA")
+    SEPIA,
 }
 
 @Serializable
 enum class FuriganaModeDto {
-    @SerialName("OFF") OFF,
-    @SerialName("ALWAYS") ALWAYS,
+    @SerialName("OFF")
+    OFF,
+
+    @SerialName("ALWAYS")
+    ALWAYS,
 }
 
 @Serializable

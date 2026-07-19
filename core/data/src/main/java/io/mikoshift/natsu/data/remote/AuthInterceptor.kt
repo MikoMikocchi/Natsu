@@ -1,14 +1,13 @@
 package io.mikoshift.natsu.data.remote
 
 import io.mikoshift.natsu.data.local.TokenStore
-import javax.inject.Inject
 import okhttp3.Interceptor
 import okhttp3.Response
+import javax.inject.Inject
 
-class AuthInterceptor @Inject constructor(
-    private val tokenStore: TokenStore,
-) : Interceptor {
-
+class AuthInterceptor
+@Inject
+constructor(private val tokenStore: TokenStore) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val path = request.url.encodedPath
@@ -17,24 +16,28 @@ class AuthInterceptor @Inject constructor(
             return chain.proceed(request)
         }
 
-        val accessToken = tokenStore.getAccessTokenBlocking()
-            ?: return chain.proceed(request)
+        val accessToken =
+            tokenStore.getAccessTokenBlocking()
+                ?: return chain.proceed(request)
 
-        val authenticatedRequest = request.newBuilder()
-            .header("Authorization", "Bearer $accessToken")
-            .build()
+        val authenticatedRequest =
+            request
+                .newBuilder()
+                .header("Authorization", "Bearer $accessToken")
+                .build()
 
         return chain.proceed(authenticatedRequest)
     }
 
     private companion object {
-        val UNAUTHENTICATED_PATH_SUFFIXES = listOf(
-            "auth/register",
-            "auth/login",
-            "oauth2/token",
-            "oauth2/revoke",
-            "auth/password/forgot",
-            "auth/password/reset",
-        )
+        val UNAUTHENTICATED_PATH_SUFFIXES =
+            listOf(
+                "auth/register",
+                "auth/login",
+                "oauth2/token",
+                "oauth2/revoke",
+                "auth/password/forgot",
+                "auth/password/reset",
+            )
     }
 }

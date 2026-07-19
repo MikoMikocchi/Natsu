@@ -3,30 +3,30 @@ package io.mikoshift.natsu.data.pkg
 import io.mikoshift.natsu.core.model.content.HeadingBlock
 import io.mikoshift.natsu.core.model.content.ImageBlock
 import io.mikoshift.natsu.core.model.content.ParagraphBlock
-import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mockk.mockk
-import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 
 class PackageParserTest {
-
     private lateinit var parser: PackageParser
 
     @Before
     fun setUp() {
-        val networkFactory = NetworkFactory(
-            baseUrl = "https://example.com/v1/",
-            rootBaseUrl = "https://example.com/",
-            isDebugBuild = false,
-        )
-        parser = PackageParser(
-            networkFactory = networkFactory,
-            packageFileStore = mockk(relaxed = true),
-        )
+        val networkFactory =
+            NetworkFactory(
+                baseUrl = "https://example.com/v1/",
+                rootBaseUrl = "https://example.com/",
+                isDebugBuild = false,
+            )
+        parser =
+            PackageParser(
+                networkFactory = networkFactory,
+                packageFileStore = mockk(relaxed = true),
+            )
     }
 
     @Test

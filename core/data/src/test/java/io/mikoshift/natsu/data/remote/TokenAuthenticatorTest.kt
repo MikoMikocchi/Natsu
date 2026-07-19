@@ -5,10 +5,6 @@ import io.mikoshift.natsu.data.local.TokenStore
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
@@ -21,9 +17,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class TokenAuthenticatorTest {
-
     private lateinit var mockWebServer: MockWebServer
     private lateinit var tokenStore: TokenStore
     private lateinit var tokenAuthenticator: TokenAuthenticator
@@ -37,17 +36,19 @@ class TokenAuthenticatorTest {
         every { tokenStore.getRefreshTokenBlocking() } returns REFRESH_TOKEN
         every { tokenStore.getSessionBlocking() } returns EXISTING_SESSION
 
-        val networkFactory = NetworkFactory(
-            baseUrl = mockWebServer.url("/v1/").toString(),
-            rootBaseUrl = mockWebServer.url("/").toString(),
-            isDebugBuild = false,
-        )
+        val networkFactory =
+            NetworkFactory(
+                baseUrl = mockWebServer.url("/v1/").toString(),
+                rootBaseUrl = mockWebServer.url("/").toString(),
+                isDebugBuild = false,
+            )
         val oauthApi = networkFactory.createUnauthenticatedOAuthApi()
-        tokenAuthenticator = TokenAuthenticator(
-            tokenStore = tokenStore,
-            oauthApi = oauthApi,
-            clientId = CLIENT_ID,
-        )
+        tokenAuthenticator =
+            TokenAuthenticator(
+                tokenStore = tokenStore,
+                oauthApi = oauthApi,
+                clientId = CLIENT_ID,
+            )
     }
 
     @After
@@ -73,19 +74,20 @@ class TokenAuthenticatorTest {
         val releaseRefresh = CountDownLatch(1)
         val refreshRequestCount = AtomicInteger(0)
 
-        mockWebServer.dispatcher = object : Dispatcher() {
-            override fun dispatch(request: RecordedRequest): MockResponse {
-                if (!request.path!!.endsWith("oauth2/token")) {
-                    return MockResponse().setResponseCode(404)
+        mockWebServer.dispatcher =
+            object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    if (!request.path!!.endsWith("oauth2/token")) {
+                        return MockResponse().setResponseCode(404)
+                    }
+
+                    refreshRequestCount.incrementAndGet()
+                    refreshStarted.countDown()
+                    releaseRefresh.await(2, TimeUnit.SECONDS)
+
+                    return refreshResponse(accessToken = NEW_ACCESS_TOKEN)
                 }
-
-                refreshRequestCount.incrementAndGet()
-                refreshStarted.countDown()
-                releaseRefresh.await(2, TimeUnit.SECONDS)
-
-                return refreshResponse(accessToken = NEW_ACCESS_TOKEN)
             }
-        }
 
         val unauthorizedResponse = unauthorizedResponse()
         val executor = Executors.newFixedThreadPool(PARALLEL_CALLS)
@@ -114,27 +116,28 @@ class TokenAuthenticatorTest {
         mockWebServer.enqueue(refreshResponse(accessToken))
     }
 
-    private fun refreshResponse(accessToken: String): MockResponse =
-        MockResponse()
-            .setBody(
-                """
+    private fun refreshResponse(accessToken: String): MockResponse = MockResponse()
+        .setBody(
+            """
                 {
                   "access_token": "$accessToken",
                   "refresh_token": "rotated-refresh-token",
                   "token_type": "Bearer",
                   "expires_in": 3600
                 }
-                """.trimIndent(),
-            )
-            .addHeader("Content-Type", "application/json")
+            """.trimIndent(),
+        ).addHeader("Content-Type", "application/json")
 
     private fun unauthorizedResponse(): Response {
-        val request = Request.Builder()
-            .url(mockWebServer.url("/v1/documents"))
-            .header("Authorization", "Bearer expired-token")
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(mockWebServer.url("/v1/documents"))
+                .header("Authorization", "Bearer expired-token")
+                .build()
 
-        return Response.Builder()
+        return Response
+            .Builder()
             .request(request)
             .protocol(Protocol.HTTP_1_1)
             .code(401)
@@ -147,12 +150,13 @@ class TokenAuthenticatorTest {
         const val REFRESH_TOKEN = "refresh-token"
         const val NEW_ACCESS_TOKEN = "new-access-token"
         const val PARALLEL_CALLS = 8
-        val EXISTING_SESSION = AuthSession(
-            accessToken = "old-access-token",
-            refreshToken = REFRESH_TOKEN,
-            userId = 1L,
-            userName = "Test User",
-            userEmail = "test@example.com",
-        )
+        val EXISTING_SESSION =
+            AuthSession(
+                accessToken = "old-access-token",
+                refreshToken = REFRESH_TOKEN,
+                userId = 1L,
+                userName = "Test User",
+                userEmail = "test@example.com",
+            )
     }
 }

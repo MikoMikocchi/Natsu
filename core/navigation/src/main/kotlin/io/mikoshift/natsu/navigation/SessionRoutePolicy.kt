@@ -4,39 +4,38 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import kotlin.reflect.KClass
 
-val authenticatedRouteClasses: Set<KClass<out Any>> = setOf(
-    HomeRoute::class,
-    ProfileRoute::class,
-    ChangePasswordRoute::class,
-    ReaderRoute::class,
-)
+val authenticatedRouteClasses: Set<KClass<out Any>> =
+    setOf(
+        HomeRoute::class,
+        ProfileRoute::class,
+        ChangePasswordRoute::class,
+        ReaderRoute::class,
+    )
 
-val authOnlyRouteClasses: Set<KClass<out Any>> = setOf(
-    LoginRoute::class,
-    RegisterRoute::class,
-    ForgotPasswordRoute::class,
-    ResetPasswordRoute::class,
-)
+val authOnlyRouteClasses: Set<KClass<out Any>> =
+    setOf(
+        LoginRoute::class,
+        RegisterRoute::class,
+        ForgotPasswordRoute::class,
+        ResetPasswordRoute::class,
+    )
 
-fun isAuthenticatedRoute(routeClass: KClass<*>): Boolean =
-    routeClass in authenticatedRouteClasses
+fun isAuthenticatedRoute(routeClass: KClass<*>): Boolean = routeClass in authenticatedRouteClasses
 
-fun isAuthOnlyRoute(routeClass: KClass<*>): Boolean =
-    routeClass in authOnlyRouteClasses
+fun isAuthOnlyRoute(routeClass: KClass<*>): Boolean = routeClass in authOnlyRouteClasses
 
-fun NavDestination.matchesAuthenticatedRoute(): Boolean =
-    authenticatedRouteClasses.any { routeClass -> hasRoute(routeClass) }
+fun NavDestination.matchesAuthenticatedRoute(): Boolean = authenticatedRouteClasses.any { routeClass ->
+    hasRoute(routeClass)
+}
 
-fun NavDestination.matchesAuthOnlyRoute(): Boolean =
-    authOnlyRouteClasses.any { routeClass -> hasRoute(routeClass) }
+fun NavDestination.matchesAuthOnlyRoute(): Boolean = authOnlyRouteClasses.any { routeClass -> hasRoute(routeClass) }
 
 enum class SessionRedirect {
     ToLogin,
     ToHome,
 }
 
-fun startDestinationForSession(hasSession: Boolean): Any =
-    if (hasSession) HomeRoute else LoginRoute
+fun startDestinationForSession(hasSession: Boolean): Any = if (hasSession) HomeRoute else LoginRoute
 
 fun resolveSessionRedirect(
     hasSession: Boolean,
@@ -48,10 +47,7 @@ fun resolveSessionRedirect(
     else -> null
 }
 
-fun resolveSessionRedirect(
-    hasSession: Boolean,
-    destination: NavDestination?,
-): SessionRedirect? {
+fun resolveSessionRedirect(hasSession: Boolean, destination: NavDestination?): SessionRedirect? {
     if (destination == null) return null
     return resolveSessionRedirect(
         hasSession = hasSession,

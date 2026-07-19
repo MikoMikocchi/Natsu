@@ -5,7 +5,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class LookupQueryExtractorTest {
-
     @Test
     fun extractLookupQuery_prefersCjkSequence() {
         assertEquals("本", extractLookupQuery("See 本 here"))

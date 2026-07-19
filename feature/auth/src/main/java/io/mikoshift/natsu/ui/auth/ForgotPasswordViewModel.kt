@@ -9,19 +9,20 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.ForgotPasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.auth.R
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class ForgotPasswordViewModel @Inject constructor(
+class ForgotPasswordViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val forgotPassword: ForgotPasswordUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ForgotPasswordUiState())
     val uiState: StateFlow<ForgotPasswordUiState> = _uiState.asStateFlow()
 
@@ -31,11 +32,12 @@ class ForgotPasswordViewModel @Inject constructor(
 
     fun submit() {
         val state = _uiState.value
-        val emailError = if (!Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
-            context.getString(R.string.error_invalid_email)
-        } else {
-            null
-        }
+        val emailError =
+            if (!Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
+                context.getString(R.string.error_invalid_email)
+            } else {
+                null
+            }
 
         if (emailError != null) {
             _uiState.update { it.copy(emailError = emailError) }
@@ -80,7 +82,8 @@ class ForgotPasswordViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        generalError = (error as? AuthError.Unknown)?.errorMessage
+                        generalError =
+                        (error as? AuthError.Unknown)?.errorMessage
                             ?: context.getString(R.string.error_generic),
                     )
                 }

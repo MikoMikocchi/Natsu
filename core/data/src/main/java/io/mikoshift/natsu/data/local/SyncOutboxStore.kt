@@ -6,10 +6,7 @@ import io.mikoshift.natsu.data.local.db.SyncOutboxEntity
 import io.mikoshift.natsu.data.local.db.SyncOutboxStatus
 import java.util.UUID
 
-class SyncOutboxStore(
-    private val syncOutboxDao: SyncOutboxDao,
-) {
-
+class SyncOutboxStore(private val syncOutboxDao: SyncOutboxDao) {
     suspend fun enqueueMetadata(documentId: String, nowMs: Long = System.currentTimeMillis()) {
         syncOutboxDao.upsert(
             SyncOutboxEntity(
@@ -50,8 +47,7 @@ class SyncOutboxStore(
         syncOutboxDao.deleteAll()
     }
 
-    private fun outboxId(entityType: SyncEntityType, entityId: String): String =
-        "${entityType.name}:$entityId"
+    private fun outboxId(entityType: SyncEntityType, entityId: String): String = "${entityType.name}:$entityId"
 
     private fun newIdempotencyKey(): String = UUID.randomUUID().toString()
 }

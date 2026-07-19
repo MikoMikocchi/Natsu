@@ -37,7 +37,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibraryViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var documentRepository: FakeDocumentRepository
@@ -60,9 +59,10 @@ class LibraryViewModelTest {
         every { context.getString(R.string.import_success, "New Book") } returns "\"New Book\" imported"
         every { context.getString(R.string.import_success, "Sample Document") } returns "\"Sample Document\" imported"
 
-        documentRepository = FakeDocumentRepository(
-            documents = listOf(DocumentFixtures.document(title = "Book One")),
-        )
+        documentRepository =
+            FakeDocumentRepository(
+                documents = listOf(DocumentFixtures.document(title = "Book One")),
+            )
         syncStatusRepository = FakeSyncStatusRepository()
         authRepository = FakeAuthRepository(session = AuthFixtures.session())
     }
@@ -77,7 +77,12 @@ class LibraryViewModelTest {
         createViewModel()
         advanceUntilIdle()
 
-        assertEquals("Book One", viewModel.uiState.value.documents.single().title)
+        assertEquals(
+            "Book One",
+            viewModel.uiState.value.documents
+                .single()
+                .title,
+        )
     }
 
     @Test
@@ -142,9 +147,10 @@ class LibraryViewModelTest {
 
     @Test
     fun onSearchQueryChange_afterDebounce_updatesSearchResults() = runTest {
-        documentRepository.searchResult = Result.success(
-            listOf(DocumentFixtures.searchResult(title = "Found Book")),
-        )
+        documentRepository.searchResult =
+            Result.success(
+                listOf(DocumentFixtures.searchResult(title = "Found Book")),
+            )
         createViewModel()
         advanceUntilIdle()
 
@@ -303,20 +309,22 @@ class LibraryViewModelTest {
     }
 
     private fun createViewModel() {
-        viewModel = LibraryViewModel(
-            context = context,
-            observeLibrary = ObserveLibraryUseCase(documentRepository),
-            observeSyncStatus = ObserveSyncStatusUseCase(syncStatusRepository),
-            syncDocuments = SyncDocumentsUseCase(
-                authRepository,
-                documentRepository,
-                syncStatusRepository,
-                FakeAnalyticsTracker(),
-            ),
-            importDocument = ImportDocumentUseCase(documentRepository, FakeAnalyticsTracker()),
-            searchDocuments = SearchDocumentsUseCase(documentRepository),
-            markDocumentDeleted = MarkDocumentDeletedUseCase(documentRepository),
-        )
+        viewModel =
+            LibraryViewModel(
+                context = context,
+                observeLibrary = ObserveLibraryUseCase(documentRepository),
+                observeSyncStatus = ObserveSyncStatusUseCase(syncStatusRepository),
+                syncDocuments =
+                SyncDocumentsUseCase(
+                    authRepository,
+                    documentRepository,
+                    syncStatusRepository,
+                    FakeAnalyticsTracker(),
+                ),
+                importDocument = ImportDocumentUseCase(documentRepository, FakeAnalyticsTracker()),
+                searchDocuments = SearchDocumentsUseCase(documentRepository),
+                markDocumentDeleted = MarkDocumentDeletedUseCase(documentRepository),
+            )
     }
 
     private companion object {

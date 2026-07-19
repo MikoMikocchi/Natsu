@@ -1,8 +1,8 @@
 package io.mikoshift.natsu.data.remote.dto
 
-import java.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.time.Instant
 
 // Note: the backend serializes JSON with snake_case property naming
 // (spring.jackson.property-naming-strategy: SNAKE_CASE), so multi-word
@@ -27,22 +27,13 @@ data class TokenResponse(
 )
 
 @Serializable
-data class RegisterResponse(
-    val user: UserResponse,
-    @SerialName("server_time_ms") val serverTimeMs: Long,
-)
+data class RegisterResponse(val user: UserResponse, @SerialName("server_time_ms") val serverTimeMs: Long)
 
 @Serializable
-data class UserInfoResponse(
-    val sub: String,
-    val email: String,
-    val name: String,
-)
+data class UserInfoResponse(val sub: String, val email: String, val name: String)
 
 @Serializable
-data class MessageResponse(
-    val message: String,
-)
+data class MessageResponse(val message: String)
 
 @Serializable
 data class DeviceSessionResponse(

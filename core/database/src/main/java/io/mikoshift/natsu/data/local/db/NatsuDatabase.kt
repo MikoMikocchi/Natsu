@@ -22,22 +22,24 @@ import io.mikoshift.natsu.core.model.SourceFormat
 )
 @TypeConverters(NatsuTypeConverters::class)
 abstract class NatsuDatabase : RoomDatabase() {
-
     abstract fun documentDao(): DocumentDao
+
     abstract fun readingProgressDao(): ReadingProgressDao
+
     abstract fun documentCacheDao(): DocumentCacheDao
+
     abstract fun syncOutboxDao(): SyncOutboxDao
+
     abstract fun syncStateDao(): SyncStateDao
 
     companion object {
-        fun create(context: Context): NatsuDatabase =
-            Room.databaseBuilder(
+        fun create(context: Context): NatsuDatabase = Room
+            .databaseBuilder(
                 context.applicationContext,
                 NatsuDatabase::class.java,
                 "natsu.db",
-            )
-                .addMigrations(*NatsuDatabaseMigrations.ALL)
-                .build()
+            ).addMigrations(*NatsuDatabaseMigrations.ALL)
+            .build()
     }
 }
 

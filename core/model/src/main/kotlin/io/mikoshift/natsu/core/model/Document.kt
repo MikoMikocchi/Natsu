@@ -41,13 +41,6 @@ data class Document(
     val cachedPackageSha256: String? get() = cache?.cachedPackageSha256
 }
 
-data class DocumentSearchMatch(
-    val charOffset: Int,
-    val snippet: String,
-)
+data class DocumentSearchMatch(val charOffset: Int, val snippet: String)
 
-data class DocumentSearchResult(
-    val id: String,
-    val title: String,
-    val matches: List<DocumentSearchMatch>,
-)
+data class DocumentSearchResult(val id: String, val title: String, val matches: List<DocumentSearchMatch>)

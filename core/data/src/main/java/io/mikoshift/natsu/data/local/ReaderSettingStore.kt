@@ -5,16 +5,16 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.model.FuriganaMode
 import io.mikoshift.natsu.core.model.ReaderSettings
 import io.mikoshift.natsu.core.model.ReaderTheme
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
-class ReaderSettingStore @Inject constructor(
-    @ApplicationContext context: Context,
-) {
+class ReaderSettingStore
+@Inject
+constructor(@ApplicationContext context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val _settingsFlow = MutableStateFlow(readSettings())
     val settingsFlow: StateFlow<ReaderSettings?> = _settingsFlow.asStateFlow()
@@ -22,7 +22,8 @@ class ReaderSettingStore @Inject constructor(
     fun getSettings(): ReaderSettings? = _settingsFlow.value
 
     fun save(settings: ReaderSettings) {
-        prefs.edit()
+        prefs
+            .edit()
             .putFloat(KEY_FONT_SIZE_SP, settings.fontSizeSp.toFloat())
             .putFloat(KEY_LINE_SPACING, settings.lineSpacingMultiplier.toFloat())
             .putString(KEY_THEME, settings.theme.name)

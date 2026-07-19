@@ -10,9 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
-class FakeAuthRepository(
-    session: AuthSession? = null,
-) : AuthRepository {
+class FakeAuthRepository(session: AuthSession? = null) : AuthRepository {
     private val _currentSession = MutableStateFlow(session)
     override val currentSession: StateFlow<AuthSession?> = _currentSession.asStateFlow()
     override val isLoggedIn: Flow<Boolean> = currentSession.map { it != null }
@@ -54,14 +52,10 @@ class FakeAuthRepository(
 
     override suspend fun getUser(): Result<User> = getUserResult
 
-    override suspend fun forgotPassword(email: String): Result<String> =
-        Result.failure(UnsupportedOperationException())
+    override suspend fun forgotPassword(email: String): Result<String> = Result.failure(UnsupportedOperationException())
 
-    override suspend fun resetPassword(
-        token: String,
-        password: String,
-        passwordConfirmation: String,
-    ): Result<String> = Result.failure(UnsupportedOperationException())
+    override suspend fun resetPassword(token: String, password: String, passwordConfirmation: String): Result<String> =
+        Result.failure(UnsupportedOperationException())
 
     override suspend fun changePassword(
         currentPassword: String,

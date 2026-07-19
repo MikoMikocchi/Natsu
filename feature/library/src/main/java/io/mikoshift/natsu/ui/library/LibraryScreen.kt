@@ -44,9 +44,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.mikoshift.natsu.core.ui.CollectEffects
 import io.mikoshift.natsu.core.model.DocumentStatus
 import io.mikoshift.natsu.core.model.SourceFormat
+import io.mikoshift.natsu.core.ui.CollectEffects
 import io.mikoshift.natsu.feature.library.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 
@@ -246,11 +246,7 @@ private fun EmptyState(message: String) {
 }
 
 @Composable
-private fun DocumentCard(
-    document: DocumentListItem,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
-) {
+private fun DocumentCard(document: DocumentListItem, onClick: () -> Unit, onDelete: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -305,10 +301,7 @@ private fun DocumentCard(
 }
 
 @Composable
-private fun SearchResultCard(
-    result: SearchResultItem,
-    onClick: () -> Unit,
-) {
+private fun SearchResultCard(result: SearchResultItem, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

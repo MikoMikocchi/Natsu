@@ -23,13 +23,14 @@ data class ReaderUiState(
     val initialScrollIndex: Int = 0,
     val showToc: Boolean = false,
     val showSettings: Boolean = false,
-    val readerSettings: ReaderSettings = ReaderSettings(
-        fontSizeSp = 16.0,
-        lineSpacingMultiplier = 1.8,
-        theme = ReaderTheme.LIGHT,
-        furiganaMode = FuriganaMode.OFF,
-        updatedAtMs = 0L,
-    ),
+    val readerSettings: ReaderSettings =
+        ReaderSettings(
+            fontSizeSp = 16.0,
+            lineSpacingMultiplier = 1.8,
+            theme = ReaderTheme.LIGHT,
+            furiganaMode = FuriganaMode.OFF,
+            updatedAtMs = 0L,
+        ),
     val lookupQuery: String? = null,
     val lookupLoading: Boolean = false,
     val lookupResults: List<io.mikoshift.natsu.core.model.DictionaryLookupResult> = emptyList(),

@@ -4,8 +4,6 @@ import io.mikoshift.natsu.core.common.di.OAuthClientId
 import io.mikoshift.natsu.data.local.TokenStore
 import io.mikoshift.natsu.data.mapper.mergeTokens
 import io.mikoshift.natsu.di.UnauthenticatedOAuthApi
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -14,14 +12,17 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
-class TokenAuthenticator @Inject constructor(
+class TokenAuthenticator
+@Inject
+constructor(
     private val tokenStore: TokenStore,
     @UnauthenticatedOAuthApi private val oauthApi: OAuthApi,
     @OAuthClientId private val clientId: String,
 ) : Authenticator {
-
     private val refreshMutex = Mutex()
     private var ongoingRefresh: CompletableDeferred<String?>? = null
 
@@ -32,29 +33,33 @@ class TokenAuthenticator @Inject constructor(
 
         val accessToken = runBlocking { refreshAccessToken() } ?: return null
 
-        return response.request.newBuilder()
+        return response.request
+            .newBuilder()
             .header("Authorization", "Bearer $accessToken")
             .build()
     }
 
     private suspend fun refreshAccessToken(): String? {
-        val role = refreshMutex.withLock {
-            ongoingRefresh?.let { return@withLock RefreshRole.Follower(it) }
+        val role =
+            refreshMutex.withLock {
+                ongoingRefresh?.let { return@withLock RefreshRole.Follower(it) }
 
-            val deferred = CompletableDeferred<String?>()
-            ongoingRefresh = deferred
-            RefreshRole.Leader(deferred)
-        }
+                val deferred = CompletableDeferred<String?>()
+                ongoingRefresh = deferred
+                RefreshRole.Leader(deferred)
+            }
 
         return when (role) {
             is RefreshRole.Follower -> role.deferred.await()
+
             is RefreshRole.Leader -> {
-                val accessToken = try {
-                    performRefresh()
-                } catch (_: Exception) {
-                    tokenStore.clearSessionBlocking()
-                    null
-                }
+                val accessToken =
+                    try {
+                        performRefresh()
+                    } catch (_: Exception) {
+                        tokenStore.clearSessionBlocking()
+                        null
+                    }
 
                 role.deferred.complete(accessToken)
                 refreshMutex.withLock {
@@ -68,16 +73,18 @@ class TokenAuthenticator @Inject constructor(
     }
 
     private suspend fun performRefresh(): String? {
-        val existingSession = tokenStore.getSessionBlocking() ?: run {
-            tokenStore.clearSessionBlocking()
-            return null
-        }
+        val existingSession =
+            tokenStore.getSessionBlocking() ?: run {
+                tokenStore.clearSessionBlocking()
+                return null
+            }
         val refreshToken = existingSession.refreshToken
 
-        val refreshResponse = oauthApi.refresh(
-            clientId = clientId,
-            refreshToken = refreshToken,
-        )
+        val refreshResponse =
+            oauthApi.refresh(
+                clientId = clientId,
+                refreshToken = refreshToken,
+            )
         val tokenResponse = refreshResponse.body()
         if (!refreshResponse.isSuccessful || tokenResponse == null) {
             tokenStore.clearSessionBlocking()
@@ -101,6 +108,7 @@ class TokenAuthenticator @Inject constructor(
 
     private sealed interface RefreshRole {
         data class Leader(val deferred: CompletableDeferred<String?>) : RefreshRole
+
         data class Follower(val deferred: CompletableDeferred<String?>) : RefreshRole
     }
 }

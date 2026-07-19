@@ -4,7 +4,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -88,10 +87,9 @@ fun BlockContent(
 private fun headingStyle(
     level: Int,
     bodyStyle: androidx.compose.ui.text.TextStyle,
-): androidx.compose.ui.text.TextStyle =
-    when (level) {
-        1 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.6f)
-        2 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.4f)
-        3 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.2f)
-        else -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.1f)
-    }
+): androidx.compose.ui.text.TextStyle = when (level) {
+    1 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.6f)
+    2 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.4f)
+    3 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.2f)
+    else -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.1f)
+}

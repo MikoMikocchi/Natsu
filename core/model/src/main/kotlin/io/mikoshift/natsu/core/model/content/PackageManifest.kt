@@ -13,11 +13,7 @@ data class PackageManifest(
     val sections: List<ManifestSection>,
 )
 
-data class TocNode(
-    val title: String,
-    val sectionId: String,
-    val children: List<TocNode> = emptyList(),
-)
+data class TocNode(val title: String, val sectionId: String, val children: List<TocNode> = emptyList())
 
 data class ManifestSection(
     val id: String,

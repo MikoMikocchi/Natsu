@@ -25,29 +25,24 @@ import io.mikoshift.natsu.data.remote.ReaderSettingApi
 import io.mikoshift.natsu.data.remote.TokenAuthenticator
 import io.mikoshift.natsu.data.remote.UserInfoApi
 import okhttp3.OkHttpClient
-import javax.inject.Singleton
 import retrofit2.Retrofit
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object DataModule {
-
     @Provides
     @Singleton
-    fun provideNatsuDatabase(
-        @ApplicationContext context: Context,
-    ): NatsuDatabase = NatsuDatabase.create(context)
+    fun provideNatsuDatabase(@ApplicationContext context: Context): NatsuDatabase = NatsuDatabase.create(context)
 
     @Provides
     fun provideDocumentDao(database: NatsuDatabase): DocumentDao = database.documentDao()
 
     @Provides
-    fun provideReadingProgressDao(database: NatsuDatabase): ReadingProgressDao =
-        database.readingProgressDao()
+    fun provideReadingProgressDao(database: NatsuDatabase): ReadingProgressDao = database.readingProgressDao()
 
     @Provides
-    fun provideDocumentCacheDao(database: NatsuDatabase): DocumentCacheDao =
-        database.documentCacheDao()
+    fun provideDocumentCacheDao(database: NatsuDatabase): DocumentCacheDao = database.documentCacheDao()
 
     @Provides
     fun provideSyncOutboxDao(database: NatsuDatabase): SyncOutboxDao = database.syncOutboxDao()
@@ -57,19 +52,15 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideSyncCursorStore(syncStateDao: SyncStateDao): SyncCursorStore =
-        SyncCursorStore(syncStateDao)
+    fun provideSyncCursorStore(syncStateDao: SyncStateDao): SyncCursorStore = SyncCursorStore(syncStateDao)
 
     @Provides
     @Singleton
-    fun provideSyncOutboxStore(syncOutboxDao: SyncOutboxDao): SyncOutboxStore =
-        SyncOutboxStore(syncOutboxDao)
+    fun provideSyncOutboxStore(syncOutboxDao: SyncOutboxDao): SyncOutboxStore = SyncOutboxStore(syncOutboxDao)
 
     @Provides
     @Singleton
-    fun providePackageFileStore(
-        @ApplicationContext context: Context,
-    ): PackageFileStore = PackageFileStore(context)
+    fun providePackageFileStore(@ApplicationContext context: Context): PackageFileStore = PackageFileStore(context)
 
     @Provides
     @Singleton
@@ -78,8 +69,7 @@ object DataModule {
         networkFactory: NetworkFactory,
         authInterceptor: AuthInterceptor,
         tokenAuthenticator: TokenAuthenticator,
-    ): OkHttpClient =
-        networkFactory.createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)
+    ): OkHttpClient = networkFactory.createAuthenticatedOkHttpClient(authInterceptor, tokenAuthenticator)
 
     @Provides
     @Singleton
@@ -99,10 +89,9 @@ object DataModule {
 
     @Provides
     @UnauthenticatedAuthApi
-    fun provideUnauthenticatedAuthApi(networkFactory: NetworkFactory): AuthApi =
-        networkFactory.createAuthApi(
-            networkFactory.createRetrofit(networkFactory.createUnauthenticatedOkHttpClient()),
-        )
+    fun provideUnauthenticatedAuthApi(networkFactory: NetworkFactory): AuthApi = networkFactory.createAuthApi(
+        networkFactory.createRetrofit(networkFactory.createUnauthenticatedOkHttpClient()),
+    )
 
     @Provides
     @UnauthenticatedOAuthApi
@@ -132,10 +121,8 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideDocumentApi(
-        networkFactory: NetworkFactory,
-        @AuthenticatedRetrofit retrofit: Retrofit,
-    ): DocumentApi = networkFactory.createDocumentApi(retrofit)
+    fun provideDocumentApi(networkFactory: NetworkFactory, @AuthenticatedRetrofit retrofit: Retrofit): DocumentApi =
+        networkFactory.createDocumentApi(retrofit)
 
     @Provides
     @Singleton

@@ -34,16 +34,15 @@ data class ManifestSectionDto(
 )
 
 @Serializable
-data class MarkDto(
-    val type: MarkTypeDto,
-    val start: Int,
-    val end: Int,
-)
+data class MarkDto(val type: MarkTypeDto, val start: Int, val end: Int)
 
 @Serializable
 enum class MarkTypeDto {
-    @SerialName("BOLD") BOLD,
-    @SerialName("ITALIC") ITALIC,
+    @SerialName("BOLD")
+    BOLD,
+
+    @SerialName("ITALIC")
+    ITALIC,
 }
 
 @Serializable
@@ -54,11 +53,8 @@ sealed interface BlockDto {
 
 @Serializable
 @SerialName("paragraph")
-data class ParagraphBlockDto(
-    override val id: String,
-    val text: String,
-    val marks: List<MarkDto> = emptyList(),
-) : BlockDto
+data class ParagraphBlockDto(override val id: String, val text: String, val marks: List<MarkDto> = emptyList()) :
+    BlockDto
 
 @Serializable
 @SerialName("heading")
@@ -79,11 +75,8 @@ data class ImageBlockDto(
 
 @Serializable
 @SerialName("blockquote")
-data class BlockquoteBlockDto(
-    override val id: String,
-    val text: String,
-    val marks: List<MarkDto> = emptyList(),
-) : BlockDto
+data class BlockquoteBlockDto(override val id: String, val text: String, val marks: List<MarkDto> = emptyList()) :
+    BlockDto
 
 @Serializable
 @SerialName("list_item")
@@ -97,6 +90,4 @@ data class ListItemBlockDto(
 
 @Serializable
 @SerialName("divider")
-data class DividerBlockDto(
-    override val id: String,
-) : BlockDto
+data class DividerBlockDto(override val id: String) : BlockDto

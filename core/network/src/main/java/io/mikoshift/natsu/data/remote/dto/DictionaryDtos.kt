@@ -5,8 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class MatchKindDto {
-    @SerialName("DIRECT") DIRECT,
-    @SerialName("DEINFLECTION") DEINFLECTION,
+    @SerialName("DIRECT")
+    DIRECT,
+
+    @SerialName("DEINFLECTION")
+    DEINFLECTION,
 }
 
 @Serializable

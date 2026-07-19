@@ -1,0 +1,54 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    `kotlin-dsl`
+}
+
+group = "io.mikoshift.natsu.buildlogic"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
+}
+
+dependencies {
+    compileOnly(libs.android.gradlePlugin)
+    compileOnly(libs.kotlin.gradlePlugin)
+    compileOnly(libs.detekt.gradlePlugin)
+    compileOnly(libs.kover.gradlePlugin)
+}
+
+gradlePlugin {
+    plugins {
+        register("jvmLibrary") {
+            id = "natsu.jvm.library"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuJvmLibraryConventionPlugin"
+        }
+        register("androidLibrary") {
+            id = "natsu.android.library"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidLibraryConventionPlugin"
+        }
+        register("androidFeature") {
+            id = "natsu.android.feature"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidFeatureConventionPlugin"
+        }
+        register("androidApplication") {
+            id = "natsu.android.application"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidApplicationConventionPlugin"
+        }
+        register("detekt") {
+            id = "natsu.detekt"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuDetektConventionPlugin"
+        }
+        register("kover") {
+            id = "natsu.kover"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuKoverConventionPlugin"
+        }
+    }
+}

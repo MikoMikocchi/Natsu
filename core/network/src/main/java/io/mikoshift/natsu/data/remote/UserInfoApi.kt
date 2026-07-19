@@ -6,7 +6,6 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 
 interface UserInfoApi {
-
     @GET("userinfo")
     suspend fun getUserInfo(): Response<UserInfoResponse>
 

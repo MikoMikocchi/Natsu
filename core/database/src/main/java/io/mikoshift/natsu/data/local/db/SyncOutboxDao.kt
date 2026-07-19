@@ -7,7 +7,6 @@ import androidx.room.Query
 
 @Dao
 interface SyncOutboxDao {
-
     @Query(
         """
         SELECT * FROM sync_outbox
@@ -33,12 +32,7 @@ interface SyncOutboxDao {
     suspend fun upsert(entry: SyncOutboxEntity)
 
     @Query("UPDATE sync_outbox SET status = :status, attempts = :attempts, lastError = :lastError WHERE id = :id")
-    suspend fun updateStatus(
-        id: String,
-        status: SyncOutboxStatus,
-        attempts: Int,
-        lastError: String?,
-    )
+    suspend fun updateStatus(id: String, status: SyncOutboxStatus, attempts: Int, lastError: String?)
 
     @Query("UPDATE sync_outbox SET status = 'PENDING', lastError = NULL WHERE status = 'IN_PROGRESS'")
     suspend fun resetInProgressToPending()

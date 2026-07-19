@@ -14,9 +14,6 @@ import io.mikoshift.natsu.data.local.db.NatsuDatabase
 import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
 import io.mikoshift.natsu.data.remote.FakeDocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
-import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
-import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -29,10 +26,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.IOException
+import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
+import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
 @RunWith(AndroidJUnit4::class)
 class DocumentSyncEngineIntegrationTest {
-
     private lateinit var context: Context
     private lateinit var database: NatsuDatabase
     private lateinit var fakeApi: FakeDocumentApi
@@ -45,33 +44,38 @@ class DocumentSyncEngineIntegrationTest {
     @Before
     fun setUp() {
         context = ApplicationProvider.getApplicationContext()
-        database = Room.inMemoryDatabaseBuilder(
-            context,
-            NatsuDatabase::class.java,
-        ).allowMainThreadQueries().build()
+        database =
+            Room
+                .inMemoryDatabaseBuilder(
+                    context,
+                    NatsuDatabase::class.java,
+                ).allowMainThreadQueries()
+                .build()
 
         fakeApi = FakeDocumentApi()
         syncCursorStore = SyncCursorStore(database.syncStateDao())
         syncOutboxStore = SyncOutboxStore(database.syncOutboxDao())
         packageFileStore = PackageFileStore(context)
-        packageDownloadService = PackageDownloadService(
-            documentApi = fakeApi.asDocumentApi(),
-            documentDao = database.documentDao(),
-            documentCacheDao = database.documentCacheDao(),
-            packageFileStore = packageFileStore,
-        )
+        packageDownloadService =
+            PackageDownloadService(
+                documentApi = fakeApi.asDocumentApi(),
+                documentDao = database.documentDao(),
+                documentCacheDao = database.documentCacheDao(),
+                packageFileStore = packageFileStore,
+            )
 
-        engine = DocumentSyncEngine(
-            documentApi = fakeApi.asDocumentApi(),
-            documentDao = database.documentDao(),
-            readingProgressDao = database.readingProgressDao(),
-            documentCacheDao = database.documentCacheDao(),
-            syncOutboxDao = database.syncOutboxDao(),
-            syncOutboxStore = syncOutboxStore,
-            syncCursorStore = syncCursorStore,
-            packageFileStore = packageFileStore,
-            packageDownloadService = packageDownloadService,
-        )
+        engine =
+            DocumentSyncEngine(
+                documentApi = fakeApi.asDocumentApi(),
+                documentDao = database.documentDao(),
+                readingProgressDao = database.readingProgressDao(),
+                documentCacheDao = database.documentCacheDao(),
+                syncOutboxDao = database.syncOutboxDao(),
+                syncOutboxStore = syncOutboxStore,
+                syncCursorStore = syncCursorStore,
+                packageFileStore = packageFileStore,
+                packageDownloadService = packageDownloadService,
+            )
     }
 
     @After

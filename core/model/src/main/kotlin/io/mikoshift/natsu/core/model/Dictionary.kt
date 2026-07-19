@@ -9,28 +9,16 @@ data class Dictionary(
     val enabled: Boolean,
 )
 
-data class DictionaryPagination(
-    val page: Int,
-    val perPage: Int,
-    val totalCount: Int,
-    val totalPages: Int,
-)
+data class DictionaryPagination(val page: Int, val perPage: Int, val totalCount: Int, val totalPages: Int)
 
-data class DictionaryPage(
-    val dictionaries: List<Dictionary>,
-    val pagination: DictionaryPagination,
-)
+data class DictionaryPage(val dictionaries: List<Dictionary>, val pagination: DictionaryPagination)
 
 enum class MatchKind {
     DIRECT,
     DEINFLECTION,
 }
 
-data class DictionarySense(
-    val definitions: List<String>,
-    val partsOfSpeech: List<String>,
-    val dictionaryTitle: String,
-)
+data class DictionarySense(val definitions: List<String>, val partsOfSpeech: List<String>, val dictionaryTitle: String)
 
 data class DictionaryLookupResult(
     val word: String,

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+echo "Running pre-commit checks..."
+
+./gradlew spotlessCheck :app:assertModuleGraph :core:architecture-test:test --no-daemon --quiet
+
+echo "Pre-commit checks passed."

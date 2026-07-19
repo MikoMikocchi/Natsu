@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -21,11 +20,7 @@ import io.mikoshift.natsu.feature.reader.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TocSheet(
-    toc: List<TocNode>,
-    onDismiss: () -> Unit,
-    onSectionSelected: (String) -> Unit,
-) {
+fun TocSheet(toc: List<TocNode>, onDismiss: () -> Unit, onSectionSelected: (String) -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -50,11 +45,7 @@ fun TocSheet(
     }
 }
 
-private data class FlatTocNode(
-    val title: String,
-    val sectionId: String,
-    val depth: Int,
-)
+private data class FlatTocNode(val title: String, val sectionId: String, val depth: Int)
 
 private fun flattenToc(nodes: List<TocNode>, depth: Int = 0): List<FlatTocNode> = buildList {
     nodes.forEach { node ->

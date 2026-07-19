@@ -42,11 +42,7 @@ import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(
-    viewModel: ProfileViewModel,
-    onNavigateBack: () -> Unit,
-    onNavigateToChangePassword: () -> Unit,
-) {
+fun ProfileScreen(viewModel: ProfileViewModel, onNavigateBack: () -> Unit, onNavigateToChangePassword: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -242,10 +238,7 @@ internal fun ProfileScreenContent(
 }
 
 @Composable
-private fun DictionaryRow(
-    dictionary: DictionaryUiModel,
-    onToggle: () -> Unit,
-) {
+private fun DictionaryRow(dictionary: DictionaryUiModel, onToggle: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -267,11 +260,7 @@ private fun DictionaryRow(
 }
 
 @Composable
-private fun SessionRow(
-    session: SessionUiModel,
-    isRevoking: Boolean,
-    onRevoke: () -> Unit,
-) {
+private fun SessionRow(session: SessionUiModel, isRevoking: Boolean, onRevoke: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

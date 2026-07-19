@@ -7,7 +7,6 @@ import androidx.room.Query
 
 @Dao
 interface DocumentCacheDao {
-
     @Query("SELECT * FROM document_cache WHERE documentId = :documentId")
     suspend fun getByDocumentId(documentId: String): DocumentCacheEntity?
 

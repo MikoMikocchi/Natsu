@@ -24,7 +24,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var authRepository: FakeAuthRepository
@@ -41,10 +40,11 @@ class LoginViewModelTest {
         every { context.getString(R.string.error_generic) } returns "Something went wrong, please try again"
 
         authRepository = FakeAuthRepository()
-        viewModel = LoginViewModel(
-            context = context,
-            login = LoginUseCase(authRepository, FakeAnalyticsTracker()),
-        )
+        viewModel =
+            LoginViewModel(
+                context = context,
+                login = LoginUseCase(authRepository, FakeAnalyticsTracker()),
+            )
     }
 
     @After

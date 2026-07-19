@@ -1,9 +1,6 @@
 package io.mikoshift.natsu.core.model.content
 
-data class DocumentPackage(
-    val manifest: PackageManifest,
-    val sections: Map<String, List<Block>>,
-) {
+data class DocumentPackage(val manifest: PackageManifest, val sections: Map<String, List<Block>>) {
     val sectionOrder: List<String> = manifest.sections.map { it.id }
 
     fun blocksInReadingOrder(): List<ReaderBlock> = buildList {
@@ -22,8 +19,4 @@ data class DocumentPackage(
     }
 }
 
-data class ReaderBlock(
-    val sectionId: String,
-    val blockIndex: Int,
-    val block: Block,
-)
+data class ReaderBlock(val sectionId: String, val blockIndex: Int, val block: Block)

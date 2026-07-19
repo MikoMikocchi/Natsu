@@ -23,7 +23,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChangePasswordViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var authRepository: FakeAuthRepository
@@ -40,10 +39,11 @@ class ChangePasswordViewModelTest {
         every { context.getString(R.string.error_generic) } returns "Something went wrong"
 
         authRepository = FakeAuthRepository()
-        viewModel = ChangePasswordViewModel(
-            context = context,
-            changePassword = ChangePasswordUseCase(authRepository),
-        )
+        viewModel =
+            ChangePasswordViewModel(
+                context = context,
+                changePassword = ChangePasswordUseCase(authRepository),
+            )
     }
 
     @After
@@ -112,14 +112,15 @@ class ChangePasswordViewModelTest {
 
     @Test
     fun submit_onValidationError_mapsFieldErrors() = runTest {
-        authRepository.changePasswordResult = Result.failure(
-            AuthError.ValidationError(
-                mapOf(
-                    "current_password" to listOf("Incorrect password"),
-                    "password" to listOf("Too weak"),
+        authRepository.changePasswordResult =
+            Result.failure(
+                AuthError.ValidationError(
+                    mapOf(
+                        "current_password" to listOf("Incorrect password"),
+                        "password" to listOf("Too weak"),
+                    ),
                 ),
-            ),
-        )
+            )
         viewModel.onCurrentPasswordChange("wrong")
         viewModel.onPasswordChange("newpassword")
         viewModel.onPasswordConfirmationChange("newpassword")

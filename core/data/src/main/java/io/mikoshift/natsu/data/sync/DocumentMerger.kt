@@ -7,7 +7,6 @@ import io.mikoshift.natsu.data.mapper.toProgressEntity
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
 
 object DocumentMerger {
-
     fun merge(
         server: DocumentResponse,
         localDocument: DocumentEntity?,
@@ -30,27 +29,32 @@ object DocumentMerger {
             return serverDocument to serverProgress
         }
 
-        val mergedDocument = when {
-            hasPendingMetadata -> localDocument.copy(
-                status = serverDocument.status,
-                importError = serverDocument.importError,
-                packageSizeBytes = serverDocument.packageSizeBytes,
-                packageUpdatedAtMs = serverDocument.packageUpdatedAtMs,
-                packageSha256 = serverDocument.packageSha256,
-                charCount = if (serverDocument.charCount > 0) {
-                    serverDocument.charCount
-                } else {
-                    localDocument.charCount
-                },
-            )
-            else -> serverDocument
-        }
+        val mergedDocument =
+            when {
+                hasPendingMetadata ->
+                    localDocument.copy(
+                        status = serverDocument.status,
+                        importError = serverDocument.importError,
+                        packageSizeBytes = serverDocument.packageSizeBytes,
+                        packageUpdatedAtMs = serverDocument.packageUpdatedAtMs,
+                        packageSha256 = serverDocument.packageSha256,
+                        charCount =
+                        if (serverDocument.charCount > 0) {
+                            serverDocument.charCount
+                        } else {
+                            localDocument.charCount
+                        },
+                    )
 
-        val mergedProgress = when {
-            hasPendingProgress && localProgress != null -> localProgress
-            hasPendingProgress -> serverProgress
-            else -> serverProgress
-        }
+                else -> serverDocument
+            }
+
+        val mergedProgress =
+            when {
+                hasPendingProgress && localProgress != null -> localProgress
+                hasPendingProgress -> serverProgress
+                else -> serverProgress
+            }
 
         return mergedDocument to mergedProgress
     }

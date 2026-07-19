@@ -1,8 +1,8 @@
 package io.mikoshift.natsu.data.remote
 
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentShowResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentShowResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -18,7 +18,6 @@ import retrofit2.http.Query
 import retrofit2.http.Streaming
 
 interface DocumentApi {
-
     @GET("documents")
     suspend fun indexDocuments(
         @Query("since") since: Long,

@@ -1,8 +1,5 @@
 package io.mikoshift.natsu.data.repository
 
-import io.mikoshift.natsu.core.model.FuriganaMode
-import io.mikoshift.natsu.core.model.ReaderSettings
-import io.mikoshift.natsu.core.model.ReaderTheme
 import io.mikoshift.natsu.data.local.ReaderSettingStore
 import io.mikoshift.natsu.data.remote.ReaderSettingApi
 import io.mikoshift.natsu.data.remote.dto.FuriganaModeDto
@@ -19,7 +16,6 @@ import org.junit.Test
 import retrofit2.Response
 
 class ReaderSettingRepositoryImplTest {
-
     private lateinit var readerSettingApi: ReaderSettingApi
     private lateinit var readerSettingStore: ReaderSettingStore
     private lateinit var repository: ReaderSettingRepositoryImpl
@@ -28,10 +24,11 @@ class ReaderSettingRepositoryImplTest {
     fun setUp() {
         readerSettingApi = mockk()
         readerSettingStore = mockk(relaxed = true)
-        repository = ReaderSettingRepositoryImpl(
-            readerSettingApi = readerSettingApi,
-            readerSettingStore = readerSettingStore,
-        )
+        repository =
+            ReaderSettingRepositoryImpl(
+                readerSettingApi = readerSettingApi,
+                readerSettingStore = readerSettingStore,
+            )
     }
 
     @Test
@@ -45,7 +42,8 @@ class ReaderSettingRepositoryImplTest {
     }
 
     private fun sampleResponse() = ReaderSettingShowResponse(
-        settings = ReaderSettingResponse(
+        settings =
+        ReaderSettingResponse(
             fontSizeSp = 16.0,
             lineSpacingMultiplier = 1.8,
             theme = ReaderThemeDto.LIGHT,

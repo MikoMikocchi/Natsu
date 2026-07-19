@@ -2,19 +2,18 @@ package io.mikoshift.natsu.data.remote
 
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentShowResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentShowResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
-import java.security.MessageDigest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
+import java.security.MessageDigest
 
 class FakeDocumentApi {
-
     var serverTimeMs: Long = 1_000L
 
     private val documents = linkedMapOf<String, DocumentResponse>()
@@ -41,10 +40,7 @@ class FakeDocumentApi {
     fun getDocument(id: String): DocumentResponse? = documents[id]
 
     fun asDocumentApi(): DocumentApi = object : DocumentApi {
-        override suspend fun indexDocuments(
-            since: Long,
-            limit: Int?,
-        ): Response<DocumentIndexResponse> {
+        override suspend fun indexDocuments(since: Long, limit: Int?): Response<DocumentIndexResponse> {
             documentsPullSinceValues.add(since)
             val delta = documents.values.filter { it.updatedAtMs > since }
             return Response.success(
@@ -70,38 +66,41 @@ class FakeDocumentApi {
                 return Response.success(cached.response)
             }
 
-            val syncedDocuments = request.documents.map { item ->
-                val existing = documents[item.id]
-                val merged = if (existing == null || item.updatedAtMs >= existing.updatedAtMs) {
-                    DocumentResponse(
-                        id = item.id,
-                        title = item.title ?: existing?.title ?: "Untitled",
-                        sourceFormat = item.sourceFormat,
-                        status = existing?.status ?: DocumentStatus.READY,
-                        importError = existing?.importError,
-                        importedAt = item.importedAt,
-                        charCount = item.charCount,
-                        lastReadCharOffset = item.lastReadCharOffset,
-                        lastReadSectionId = item.lastReadSectionId,
-                        lastReadBlockIndex = item.lastReadBlockIndex,
-                        lastReadBlockCharOffset = item.lastReadBlockCharOffset,
-                        updatedAtMs = item.updatedAtMs,
-                        packageSizeBytes = existing?.packageSizeBytes ?: 0,
-                        packageUpdatedAtMs = existing?.packageUpdatedAtMs ?: 0,
-                        packageSha256 = existing?.packageSha256,
-                        deleted = item.deleted,
-                    )
-                } else {
-                    existing
+            val syncedDocuments =
+                request.documents.map { item ->
+                    val existing = documents[item.id]
+                    val merged =
+                        if (existing == null || item.updatedAtMs >= existing.updatedAtMs) {
+                            DocumentResponse(
+                                id = item.id,
+                                title = item.title ?: existing?.title ?: "Untitled",
+                                sourceFormat = item.sourceFormat,
+                                status = existing?.status ?: DocumentStatus.READY,
+                                importError = existing?.importError,
+                                importedAt = item.importedAt,
+                                charCount = item.charCount,
+                                lastReadCharOffset = item.lastReadCharOffset,
+                                lastReadSectionId = item.lastReadSectionId,
+                                lastReadBlockIndex = item.lastReadBlockIndex,
+                                lastReadBlockCharOffset = item.lastReadBlockCharOffset,
+                                updatedAtMs = item.updatedAtMs,
+                                packageSizeBytes = existing?.packageSizeBytes ?: 0,
+                                packageUpdatedAtMs = existing?.packageUpdatedAtMs ?: 0,
+                                packageSha256 = existing?.packageSha256,
+                                deleted = item.deleted,
+                            )
+                        } else {
+                            existing
+                        }
+                    documents[item.id] = merged
+                    merged
                 }
-                documents[item.id] = merged
-                merged
-            }
 
-            val response = DocumentIndexResponse(
-                documents = syncedDocuments,
-                serverTimeMs = serverTimeMs,
-            )
+            val response =
+                DocumentIndexResponse(
+                    documents = syncedDocuments,
+                    serverTimeMs = serverTimeMs,
+                )
             idempotencyCache[idempotencyKey] = CachedIdempotentResponse(requestHash, response)
             return Response.success(response)
         }
@@ -117,34 +116,33 @@ class FakeDocumentApi {
 
         override suspend fun downloadPackage(id: String): Response<ResponseBody> {
             downloadPackageCallCount++
-            val content = packages[id]
-                ?: return Response.error(404, "missing".toResponseBody("text/plain".toMediaType()))
+            val content =
+                packages[id]
+                    ?: return Response.error(404, "missing".toResponseBody("text/plain".toMediaType()))
             return Response.success(content.toResponseBody("application/zip".toMediaType()))
         }
     }
 
-    private data class CachedIdempotentResponse(
-        val requestHash: String,
-        val response: DocumentIndexResponse,
-    )
+    private data class CachedIdempotentResponse(val requestHash: String, val response: DocumentIndexResponse)
 
     private fun hashRequest(request: DocumentSyncRequest): String {
-        val canonical = request.documents.joinToString("|") { item ->
-            listOf(
-                item.id,
-                item.idempotencyKey,
-                item.title,
-                item.sourceFormat.name,
-                item.importedAt,
-                item.charCount,
-                item.lastReadCharOffset,
-                item.lastReadSectionId,
-                item.lastReadBlockIndex,
-                item.lastReadBlockCharOffset,
-                item.updatedAtMs,
-                item.deleted,
-            ).joinToString(",")
-        }
+        val canonical =
+            request.documents.joinToString("|") { item ->
+                listOf(
+                    item.id,
+                    item.idempotencyKey,
+                    item.title,
+                    item.sourceFormat.name,
+                    item.importedAt,
+                    item.charCount,
+                    item.lastReadCharOffset,
+                    item.lastReadSectionId,
+                    item.lastReadBlockIndex,
+                    item.lastReadBlockCharOffset,
+                    item.updatedAtMs,
+                    item.deleted,
+                ).joinToString(",")
+            }
         val digest = MessageDigest.getInstance("SHA-256").digest(canonical.toByteArray())
         return digest.joinToString("") { byte -> "%02x".format(byte) }
     }

@@ -28,11 +28,7 @@ import io.mikoshift.natsu.feature.auth.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @Composable
-fun LoginScreen(
-    viewModel: LoginViewModel,
-    onNavigateToRegister: () -> Unit,
-    onNavigateToForgotPassword: () -> Unit,
-) {
+fun LoginScreen(viewModel: LoginViewModel, onNavigateToRegister: () -> Unit, onNavigateToForgotPassword: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LoginScreenContent(
         uiState = uiState,

@@ -13,14 +13,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SyncScheduler @Inject constructor(
-    @ApplicationContext private val context: Context,
-) {
+class SyncScheduler
+@Inject
+constructor(@ApplicationContext private val context: Context) {
     fun scheduleImmediateSync() {
-        val request = OneTimeWorkRequestBuilder<DocumentSyncWorker>()
-            .setConstraints(SyncPolicy.immediateConstraints())
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
-            .build()
+        val request =
+            OneTimeWorkRequestBuilder<DocumentSyncWorker>()
+                .setConstraints(SyncPolicy.immediateConstraints())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
+                .build()
 
         WorkManager.getInstance(context).enqueueUniqueWork(
             IMMEDIATE_SYNC_WORK_NAME,
@@ -30,10 +31,11 @@ class SyncScheduler @Inject constructor(
     }
 
     fun scheduleOnAppStart() {
-        val request = OneTimeWorkRequestBuilder<DocumentSyncWorker>()
-            .setConstraints(SyncPolicy.immediateConstraints())
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
-            .build()
+        val request =
+            OneTimeWorkRequestBuilder<DocumentSyncWorker>()
+                .setConstraints(SyncPolicy.immediateConstraints())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
+                .build()
 
         WorkManager.getInstance(context).enqueueUniqueWork(
             IMMEDIATE_SYNC_WORK_NAME,
@@ -43,13 +45,13 @@ class SyncScheduler @Inject constructor(
     }
 
     fun schedulePeriodic() {
-        val request = PeriodicWorkRequestBuilder<DocumentSyncWorker>(
-            PERIODIC_SYNC_INTERVAL_MINUTES,
-            TimeUnit.MINUTES,
-        )
-            .setConstraints(SyncPolicy.periodicConstraints())
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
-            .build()
+        val request =
+            PeriodicWorkRequestBuilder<DocumentSyncWorker>(
+                PERIODIC_SYNC_INTERVAL_MINUTES,
+                TimeUnit.MINUTES,
+            ).setConstraints(SyncPolicy.periodicConstraints())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_DELAY_MINUTES, TimeUnit.MINUTES)
+                .build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             PERIODIC_SYNC_WORK_NAME,

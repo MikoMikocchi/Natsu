@@ -18,10 +18,8 @@ data class LibraryUiState(
 
 sealed interface LibraryEffect {
     data class ShowMessage(val text: String) : LibraryEffect
-    data class NavigateToReader(
-        val documentId: String,
-        val initialCharOffset: Int? = null,
-    ) : LibraryEffect
+
+    data class NavigateToReader(val documentId: String, val initialCharOffset: Int? = null) : LibraryEffect
 }
 
 data class DocumentListItem(
@@ -55,4 +53,3 @@ fun DocumentSearchResult.toSearchResultItem(): SearchResultItem = SearchResultIt
     snippets = matches.map { it.snippet },
     initialCharOffset = matches.firstOrNull()?.charOffset,
 )
-

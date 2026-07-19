@@ -13,7 +13,6 @@ import io.mikoshift.natsu.core.common.di.RootBaseUrl
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
     @Provides
     @BaseUrl
     fun provideBaseUrl(): String = BuildConfig.BASE_URL

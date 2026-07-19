@@ -6,7 +6,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class AndroidAppLogger @Inject constructor() : AppLogger {
+class AndroidAppLogger
+@Inject
+constructor() : AppLogger {
     override fun d(tag: String, message: String) {
         Log.d(tag, message)
     }

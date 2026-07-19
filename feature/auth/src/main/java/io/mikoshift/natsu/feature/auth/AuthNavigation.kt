@@ -56,7 +56,8 @@ fun NavGraphBuilder.authGraph(navController: NavHostController) {
     }
 
     composable<ResetPasswordRoute>(
-        deepLinks = listOf(
+        deepLinks =
+        listOf(
             navDeepLink<ResetPasswordRoute>(
                 basePath = "https://natsu.mikoshift.io/reset-password",
             ),

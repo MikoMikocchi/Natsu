@@ -5,7 +5,6 @@ import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
 import io.mikoshift.natsu.data.local.SyncOutboxStore
 import io.mikoshift.natsu.data.local.db.DocumentCacheDao
-import io.mikoshift.natsu.data.local.db.DocumentCacheEntity
 import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.local.db.ReadingProgressDao
 import io.mikoshift.natsu.data.local.db.SyncEntityType
@@ -17,14 +16,16 @@ import io.mikoshift.natsu.data.mapper.toSyncItemRequest
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
+import retrofit2.Response
 import java.io.IOException
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
-import retrofit2.Response
 
 @Singleton
-class DocumentSyncEngine @Inject constructor(
+class DocumentSyncEngine
+@Inject
+constructor(
     private val documentApi: DocumentApi,
     private val documentDao: DocumentDao,
     private val readingProgressDao: ReadingProgressDao,
@@ -35,7 +36,6 @@ class DocumentSyncEngine @Inject constructor(
     private val packageFileStore: PackageFileStore,
     private val packageDownloadService: PackageDownloadService,
 ) {
-
     suspend fun sync(): Result<Unit> = runCatching {
         val documentsCursor = pullDocuments()
         pushOutbox()
@@ -45,9 +45,13 @@ class DocumentSyncEngine @Inject constructor(
         onSuccess = { Result.success(Unit) },
         onFailure = { throwable ->
             Result.failure(
-                if (throwable is DocumentError) throwable
-                else if (throwable is IOException) DocumentError.NetworkFailure
-                else DocumentError.Unknown(throwable.message),
+                if (throwable is DocumentError) {
+                    throwable
+                } else if (throwable is IOException) {
+                    DocumentError.NetworkFailure
+                } else {
+                    DocumentError.Unknown(throwable.message)
+                },
             )
         },
     )
@@ -63,13 +67,14 @@ class DocumentSyncEngine @Inject constructor(
             val localProgress = readingProgressDao.getByDocumentId(serverDoc.id)
             val hasPendingMetadata = syncOutboxStore.hasPendingMetadata(serverDoc.id)
             val hasPendingProgress = syncOutboxStore.hasPendingProgress(serverDoc.id)
-            val (mergedDocument, mergedProgress) = DocumentMerger.merge(
-                server = serverDoc,
-                localDocument = localDocument,
-                localProgress = localProgress,
-                hasPendingMetadata = hasPendingMetadata,
-                hasPendingProgress = hasPendingProgress,
-            )
+            val (mergedDocument, mergedProgress) =
+                DocumentMerger.merge(
+                    server = serverDoc,
+                    localDocument = localDocument,
+                    localProgress = localProgress,
+                    hasPendingMetadata = hasPendingMetadata,
+                    hasPendingProgress = hasPendingProgress,
+                )
             documentDao.upsert(mergedDocument)
             readingProgressDao.upsert(mergedProgress)
 
@@ -77,10 +82,11 @@ class DocumentSyncEngine @Inject constructor(
                 maxUpdatedAtMs = serverDoc.updatedAtMs
             }
 
-            val localMaxTs = maxOf(
-                localDocument?.updatedAtMs ?: 0L,
-                localProgress?.updatedAtMs ?: 0L,
-            )
+            val localMaxTs =
+                maxOf(
+                    localDocument?.updatedAtMs ?: 0L,
+                    localProgress?.updatedAtMs ?: 0L,
+                )
             if (serverDoc.updatedAtMs > localMaxTs) {
                 syncOutboxStore.clearEntity(SyncEntityType.METADATA, serverDoc.id)
                 syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, serverDoc.id)
@@ -110,14 +116,12 @@ class DocumentSyncEngine @Inject constructor(
         }
     }
 
-    private suspend fun pushDocumentsBatch(
-        documentIds: List<String>,
-        pending: List<SyncOutboxEntity>,
-    ) {
+    private suspend fun pushDocumentsBatch(documentIds: List<String>, pending: List<SyncOutboxEntity>) {
         val batchEntries = pending.filter { it.entityId in documentIds }
-        val attemptsById = batchEntries.associate { entry ->
-            entry.id to entry.attempts + 1
-        }
+        val attemptsById =
+            batchEntries.associate { entry ->
+                entry.id to entry.attempts + 1
+            }
         batchEntries.forEach { entry ->
             syncOutboxDao.updateStatus(
                 id = entry.id,
@@ -127,16 +131,18 @@ class DocumentSyncEngine @Inject constructor(
             )
         }
 
-        val syncItems = documentIds.mapNotNull { documentId ->
-            val document = documentDao.getById(documentId) ?: run {
-                syncOutboxStore.clearEntity(SyncEntityType.METADATA, documentId)
-                syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, documentId)
-                return@mapNotNull null
+        val syncItems =
+            documentIds.mapNotNull { documentId ->
+                val document =
+                    documentDao.getById(documentId) ?: run {
+                        syncOutboxStore.clearEntity(SyncEntityType.METADATA, documentId)
+                        syncOutboxStore.clearEntity(SyncEntityType.PROGRESS, documentId)
+                        return@mapNotNull null
+                    }
+                val progress = readingProgressDao.getByDocumentId(documentId)
+                val itemIdempotencyKey = itemIdempotencyKey(batchEntries, documentId)
+                document.toSyncItemRequest(progress, itemIdempotencyKey)
             }
-            val progress = readingProgressDao.getByDocumentId(documentId)
-            val itemIdempotencyKey = itemIdempotencyKey(batchEntries, documentId)
-            document.toSyncItemRequest(progress, itemIdempotencyKey)
-        }
 
         if (syncItems.isEmpty()) return
 
@@ -175,8 +181,9 @@ class DocumentSyncEngine @Inject constructor(
     private suspend fun applySyncResponse(body: DocumentIndexResponse) {
         for (serverDoc in body.documents) {
             val localCache = documentCacheDao.getByDocumentId(serverDoc.id)
-            val keepPackage = serverDoc.packageSha256 != null &&
-                serverDoc.packageSha256 == localCache?.cachedPackageSha256
+            val keepPackage =
+                serverDoc.packageSha256 != null &&
+                    serverDoc.packageSha256 == localCache?.cachedPackageSha256
 
             val (documentEntity, progressEntity) = serverDoc.toEntities()
             documentDao.upsert(documentEntity)
@@ -207,12 +214,11 @@ class DocumentSyncEngine @Inject constructor(
         throw mapErrorResponse(response)
     }
 
-    private fun <T> mapErrorResponse(response: Response<T>): DocumentError =
-        if (response.code() == 401) {
-            DocumentError.Unauthorized
-        } else {
-            DocumentError.Unknown(response.message())
-        }
+    private fun <T> mapErrorResponse(response: Response<T>): DocumentError = if (response.code() == 401) {
+        DocumentError.Unauthorized
+    } else {
+        DocumentError.Unknown(response.message())
+    }
 
     private companion object {
         const val MAX_SYNC_BATCH = 100

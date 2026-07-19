@@ -25,17 +25,19 @@ import io.mikoshift.natsu.data.remote.dto.TokenResponse
 import io.mikoshift.natsu.di.AuthenticatedAuthApi
 import io.mikoshift.natsu.di.UnauthenticatedAuthApi
 import io.mikoshift.natsu.di.UnauthenticatedOAuthApi
-import java.io.IOException
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import retrofit2.Response
+import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
-class AuthRepositoryImpl @Inject constructor(
+class AuthRepositoryImpl
+@Inject
+constructor(
     @UnauthenticatedAuthApi private val unauthenticatedApi: AuthApi,
     @AuthenticatedAuthApi private val authenticatedApi: AuthApi,
     @UnauthenticatedOAuthApi private val oauthApi: OAuthApi,
@@ -44,7 +46,6 @@ class AuthRepositoryImpl @Inject constructor(
     private val networkFactory: NetworkFactory,
     @OAuthClientId private val clientId: String,
 ) : AuthRepository {
-
     override val isLoggedIn: Flow<Boolean> = tokenStore.sessionFlow.map { it != null }
 
     override val currentSession: StateFlow<AuthSession?> = tokenStore.sessionFlow
@@ -118,22 +119,19 @@ class AuthRepositoryImpl @Inject constructor(
         onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
     )
 
-    override suspend fun resetPassword(
-        token: String,
-        password: String,
-        passwordConfirmation: String,
-    ): Result<String> = runCatching {
-        unauthenticatedApi.resetPassword(
-            ResetPasswordRequest(
-                token = token,
-                password = password,
-                passwordConfirmation = passwordConfirmation,
-            ),
+    override suspend fun resetPassword(token: String, password: String, passwordConfirmation: String): Result<String> =
+        runCatching {
+            unauthenticatedApi.resetPassword(
+                ResetPasswordRequest(
+                    token = token,
+                    password = password,
+                    passwordConfirmation = passwordConfirmation,
+                ),
+            )
+        }.fold(
+            onSuccess = { response -> mapMessageResponse(response) },
+            onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
         )
-    }.fold(
-        onSuccess = { response -> mapMessageResponse(response) },
-        onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
-    )
 
     override suspend fun changePassword(
         currentPassword: String,
@@ -153,18 +151,19 @@ class AuthRepositoryImpl @Inject constructor(
     )
 
     override suspend fun deleteAccount(password: String): Result<Unit> {
-        val result = runCatching {
-            authenticatedApi.deleteAccount(DeleteAccountRequest(password = password))
-        }.fold(
-            onSuccess = { response ->
-                if (response.isSuccessful) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(mapErrorResponse(response))
-                }
-            },
-            onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
-        )
+        val result =
+            runCatching {
+                authenticatedApi.deleteAccount(DeleteAccountRequest(password = password))
+            }.fold(
+                onSuccess = { response ->
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(mapErrorResponse(response))
+                    }
+                },
+                onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+            )
         if (result.isSuccess) {
             tokenStore.clearSession()
         }
@@ -186,18 +185,19 @@ class AuthRepositoryImpl @Inject constructor(
     )
 
     override suspend fun revokeSession(id: String, isCurrentSession: Boolean): Result<Unit> {
-        val result = runCatching {
-            authenticatedApi.revokeSession(id)
-        }.fold(
-            onSuccess = { response ->
-                if (response.isSuccessful) {
-                    Result.success(Unit)
-                } else {
-                    Result.failure(mapErrorResponse(response))
-                }
-            },
-            onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
-        )
+        val result =
+            runCatching {
+                authenticatedApi.revokeSession(id)
+            }.fold(
+                onSuccess = { response ->
+                    if (response.isSuccessful) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(mapErrorResponse(response))
+                    }
+                },
+                onFailure = { throwable -> Result.failure(throwable.toAuthFailure()) },
+            )
         if (result.isSuccess && isCurrentSession) {
             tokenStore.clearSession()
         }
@@ -234,17 +234,19 @@ class AuthRepositoryImpl @Inject constructor(
         if (this is IOException) AuthError.NetworkFailure else AuthError.Unknown(message)
 
     private fun <T> mapErrorResponse(response: Response<T>): AuthError {
-        val errorBody = try {
-            response.errorBody()?.string()
-        } catch (_: IOException) {
-            null
-        }
+        val errorBody =
+            try {
+                response.errorBody()?.string()
+            } catch (_: IOException) {
+                null
+            }
         if (errorBody != null) {
             try {
-                val parsed = networkFactory.json.decodeFromString(
-                    ApiErrorResponse.serializer(),
-                    errorBody,
-                )
+                val parsed =
+                    networkFactory.json.decodeFromString(
+                        ApiErrorResponse.serializer(),
+                        errorBody,
+                    )
                 return AuthError.ValidationError(parsed.errors)
             } catch (_: SerializationException) {
                 // fall through

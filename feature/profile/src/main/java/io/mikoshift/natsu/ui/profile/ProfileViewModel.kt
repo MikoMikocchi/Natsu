@@ -14,7 +14,6 @@ import io.mikoshift.natsu.core.domain.usecase.RevokeSessionUseCase
 import io.mikoshift.natsu.core.domain.usecase.ToggleDictionaryUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.profile.R
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,9 +21,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(
+class ProfileViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val observeUserProfile: ObserveUserProfileUseCase,
     private val observeSessions: ObserveSessionsUseCase,
@@ -34,7 +36,6 @@ class ProfileViewModel @Inject constructor(
     private val listDictionaries: ListDictionariesUseCase,
     private val toggleDictionary: ToggleDictionaryUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
@@ -111,12 +112,13 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun toggleDictionary(id: String, enabled: Boolean) {
+    fun toggleDictionary(id: String, @Suppress("UNUSED_PARAMETER") enabled: Boolean) {
         if (_uiState.value.togglingDictionaryId != null) return
         _uiState.update { state ->
             state.copy(
                 togglingDictionaryId = id,
-                dictionaries = state.dictionaries.map { dictionary ->
+                dictionaries =
+                state.dictionaries.map { dictionary ->
                     if (dictionary.id == id) dictionary.copy(isToggling = true) else dictionary
                 },
             )
@@ -195,14 +197,19 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isDeletingAccount = false,
-                        deletePasswordError = if (forDelete) {
+                        deletePasswordError =
+                        if (forDelete) {
                             fieldErrors["password"]?.joinToString(", ")
                         } else {
                             it.deletePasswordError
                         },
-                        generalError = fieldErrors["base"]?.joinToString(", ")
-                            ?: fieldErrors.filterKeys { key -> key !in setOf("password") }
-                                .values.flatten().takeIf { messages -> messages.isNotEmpty() }
+                        generalError =
+                        fieldErrors["base"]?.joinToString(", ")
+                            ?: fieldErrors
+                                .filterKeys { key -> key !in setOf("password") }
+                                .values
+                                .flatten()
+                                .takeIf { messages -> messages.isNotEmpty() }
                                 ?.joinToString(", "),
                     )
                 }
@@ -217,7 +224,8 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isDeletingAccount = false,
-                        generalError = (error as? AuthError.Unknown)?.errorMessage
+                        generalError =
+                        (error as? AuthError.Unknown)?.errorMessage
                             ?: context.getString(R.string.error_generic),
                     )
                 }

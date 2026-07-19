@@ -16,17 +16,18 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class DocumentDaoTest {
-
     private lateinit var database: NatsuDatabase
     private lateinit var documentDao: DocumentDao
     private lateinit var readingProgressDao: ReadingProgressDao
 
     @Before
     fun createDb() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            NatsuDatabase::class.java,
-        ).build()
+        database =
+            Room
+                .inMemoryDatabaseBuilder(
+                    ApplicationProvider.getApplicationContext(),
+                    NatsuDatabase::class.java,
+                ).build()
         documentDao = database.documentDao()
         readingProgressDao = database.readingProgressDao()
     }
@@ -38,13 +39,14 @@ class DocumentDaoTest {
 
     @Test
     fun upsert_andObserveLibrary_returnsDocumentWithProgress() = runTest {
-        val entity = DocumentEntity(
-            id = "doc-1",
-            title = "Test Book",
-            sourceFormat = SourceFormat.EPUB,
-            status = DocumentStatus.READY,
-            updatedAtMs = 100L,
-        )
+        val entity =
+            DocumentEntity(
+                id = "doc-1",
+                title = "Test Book",
+                sourceFormat = SourceFormat.EPUB,
+                status = DocumentStatus.READY,
+                updatedAtMs = 100L,
+            )
         documentDao.upsert(entity)
         readingProgressDao.upsert(
             ReadingProgressEntity(

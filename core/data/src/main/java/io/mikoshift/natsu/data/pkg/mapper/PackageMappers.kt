@@ -28,20 +28,20 @@ import io.mikoshift.natsu.data.pkg.dto.ParagraphBlockDto
 import io.mikoshift.natsu.data.pkg.dto.TocNodeDto
 import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
-fun PackageManifestDto.toDomain(sections: Map<String, List<Block>>): DocumentPackage =
-    DocumentPackage(
-        manifest = PackageManifest(
-            schemaVersion = schemaVersion,
-            title = title,
-            authors = authors,
-            language = language,
-            coverAssetId = coverAssetId,
-            sourceFormat = sourceFormat.toDomain(),
-            toc = toc.map { it.toDomain() },
-            sections = this.sections.map { it.toDomain() },
-        ),
-        sections = sections,
-    )
+fun PackageManifestDto.toDomain(sections: Map<String, List<Block>>): DocumentPackage = DocumentPackage(
+    manifest =
+    PackageManifest(
+        schemaVersion = schemaVersion,
+        title = title,
+        authors = authors,
+        language = language,
+        coverAssetId = coverAssetId,
+        sourceFormat = sourceFormat.toDomain(),
+        toc = toc.map { it.toDomain() },
+        sections = this.sections.map { it.toDomain() },
+    ),
+    sections = sections,
+)
 
 private fun ManifestSectionDto.toDomain(): ManifestSection = ManifestSection(
     id = id,
@@ -58,39 +58,50 @@ private fun TocNodeDto.toDomain(): TocNode = TocNode(
 )
 
 fun BlockDto.toDomain(): Block = when (this) {
-    is ParagraphBlockDto -> ParagraphBlock(
-        id = id,
-        text = text,
-        marks = marks.map { it.toDomain() },
-    )
-    is HeadingBlockDto -> HeadingBlock(
-        id = id,
-        level = level,
-        text = text,
-        marks = marks.map { it.toDomain() },
-    )
-    is ImageBlockDto -> ImageBlock(
-        id = id,
-        assetId = assetId,
-        alt = alt,
-    )
-    is BlockquoteBlockDto -> BlockquoteBlock(
-        id = id,
-        text = text,
-        marks = marks.map { it.toDomain() },
-    )
-    is ListItemBlockDto -> ListItemBlock(
-        id = id,
-        level = level,
-        ordered = ordered,
-        text = text,
-        marks = marks.map { it.toDomain() },
-    )
+    is ParagraphBlockDto ->
+        ParagraphBlock(
+            id = id,
+            text = text,
+            marks = marks.map { it.toDomain() },
+        )
+
+    is HeadingBlockDto ->
+        HeadingBlock(
+            id = id,
+            level = level,
+            text = text,
+            marks = marks.map { it.toDomain() },
+        )
+
+    is ImageBlockDto ->
+        ImageBlock(
+            id = id,
+            assetId = assetId,
+            alt = alt,
+        )
+
+    is BlockquoteBlockDto ->
+        BlockquoteBlock(
+            id = id,
+            text = text,
+            marks = marks.map { it.toDomain() },
+        )
+
+    is ListItemBlockDto ->
+        ListItemBlock(
+            id = id,
+            level = level,
+            ordered = ordered,
+            text = text,
+            marks = marks.map { it.toDomain() },
+        )
+
     is DividerBlockDto -> DividerBlock(id = id)
 }
 
 private fun MarkDto.toDomain(): Mark = Mark(
-    type = when (type) {
+    type =
+    when (type) {
         MarkTypeDto.BOLD -> MarkType.BOLD
         MarkTypeDto.ITALIC -> MarkType.ITALIC
     },

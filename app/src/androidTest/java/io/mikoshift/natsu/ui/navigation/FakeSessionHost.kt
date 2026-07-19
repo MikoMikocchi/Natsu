@@ -6,9 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class FakeSessionHost(
-    initialSession: AuthSession? = null,
-) : SessionHost {
+class FakeSessionHost(initialSession: AuthSession? = null) : SessionHost {
     private val _session = MutableStateFlow(initialSession)
     override val session: StateFlow<AuthSession?> = _session.asStateFlow()
     var sessionClearedCalls: Int = 0
@@ -24,8 +22,7 @@ class FakeSessionHost(
 }
 
 object SessionHostFixtures {
-    fun loggedInHost(session: AuthSession = AuthFixtures.session()) =
-        FakeSessionHost(initialSession = session)
+    fun loggedInHost(session: AuthSession = AuthFixtures.session()) = FakeSessionHost(initialSession = session)
 
     fun loggedOutHost() = FakeSessionHost(initialSession = null)
 }

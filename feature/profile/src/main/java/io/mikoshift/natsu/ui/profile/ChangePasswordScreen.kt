@@ -32,10 +32,7 @@ import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChangePasswordScreen(
-    viewModel: ChangePasswordViewModel,
-    onNavigateBack: () -> Unit,
-) {
+fun ChangePasswordScreen(viewModel: ChangePasswordViewModel, onNavigateBack: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     ChangePasswordScreenContent(
         uiState = uiState,

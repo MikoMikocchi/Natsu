@@ -9,19 +9,20 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.RegisterUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.auth.R
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor(
+class RegisterViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val register: RegisterUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
@@ -46,26 +47,30 @@ class RegisterViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val nameError = if (state.name.isBlank()) {
-            context.getString(R.string.error_name_required)
-        } else {
-            null
-        }
-        val emailError = if (!Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
-            context.getString(R.string.error_invalid_email)
-        } else {
-            null
-        }
-        val passwordError = if (state.password.length < 8) {
-            context.getString(R.string.error_password_min_length)
-        } else {
-            null
-        }
-        val passwordConfirmationError = if (state.passwordConfirmation != state.password) {
-            context.getString(R.string.error_passwords_do_not_match)
-        } else {
-            null
-        }
+        val nameError =
+            if (state.name.isBlank()) {
+                context.getString(R.string.error_name_required)
+            } else {
+                null
+            }
+        val emailError =
+            if (!Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
+                context.getString(R.string.error_invalid_email)
+            } else {
+                null
+            }
+        val passwordError =
+            if (state.password.length < 8) {
+                context.getString(R.string.error_password_min_length)
+            } else {
+                null
+            }
+        val passwordConfirmationError =
+            if (state.passwordConfirmation != state.password) {
+                context.getString(R.string.error_passwords_do_not_match)
+            } else {
+                null
+            }
 
         if (nameError != null || emailError != null || passwordError != null || passwordConfirmationError != null) {
             _uiState.update {

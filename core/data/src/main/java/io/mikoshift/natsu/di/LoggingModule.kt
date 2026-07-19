@@ -13,7 +13,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class LoggingModule {
-
     @Binds
     @Singleton
     abstract fun bindAppLogger(impl: AndroidAppLogger): AppLogger

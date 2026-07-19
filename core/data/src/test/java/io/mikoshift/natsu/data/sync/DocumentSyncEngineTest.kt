@@ -10,7 +10,6 @@ import io.mikoshift.natsu.data.local.db.DocumentCacheDao
 import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.ReadingProgressDao
-import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
 import io.mikoshift.natsu.data.local.db.SyncEntityType
 import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.local.db.SyncOutboxEntity
@@ -18,24 +17,23 @@ import io.mikoshift.natsu.data.local.db.SyncOutboxStatus
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
-import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
-import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import io.mockk.slot
-import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
+import java.io.IOException
+import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
+import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
 class DocumentSyncEngineTest {
-
     private lateinit var documentApi: DocumentApi
     private lateinit var documentDao: DocumentDao
     private lateinit var readingProgressDao: ReadingProgressDao
@@ -59,17 +57,18 @@ class DocumentSyncEngineTest {
         packageFileStore = mockk(relaxed = true)
         packageDownloadService = mockk(relaxed = true)
 
-        engine = DocumentSyncEngine(
-            documentApi = documentApi,
-            documentDao = documentDao,
-            readingProgressDao = readingProgressDao,
-            documentCacheDao = documentCacheDao,
-            syncOutboxDao = syncOutboxDao,
-            syncOutboxStore = syncOutboxStore,
-            syncCursorStore = syncCursorStore,
-            packageFileStore = packageFileStore,
-            packageDownloadService = packageDownloadService,
-        )
+        engine =
+            DocumentSyncEngine(
+                documentApi = documentApi,
+                documentDao = documentDao,
+                readingProgressDao = readingProgressDao,
+                documentCacheDao = documentCacheDao,
+                syncOutboxDao = syncOutboxDao,
+                syncOutboxStore = syncOutboxStore,
+                syncCursorStore = syncCursorStore,
+                packageFileStore = packageFileStore,
+                packageDownloadService = packageDownloadService,
+            )
 
         stubEmptyPull()
         stubEmptyPackageDownload()
@@ -81,14 +80,16 @@ class DocumentSyncEngineTest {
     @Test
     fun sync_success_commitsPullCursorAfterPush() = runTest {
         coEvery { syncCursorStore.getDocumentsSinceMs() } returns 100L
-        coEvery { documentApi.indexDocuments(since = 100L) } returns Response.success(
-            DocumentIndexResponse(
-                documents = listOf(
-                    sampleServerDocument(id = "doc-1", updatedAtMs = 500L),
+        coEvery { documentApi.indexDocuments(since = 100L) } returns
+            Response.success(
+                DocumentIndexResponse(
+                    documents =
+                    listOf(
+                        sampleServerDocument(id = "doc-1", updatedAtMs = 500L),
+                    ),
+                    serverTimeMs = 600L,
                 ),
-                serverTimeMs = 600L,
-            ),
-        )
+            )
         coEvery { documentDao.getById("doc-1") } returns null
 
         val result = engine.sync()
@@ -100,15 +101,17 @@ class DocumentSyncEngineTest {
     @Test
     fun sync_pushFailure_doesNotCommitPullCursor() = runTest {
         coEvery { syncCursorStore.getDocumentsSinceMs() } returns 0L
-        coEvery { documentApi.indexDocuments(since = 0L) } returns Response.success(
-            DocumentIndexResponse(
-                documents = listOf(sampleServerDocument(updatedAtMs = 500L)),
-                serverTimeMs = 600L,
-            ),
-        )
-        coEvery { syncOutboxDao.getPending() } returns listOf(
-            metadataOutboxEntry(entityId = "doc-local"),
-        )
+        coEvery { documentApi.indexDocuments(since = 0L) } returns
+            Response.success(
+                DocumentIndexResponse(
+                    documents = listOf(sampleServerDocument(updatedAtMs = 500L)),
+                    serverTimeMs = 600L,
+                ),
+            )
+        coEvery { syncOutboxDao.getPending() } returns
+            listOf(
+                metadataOutboxEntry(entityId = "doc-local"),
+            )
         coEvery { documentDao.getById("doc-local") } returns sampleLocalDocument(id = "doc-local")
         coEvery { documentApi.syncDocuments(any(), any()) } throws IOException("network down")
 
@@ -167,12 +170,13 @@ class DocumentSyncEngineTest {
 
     private fun stubEmptyPull() {
         coEvery { syncCursorStore.getDocumentsSinceMs() } returns 0L
-        coEvery { documentApi.indexDocuments(any()) } returns Response.success(
-            DocumentIndexResponse(
-                documents = emptyList(),
-                serverTimeMs = 1_000L,
-            ),
-        )
+        coEvery { documentApi.indexDocuments(any()) } returns
+            Response.success(
+                DocumentIndexResponse(
+                    documents = emptyList(),
+                    serverTimeMs = 1_000L,
+                ),
+            )
         coEvery { syncOutboxStore.hasPendingMetadata(any()) } returns false
         coEvery { syncOutboxStore.hasPendingProgress(any()) } returns false
     }
@@ -203,29 +207,29 @@ class DocumentSyncEngineTest {
         }
     }
 
-    private fun successfulDocumentResponse(
-        request: DocumentSyncRequest,
-    ): Response<DocumentIndexResponse> = Response.success(
-        DocumentIndexResponse(
-            documents = request.documents.map { item ->
-                DocumentResponse(
-                    id = item.id,
-                    title = item.title ?: "Title",
-                    sourceFormat = item.sourceFormat,
-                    status = DocumentStatusDto.READY,
-                    importedAt = item.importedAt,
-                    charCount = item.charCount,
-                    lastReadCharOffset = item.lastReadCharOffset,
-                    lastReadSectionId = item.lastReadSectionId,
-                    lastReadBlockIndex = item.lastReadBlockIndex,
-                    lastReadBlockCharOffset = item.lastReadBlockCharOffset,
-                    updatedAtMs = item.updatedAtMs,
-                    deleted = item.deleted,
-                )
-            },
-            serverTimeMs = 2_000L,
-        ),
-    )
+    private fun successfulDocumentResponse(request: DocumentSyncRequest): Response<DocumentIndexResponse> =
+        Response.success(
+            DocumentIndexResponse(
+                documents =
+                request.documents.map { item ->
+                    DocumentResponse(
+                        id = item.id,
+                        title = item.title ?: "Title",
+                        sourceFormat = item.sourceFormat,
+                        status = DocumentStatusDto.READY,
+                        importedAt = item.importedAt,
+                        charCount = item.charCount,
+                        lastReadCharOffset = item.lastReadCharOffset,
+                        lastReadSectionId = item.lastReadSectionId,
+                        lastReadBlockIndex = item.lastReadBlockIndex,
+                        lastReadBlockCharOffset = item.lastReadBlockCharOffset,
+                        updatedAtMs = item.updatedAtMs,
+                        deleted = item.deleted,
+                    )
+                },
+                serverTimeMs = 2_000L,
+            ),
+        )
 
     private fun metadataOutboxEntry(
         entityId: String,
@@ -249,10 +253,7 @@ class DocumentSyncEngineTest {
         updatedAtMs = 1_000L,
     )
 
-    private fun sampleServerDocument(
-        id: String = "doc-1",
-        updatedAtMs: Long,
-    ) = DocumentResponse(
+    private fun sampleServerDocument(id: String = "doc-1", updatedAtMs: Long) = DocumentResponse(
         id = id,
         title = "Server title",
         sourceFormat = SourceFormatDto.EPUB,

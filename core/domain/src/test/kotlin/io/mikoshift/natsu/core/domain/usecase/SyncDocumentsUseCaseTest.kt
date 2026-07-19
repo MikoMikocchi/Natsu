@@ -1,29 +1,29 @@
 package io.mikoshift.natsu.core.domain.usecase
 
+import io.mikoshift.natsu.core.model.DocumentError
+import io.mikoshift.natsu.core.model.SyncState
 import io.mikoshift.natsu.core.testing.analytics.FakeAnalyticsTracker
 import io.mikoshift.natsu.core.testing.fixture.AuthFixtures
 import io.mikoshift.natsu.core.testing.repository.FakeAuthRepository
 import io.mikoshift.natsu.core.testing.repository.FakeDocumentRepository
 import io.mikoshift.natsu.core.testing.repository.FakeSyncStatusRepository
-import io.mikoshift.natsu.core.model.DocumentError
-import io.mikoshift.natsu.core.model.SyncState
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SyncDocumentsUseCaseTest {
-
     @Test
     fun invoke_whenLoggedOut_skipsSync() = runTest {
         val documentRepository = FakeDocumentRepository()
         val syncStatusRepository = FakeSyncStatusRepository()
-        val useCase = SyncDocumentsUseCase(
-            authRepository = FakeAuthRepository(session = null),
-            documentRepository = documentRepository,
-            syncStatusRepository = syncStatusRepository,
-            analyticsTracker = FakeAnalyticsTracker(),
-        )
+        val useCase =
+            SyncDocumentsUseCase(
+                authRepository = FakeAuthRepository(session = null),
+                documentRepository = documentRepository,
+                syncStatusRepository = syncStatusRepository,
+                analyticsTracker = FakeAnalyticsTracker(),
+            )
 
         val result = useCase()
 
@@ -36,12 +36,13 @@ class SyncDocumentsUseCaseTest {
     fun invoke_whenLoggedIn_syncsAndUpdatesStatus() = runTest {
         val documentRepository = FakeDocumentRepository()
         val syncStatusRepository = FakeSyncStatusRepository()
-        val useCase = SyncDocumentsUseCase(
-            authRepository = FakeAuthRepository(session = AuthFixtures.session()),
-            documentRepository = documentRepository,
-            syncStatusRepository = syncStatusRepository,
-            analyticsTracker = FakeAnalyticsTracker(),
-        )
+        val useCase =
+            SyncDocumentsUseCase(
+                authRepository = FakeAuthRepository(session = AuthFixtures.session()),
+                documentRepository = documentRepository,
+                syncStatusRepository = syncStatusRepository,
+                analyticsTracker = FakeAnalyticsTracker(),
+            )
 
         val result = useCase()
 
@@ -52,17 +53,19 @@ class SyncDocumentsUseCaseTest {
 
     @Test
     fun invoke_whenSyncFails_setsFailedStatusAndTracksAnalytics() = runTest {
-        val documentRepository = FakeDocumentRepository(
-            syncResult = Result.failure(DocumentError.NetworkFailure),
-        )
+        val documentRepository =
+            FakeDocumentRepository(
+                syncResult = Result.failure(DocumentError.NetworkFailure),
+            )
         val syncStatusRepository = FakeSyncStatusRepository()
         val analyticsTracker = FakeAnalyticsTracker()
-        val useCase = SyncDocumentsUseCase(
-            authRepository = FakeAuthRepository(session = AuthFixtures.session()),
-            documentRepository = documentRepository,
-            syncStatusRepository = syncStatusRepository,
-            analyticsTracker = analyticsTracker,
-        )
+        val useCase =
+            SyncDocumentsUseCase(
+                authRepository = FakeAuthRepository(session = AuthFixtures.session()),
+                documentRepository = documentRepository,
+                syncStatusRepository = syncStatusRepository,
+                analyticsTracker = analyticsTracker,
+            )
 
         val result = useCase()
 

@@ -5,7 +5,9 @@ import io.mikoshift.natsu.core.domain.repository.DocumentRepository
 import io.mikoshift.natsu.core.model.Document
 import javax.inject.Inject
 
-class ImportDocumentUseCase @Inject constructor(
+class ImportDocumentUseCase
+@Inject
+constructor(
     private val documentRepository: DocumentRepository,
     private val analyticsTracker: AnalyticsTracker,
 ) {

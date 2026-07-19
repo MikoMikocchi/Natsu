@@ -8,7 +8,6 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 
 interface ReaderSettingApi {
-
     @GET("settings/reader")
     suspend fun show(): Response<ReaderSettingShowResponse>
 

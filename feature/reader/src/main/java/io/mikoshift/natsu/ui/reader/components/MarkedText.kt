@@ -26,16 +26,15 @@ fun MarkedText(
     )
 }
 
-internal fun buildMarkedAnnotatedString(text: String, marks: List<Mark>): AnnotatedString =
-    buildAnnotatedString {
-        append(text)
-        marks.forEach { mark ->
-            val start = mark.start.coerceIn(0, text.length)
-            val end = mark.end.coerceIn(start, text.length)
-            if (start >= end) return@forEach
-            when (mark.type) {
-                MarkType.BOLD -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), start, end)
-                MarkType.ITALIC -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), start, end)
-            }
+internal fun buildMarkedAnnotatedString(text: String, marks: List<Mark>): AnnotatedString = buildAnnotatedString {
+    append(text)
+    marks.forEach { mark ->
+        val start = mark.start.coerceIn(0, text.length)
+        val end = mark.end.coerceIn(start, text.length)
+        if (start >= end) return@forEach
+        when (mark.type) {
+            MarkType.BOLD -> addStyle(SpanStyle(fontWeight = FontWeight.Bold), start, end)
+            MarkType.ITALIC -> addStyle(SpanStyle(fontStyle = FontStyle.Italic), start, end)
         }
     }
+}

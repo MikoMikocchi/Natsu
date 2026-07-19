@@ -13,9 +13,9 @@ import io.mikoshift.natsu.data.local.db.DocumentEntity
 import io.mikoshift.natsu.data.local.db.DocumentWithRelations
 import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
 import io.mikoshift.natsu.data.remote.dto.DocumentResponse
+import io.mikoshift.natsu.data.remote.dto.DocumentSyncItemRequest
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResult as DocumentSearchResultDto
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus as DocumentStatusDto
-import io.mikoshift.natsu.data.remote.dto.DocumentSyncItemRequest
 import io.mikoshift.natsu.data.remote.dto.SourceFormat as SourceFormatDto
 
 fun DocumentWithRelations.toDomain(): Document = Document(
@@ -85,10 +85,7 @@ fun DocumentResponse.toEntities(): Pair<DocumentEntity, ReadingProgressEntity> =
 
 fun DocumentResponse.toEntity(): DocumentEntity = toDocumentEntity()
 
-fun DocumentResponse.toDomain(
-    progress: ReadingProgress? = null,
-    cache: DocumentCache? = null,
-): Document = Document(
+fun DocumentResponse.toDomain(progress: ReadingProgress? = null, cache: DocumentCache? = null): Document = Document(
     metadata = toDocumentEntity().toDomain(),
     progress = progress,
     cache = cache,
@@ -98,15 +95,16 @@ fun DocumentEntity.toSyncItemRequest(
     progress: ReadingProgressEntity?,
     idempotencyKey: String,
 ): DocumentSyncItemRequest {
-    val progressEntity = progress ?: ReadingProgressEntity(
-        documentId = id,
-        lastReadCharOffset = 0,
-        lastReadSectionId = null,
-        lastReadBlockIndex = 0,
-        lastReadBlockCharOffset = 0,
-        updatedAtMs = 0,
-        clientUpdatedAtMs = 0,
-    )
+    val progressEntity =
+        progress ?: ReadingProgressEntity(
+            documentId = id,
+            lastReadCharOffset = 0,
+            lastReadSectionId = null,
+            lastReadBlockIndex = 0,
+            lastReadBlockCharOffset = 0,
+            updatedAtMs = 0,
+            clientUpdatedAtMs = 0,
+        )
     return DocumentSyncItemRequest(
         id = id,
         idempotencyKey = idempotencyKey,
@@ -126,7 +124,8 @@ fun DocumentEntity.toSyncItemRequest(
 fun DocumentSearchResultDto.toDomain(): DocumentSearchResult = DocumentSearchResult(
     id = id,
     title = title,
-    matches = matches.map { match ->
+    matches =
+    matches.map { match ->
         DocumentSearchMatch(
             charOffset = match.charOffset,
             snippet = match.snippet,

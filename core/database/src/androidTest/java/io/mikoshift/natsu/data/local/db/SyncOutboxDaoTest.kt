@@ -13,16 +13,17 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SyncOutboxDaoTest {
-
     private lateinit var database: NatsuDatabase
     private lateinit var syncOutboxDao: SyncOutboxDao
 
     @Before
     fun createDb() {
-        database = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            NatsuDatabase::class.java,
-        ).build()
+        database =
+            Room
+                .inMemoryDatabaseBuilder(
+                    ApplicationProvider.getApplicationContext(),
+                    NatsuDatabase::class.java,
+                ).build()
         syncOutboxDao = database.syncOutboxDao()
     }
 
@@ -65,19 +66,15 @@ class SyncOutboxDaoTest {
         assertEquals(2, stale.attempts)
     }
 
-    private fun sampleEntry(
-        id: String,
-        status: SyncOutboxStatus,
-        attempts: Int = 0,
-        lastError: String? = null,
-    ) = SyncOutboxEntity(
-        id = id,
-        entityType = SyncEntityType.METADATA,
-        entityId = "doc-$id",
-        createdAtMs = 1L,
-        idempotencyKey = "key-$id",
-        status = status,
-        attempts = attempts,
-        lastError = lastError,
-    )
+    private fun sampleEntry(id: String, status: SyncOutboxStatus, attempts: Int = 0, lastError: String? = null) =
+        SyncOutboxEntity(
+            id = id,
+            entityType = SyncEntityType.METADATA,
+            entityId = "doc-$id",
+            createdAtMs = 1L,
+            idempotencyKey = "key-$id",
+            status = status,
+            attempts = attempts,
+            lastError = lastError,
+        )
 }

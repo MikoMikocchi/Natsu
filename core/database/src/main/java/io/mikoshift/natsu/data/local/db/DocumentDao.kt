@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DocumentDao {
-
     @Transaction
     @Query(
         """

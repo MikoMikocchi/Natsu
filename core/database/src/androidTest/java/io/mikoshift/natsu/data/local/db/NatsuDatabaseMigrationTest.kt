@@ -11,14 +11,14 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class NatsuDatabaseMigrationTest {
-
     @get:Rule
-    val helper = MigrationTestHelper(
-        InstrumentationRegistry.getInstrumentation(),
-        NatsuDatabase::class.java,
-        emptyList(),
-        FrameworkSQLiteOpenHelperFactory(),
-    )
+    val helper =
+        MigrationTestHelper(
+            InstrumentationRegistry.getInstrumentation(),
+            NatsuDatabase::class.java,
+            emptyList(),
+            FrameworkSQLiteOpenHelperFactory(),
+        )
 
     @Test
     fun migrate2To3_preservesDocumentsProgressOutboxAndSyncCursor() {
@@ -59,31 +59,34 @@ class NatsuDatabaseMigrationTest {
             close()
         }
 
-        val db = helper.runMigrationsAndValidate(
-            TEST_DB,
-            3,
-            true,
-            NatsuDatabaseMigrations.MIGRATION_2_3,
-        )
+        val db =
+            helper.runMigrationsAndValidate(
+                TEST_DB,
+                3,
+                true,
+                NatsuDatabaseMigrations.MIGRATION_2_3,
+            )
 
         db.query("SELECT title FROM documents WHERE id = 'doc-1'").use { cursor ->
             assertEquals(true, cursor.moveToFirst())
             assertEquals("Book", cursor.getString(0))
         }
 
-        db.query(
-            "SELECT lastReadCharOffset FROM reading_progress WHERE documentId = 'doc-1'",
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals(42, cursor.getInt(0))
-        }
+        db
+            .query(
+                "SELECT lastReadCharOffset FROM reading_progress WHERE documentId = 'doc-1'",
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals(42, cursor.getInt(0))
+            }
 
-        db.query(
-            "SELECT status FROM sync_outbox WHERE id = 'METADATA:doc-1'",
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals("PENDING", cursor.getString(0))
-        }
+        db
+            .query(
+                "SELECT status FROM sync_outbox WHERE id = 'METADATA:doc-1'",
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals("PENDING", cursor.getString(0))
+            }
 
         db.query("SELECT documentsSinceMs FROM sync_state WHERE id = 1").use { cursor ->
             assertEquals(true, cursor.moveToFirst())
@@ -108,19 +111,21 @@ class NatsuDatabaseMigrationTest {
             close()
         }
 
-        val db = helper.runMigrationsAndValidate(
-            TEST_DB,
-            4,
-            true,
-            NatsuDatabaseMigrations.MIGRATION_3_4,
-        )
+        val db =
+            helper.runMigrationsAndValidate(
+                TEST_DB,
+                4,
+                true,
+                NatsuDatabaseMigrations.MIGRATION_3_4,
+            )
 
-        db.query(
-            "SELECT idempotencyKey FROM sync_outbox WHERE id = 'METADATA:doc-1'",
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals("METADATA:doc-1:500", cursor.getString(0))
-        }
+        db
+            .query(
+                "SELECT idempotencyKey FROM sync_outbox WHERE id = 'METADATA:doc-1'",
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals("METADATA:doc-1:500", cursor.getString(0))
+            }
 
         db.close()
     }
@@ -182,57 +187,62 @@ class NatsuDatabaseMigrationTest {
             close()
         }
 
-        val db = helper.runMigrationsAndValidate(
-            TEST_DB,
-            2,
-            true,
-            NatsuDatabaseMigrations.MIGRATION_1_2,
-        )
+        val db =
+            helper.runMigrationsAndValidate(
+                TEST_DB,
+                2,
+                true,
+                NatsuDatabaseMigrations.MIGRATION_1_2,
+            )
 
         db.query("SELECT title FROM documents WHERE id = 'doc-1'").use { cursor ->
             assertEquals(true, cursor.moveToFirst())
             assertEquals("Legacy Book", cursor.getString(0))
         }
 
-        db.query(
-            """
-            SELECT lastReadCharOffset, lastReadSectionId
-            FROM reading_progress
-            WHERE documentId = 'doc-1'
-            """.trimIndent(),
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals(15, cursor.getInt(0))
-            assertEquals("chapter-2", cursor.getString(1))
-        }
+        db
+            .query(
+                """
+                SELECT lastReadCharOffset, lastReadSectionId
+                FROM reading_progress
+                WHERE documentId = 'doc-1'
+                """.trimIndent(),
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals(15, cursor.getInt(0))
+                assertEquals("chapter-2", cursor.getString(1))
+            }
 
-        db.query(
-            """
-            SELECT localPackagePath, cachedPackageSha256
-            FROM document_cache
-            WHERE documentId = 'doc-1'
-            """.trimIndent(),
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals("/tmp/book.epub", cursor.getString(0))
-            assertEquals("cached-sha", cursor.getString(1))
-        }
+        db
+            .query(
+                """
+                SELECT localPackagePath, cachedPackageSha256
+                FROM document_cache
+                WHERE documentId = 'doc-1'
+                """.trimIndent(),
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals("/tmp/book.epub", cursor.getString(0))
+                assertEquals("cached-sha", cursor.getString(1))
+            }
 
-        db.query(
-            "SELECT entityType, status FROM sync_outbox WHERE entityId = 'doc-1'",
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals("METADATA", cursor.getString(0))
-            assertEquals("PENDING", cursor.getString(1))
-        }
+        db
+            .query(
+                "SELECT entityType, status FROM sync_outbox WHERE entityId = 'doc-1'",
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals("METADATA", cursor.getString(0))
+                assertEquals("PENDING", cursor.getString(1))
+            }
 
-        db.query(
-            "SELECT metadataSinceMs, progressSinceMs FROM sync_state WHERE id = 1",
-        ).use { cursor ->
-            assertEquals(true, cursor.moveToFirst())
-            assertEquals(777L, cursor.getLong(0))
-            assertEquals(777L, cursor.getLong(1))
-        }
+        db
+            .query(
+                "SELECT metadataSinceMs, progressSinceMs FROM sync_state WHERE id = 1",
+            ).use { cursor ->
+                assertEquals(true, cursor.moveToFirst())
+                assertEquals(777L, cursor.getLong(0))
+                assertEquals(777L, cursor.getLong(1))
+            }
 
         db.close()
     }

@@ -14,11 +14,7 @@ import io.mikoshift.natsu.feature.reader.R
 import java.io.File
 
 @Composable
-fun PackageImage(
-    assetPath: String?,
-    alt: String?,
-    modifier: Modifier = Modifier,
-) {
+fun PackageImage(assetPath: String?, alt: String?, modifier: Modifier = Modifier) {
     if (assetPath == null) return
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)

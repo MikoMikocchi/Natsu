@@ -58,12 +58,14 @@ fun NatsuNavHost(
                     launchSingleTop = true
                 }
             }
+
             SessionRedirect.ToHome -> {
                 navController.navigate(HomeRoute) {
                     popUpTo(LoginRoute) { inclusive = true }
                     launchSingleTop = true
                 }
             }
+
             null -> Unit
         }
     }

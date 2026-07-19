@@ -7,7 +7,6 @@ import androidx.room.Query
 
 @Dao
 interface SyncStateDao {
-
     @Query("SELECT * FROM sync_state WHERE id = 1")
     suspend fun get(): SyncStateEntity?
 

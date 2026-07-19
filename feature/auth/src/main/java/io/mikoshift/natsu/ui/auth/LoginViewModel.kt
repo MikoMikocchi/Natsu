@@ -8,19 +8,20 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.LoginUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.auth.R
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
+class LoginViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val login: LoginUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
@@ -35,16 +36,18 @@ class LoginViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val emailError = if (state.email.isBlank()) {
-            context.getString(R.string.error_email_required)
-        } else {
-            null
-        }
-        val passwordError = if (state.password.isBlank()) {
-            context.getString(R.string.error_password_required)
-        } else {
-            null
-        }
+        val emailError =
+            if (state.email.isBlank()) {
+                context.getString(R.string.error_email_required)
+            } else {
+                null
+            }
+        val passwordError =
+            if (state.password.isBlank()) {
+                context.getString(R.string.error_password_required)
+            } else {
+                null
+            }
 
         if (emailError != null || passwordError != null) {
             _uiState.update {

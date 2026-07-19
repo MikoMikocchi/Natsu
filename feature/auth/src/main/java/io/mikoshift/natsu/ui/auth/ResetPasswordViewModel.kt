@@ -9,7 +9,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.ResetPasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.auth.R
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,17 +16,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class ResetPasswordViewModel @Inject constructor(
+class ResetPasswordViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val resetPassword: ResetPasswordUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(
-        ResetPasswordUiState(token = savedStateHandle.get<String>("token").orEmpty()),
-    )
+    private val _uiState =
+        MutableStateFlow(
+            ResetPasswordUiState(token = savedStateHandle.get<String>("token").orEmpty()),
+        )
     val uiState: StateFlow<ResetPasswordUiState> = _uiState.asStateFlow()
 
     private val _effects = Channel<ResetPasswordEffect>(Channel.BUFFERED)
@@ -50,21 +52,24 @@ class ResetPasswordViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val tokenError = if (state.token.isBlank()) {
-            context.getString(R.string.error_token_required)
-        } else {
-            null
-        }
-        val passwordError = if (state.password.length < 8) {
-            context.getString(R.string.error_password_min_length)
-        } else {
-            null
-        }
-        val passwordConfirmationError = if (state.passwordConfirmation != state.password) {
-            context.getString(R.string.error_passwords_do_not_match)
-        } else {
-            null
-        }
+        val tokenError =
+            if (state.token.isBlank()) {
+                context.getString(R.string.error_token_required)
+            } else {
+                null
+            }
+        val passwordError =
+            if (state.password.length < 8) {
+                context.getString(R.string.error_password_min_length)
+            } else {
+                null
+            }
+        val passwordConfirmationError =
+            if (state.passwordConfirmation != state.password) {
+                context.getString(R.string.error_passwords_do_not_match)
+            } else {
+                null
+            }
 
         if (tokenError != null || passwordError != null || passwordConfirmationError != null) {
             _uiState.update {
@@ -127,7 +132,8 @@ class ResetPasswordViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        generalError = (error as? AuthError.Unknown)?.errorMessage
+                        generalError =
+                        (error as? AuthError.Unknown)?.errorMessage
                             ?: context.getString(R.string.error_generic),
                     )
                 }

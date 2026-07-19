@@ -35,7 +35,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var authRepository: FakeAuthRepository
@@ -51,28 +50,33 @@ class ProfileViewModelTest {
         every { context.getString(R.string.error_network) } returns "Network error"
         every { context.getString(R.string.error_generic) } returns "Something went wrong"
 
-        authRepository = FakeAuthRepository(
-            session = AuthFixtures.session(),
-        ).apply {
-            getUserResult = Result.success(AuthFixtures.user(name = "Alice"))
-            getSessionsResult = Result.success(
-                listOf(
-                    AuthFixtures.deviceSession(id = "session-1", name = "Phone", current = true),
-                    AuthFixtures.deviceSession(id = "session-2", name = "Tablet", current = false),
-                ),
-            )
-        }
-        listDictionaries = mockk {
-            coEvery { this@mockk.invoke(any(), any()) } returns Result.success(
-                DictionaryPage(
-                    dictionaries = emptyList(),
-                    pagination = DictionaryPagination(1, 50, 0, 0),
-                ),
-            )
-        }
-        toggleDictionary = mockk {
-            coEvery { this@mockk.invoke(any()) } returns Result.success(Unit)
-        }
+        authRepository =
+            FakeAuthRepository(
+                session = AuthFixtures.session(),
+            ).apply {
+                getUserResult = Result.success(AuthFixtures.user(name = "Alice"))
+                getSessionsResult =
+                    Result.success(
+                        listOf(
+                            AuthFixtures.deviceSession(id = "session-1", name = "Phone", current = true),
+                            AuthFixtures.deviceSession(id = "session-2", name = "Tablet", current = false),
+                        ),
+                    )
+            }
+        listDictionaries =
+            mockk {
+                coEvery { this@mockk.invoke(any(), any()) } returns
+                    Result.success(
+                        DictionaryPage(
+                            dictionaries = emptyList(),
+                            pagination = DictionaryPagination(1, 50, 0, 0),
+                        ),
+                    )
+            }
+        toggleDictionary =
+            mockk {
+                coEvery { this@mockk.invoke(any()) } returns Result.success(Unit)
+            }
     }
 
     @After
@@ -124,9 +128,10 @@ class ProfileViewModelTest {
 
     @Test
     fun deleteAccount_onValidationError_setsFieldError() = runTest {
-        authRepository.deleteAccountResult = Result.failure(
-            AuthError.ValidationError(mapOf("password" to listOf("Incorrect password"))),
-        )
+        authRepository.deleteAccountResult =
+            Result.failure(
+                AuthError.ValidationError(mapOf("password" to listOf("Incorrect password"))),
+            )
         createViewModel()
         advanceUntilIdle()
 
@@ -185,9 +190,10 @@ class ProfileViewModelTest {
 
     @Test
     fun revokeSession_onFailure_setsGeneralError() = runTest {
-        authRepository.revokeSessionResult = Result.failure(
-            AuthError.Unknown("Could not revoke session"),
-        )
+        authRepository.revokeSessionResult =
+            Result.failure(
+                AuthError.Unknown("Could not revoke session"),
+            )
         createViewModel()
         advanceUntilIdle()
 
@@ -214,15 +220,16 @@ class ProfileViewModelTest {
     }
 
     private fun createViewModel() {
-        viewModel = ProfileViewModel(
-            context = context,
-            observeUserProfile = ObserveUserProfileUseCase(authRepository),
-            observeSessions = ObserveSessionsUseCase(authRepository),
-            logoutUseCase = LogoutUseCase(authRepository),
-            deleteAccount = DeleteAccountUseCase(authRepository),
-            revokeSession = RevokeSessionUseCase(authRepository),
-            listDictionaries = listDictionaries,
-            toggleDictionary = toggleDictionary,
-        )
+        viewModel =
+            ProfileViewModel(
+                context = context,
+                observeUserProfile = ObserveUserProfileUseCase(authRepository),
+                observeSessions = ObserveSessionsUseCase(authRepository),
+                logoutUseCase = LogoutUseCase(authRepository),
+                deleteAccount = DeleteAccountUseCase(authRepository),
+                revokeSession = RevokeSessionUseCase(authRepository),
+                listDictionaries = listDictionaries,
+                toggleDictionary = toggleDictionary,
+            )
     }
 }

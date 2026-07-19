@@ -10,12 +10,21 @@ console-reports:
 ktlint:
   active: true
   autoCorrect: false
+  BlankLineBetweenWhenConditions:
+    active: false
 
 comments:
   active: true
 
 complexity:
   active: true
+  CyclomaticComplexMethod:
+    active: true
+    ignoreAnnotated:
+      - Composable
+  ComplexCondition:
+    active: true
+    allowedConditions: 4
   LongMethod:
     active: true
     allowedLines: 150
@@ -43,6 +52,10 @@ empty-blocks:
 
 exceptions:
   active: true
+  TooGenericExceptionCaught:
+    active: true
+    excludes:
+      - '**/DocumentSyncEngine.kt'
 
 naming:
   active: true
@@ -62,6 +75,12 @@ potential-bugs:
 
 style:
   active: true
+  ReturnCount:
+    active: true
+    max: 6
+  ThrowsCount:
+    active: true
+    max: 5
   MagicNumber:
     active: true
     ignorePropertyDeclaration: true

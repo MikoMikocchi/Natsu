@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface SessionHost {
     val session: StateFlow<AuthSession?>
+
     fun onSessionCleared()
 }

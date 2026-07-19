@@ -17,10 +17,7 @@ data class RegisterRequest(
 )
 
 @Serializable
-data class LoginRequest(
-    val email: String,
-    val password: String,
-)
+data class LoginRequest(val email: String, val password: String)
 
 @Serializable
 data class ChangePasswordRequest(
@@ -30,9 +27,7 @@ data class ChangePasswordRequest(
 )
 
 @Serializable
-data class ForgotPasswordRequest(
-    val email: String,
-)
+data class ForgotPasswordRequest(val email: String)
 
 @Serializable
 data class ResetPasswordRequest(
@@ -42,6 +37,4 @@ data class ResetPasswordRequest(
 )
 
 @Serializable
-data class DeleteAccountRequest(
-    val password: String,
-)
+data class DeleteAccountRequest(val password: String)

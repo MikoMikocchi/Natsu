@@ -5,35 +5,39 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PlainTextIndexTest {
-
     @Test
     fun extractPlainText_matchesBackendOrder() {
-        val documentPackage = DocumentPackage(
-            manifest = PackageManifest(
-                schemaVersion = 2,
-                title = "Book",
-                authors = emptyList(),
-                language = null,
-                coverAssetId = null,
-                sourceFormat = SourceFormat.PLAIN_TEXT,
-                toc = emptyList(),
-                sections = listOf(
-                    ManifestSection(
-                        id = "section-0",
-                        title = null,
-                        path = "sections/section-0.json",
-                        wordCount = 0,
-                        checksum = "",
+        val documentPackage =
+            DocumentPackage(
+                manifest =
+                PackageManifest(
+                    schemaVersion = 2,
+                    title = "Book",
+                    authors = emptyList(),
+                    language = null,
+                    coverAssetId = null,
+                    sourceFormat = SourceFormat.PLAIN_TEXT,
+                    toc = emptyList(),
+                    sections =
+                    listOf(
+                        ManifestSection(
+                            id = "section-0",
+                            title = null,
+                            path = "sections/section-0.json",
+                            wordCount = 0,
+                            checksum = "",
+                        ),
                     ),
                 ),
-            ),
-            sections = mapOf(
-                "section-0" to listOf(
-                    HeadingBlock(id = "b0", level = 1, text = "Title"),
-                    ParagraphBlock(id = "b1", text = "Body text."),
+                sections =
+                mapOf(
+                    "section-0" to
+                        listOf(
+                            HeadingBlock(id = "b0", level = 1, text = "Title"),
+                            ParagraphBlock(id = "b1", text = "Body text."),
+                        ),
                 ),
-            ),
-        )
+            )
 
         val index = PlainTextIndex.fromDocumentPackage(documentPackage)
 
@@ -64,7 +68,8 @@ class PlainTextIndexTest {
     }
 
     private fun samplePackage(): DocumentPackage = DocumentPackage(
-        manifest = PackageManifest(
+        manifest =
+        PackageManifest(
             schemaVersion = 2,
             title = "My Book",
             authors = emptyList(),
@@ -72,7 +77,8 @@ class PlainTextIndexTest {
             coverAssetId = null,
             sourceFormat = SourceFormat.EPUB,
             toc = emptyList(),
-            sections = listOf(
+            sections =
+            listOf(
                 ManifestSection(
                     id = "section-0",
                     title = "Chapter",
@@ -82,11 +88,13 @@ class PlainTextIndexTest {
                 ),
             ),
         ),
-        sections = mapOf(
-            "section-0" to listOf(
-                ParagraphBlock(id = "b0", text = "Hello"),
-                ParagraphBlock(id = "b1", text = "World"),
-            ),
+        sections =
+        mapOf(
+            "section-0" to
+                listOf(
+                    ParagraphBlock(id = "b0", text = "Hello"),
+                    ParagraphBlock(id = "b1", text = "World"),
+                ),
         ),
     )
 }

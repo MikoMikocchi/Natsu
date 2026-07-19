@@ -8,28 +8,25 @@ import io.mikoshift.natsu.core.domain.repository.DocumentRepository
 import io.mikoshift.natsu.core.model.Document
 import io.mikoshift.natsu.core.model.DocumentError
 import io.mikoshift.natsu.core.model.DocumentSearchResult
+import io.mikoshift.natsu.core.model.content.ReadingPosition
 import io.mikoshift.natsu.data.local.PackageFileStore
 import io.mikoshift.natsu.data.local.SyncCursorStore
 import io.mikoshift.natsu.data.local.SyncOutboxStore
 import io.mikoshift.natsu.data.local.db.DocumentCacheDao
 import io.mikoshift.natsu.data.local.db.DocumentDao
 import io.mikoshift.natsu.data.local.db.ReadingProgressDao
+import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
 import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.mapper.toDomain
 import io.mikoshift.natsu.data.mapper.toEntities
+import io.mikoshift.natsu.data.pkg.PackageAssetStore
 import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
 import io.mikoshift.natsu.data.remote.dto.ApiErrorResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus
-import io.mikoshift.natsu.core.model.content.ReadingPosition
-import io.mikoshift.natsu.data.local.db.ReadingProgressEntity
-import io.mikoshift.natsu.data.pkg.PackageAssetStore
 import io.mikoshift.natsu.data.sync.DocumentSyncEngine
 import io.mikoshift.natsu.data.sync.PackageDownloadService
 import io.mikoshift.natsu.data.sync.SyncScheduler
-import java.io.IOException
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -38,6 +35,9 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
+import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class DocumentRepositoryImpl @Inject constructor(
@@ -120,26 +120,24 @@ class DocumentRepositoryImpl @Inject constructor(
         return syncEngine.sync()
     }
 
-    override suspend fun ensurePackageDownloaded(id: String): Result<Unit> =
-        packageDownloadService.download(id)
+    override suspend fun ensurePackageDownloaded(id: String): Result<Unit> = packageDownloadService.download(id)
 
-    override suspend fun updateReadingProgress(id: String, position: ReadingPosition): Result<Unit> =
-        runCatching {
-            val now = System.currentTimeMillis()
-            readingProgressDao.upsert(
-                ReadingProgressEntity(
-                    documentId = id,
-                    lastReadCharOffset = position.globalCharOffset,
-                    lastReadSectionId = position.sectionId,
-                    lastReadBlockIndex = position.blockIndex,
-                    lastReadBlockCharOffset = position.blockCharOffset,
-                    updatedAtMs = now,
-                    clientUpdatedAtMs = now,
-                ),
-            )
-            syncOutboxStore.enqueueProgress(id, now)
-            syncScheduler.scheduleImmediateSync()
-        }
+    override suspend fun updateReadingProgress(id: String, position: ReadingPosition): Result<Unit> = runCatching {
+        val now = System.currentTimeMillis()
+        readingProgressDao.upsert(
+            ReadingProgressEntity(
+                documentId = id,
+                lastReadCharOffset = position.globalCharOffset,
+                lastReadSectionId = position.sectionId,
+                lastReadBlockIndex = position.blockIndex,
+                lastReadBlockCharOffset = position.blockCharOffset,
+                updatedAtMs = now,
+                clientUpdatedAtMs = now,
+            ),
+        )
+        syncOutboxStore.enqueueProgress(id, now)
+        syncScheduler.scheduleImmediateSync()
+    }
 
     override suspend fun clearOnLogout() {
         documentDao.deleteAll()
@@ -173,9 +171,11 @@ class DocumentRepositoryImpl @Inject constructor(
                             ?: metadata.toDomain(),
                     )
                 }
+
                 DocumentStatus.FAILED -> {
                     return Result.failure(DocumentError.ImportFailed(metadata.importError))
                 }
+
                 DocumentStatus.PENDING -> Unit
             }
         }
@@ -197,19 +197,24 @@ class DocumentRepositoryImpl @Inject constructor(
         return bytes to fileName
     }
 
-    private fun guessMediaType(fileName: String) =
-        when {
-            fileName.endsWith(".epub", ignoreCase = true) -> "application/epub+zip"
-            fileName.endsWith(".md", ignoreCase = true) ||
-                fileName.endsWith(".markdown", ignoreCase = true) -> "text/markdown"
-            fileName.endsWith(".txt", ignoreCase = true) -> "text/plain"
-            else -> "application/octet-stream"
-        }.toMediaTypeOrNull()
+    private fun guessMediaType(fileName: String) = when {
+        fileName.endsWith(".epub", ignoreCase = true) -> "application/epub+zip"
 
-    private fun Throwable.toDocumentFailure(): DocumentError =
-        if (this is DocumentError) this
-        else if (this is IOException) DocumentError.NetworkFailure
-        else DocumentError.Unknown(message)
+        fileName.endsWith(".md", ignoreCase = true) ||
+            fileName.endsWith(".markdown", ignoreCase = true) -> "text/markdown"
+
+        fileName.endsWith(".txt", ignoreCase = true) -> "text/plain"
+
+        else -> "application/octet-stream"
+    }.toMediaTypeOrNull()
+
+    private fun Throwable.toDocumentFailure(): DocumentError = if (this is DocumentError) {
+        this
+    } else if (this is IOException) {
+        DocumentError.NetworkFailure
+    } else {
+        DocumentError.Unknown(message)
+    }
 
     private fun <T> mapErrorResponse(response: Response<T>): DocumentError {
         val errorBody = try {

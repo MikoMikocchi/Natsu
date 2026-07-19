@@ -10,18 +10,9 @@ private val displayDateFormatter: DateTimeFormatter =
 
 private fun Instant.toDisplayDate(): String = displayDateFormatter.format(this)
 
-data class UserUiModel(
-    val displayName: String,
-    val email: String,
-    val memberSince: String?,
-)
+data class UserUiModel(val displayName: String, val email: String, val memberSince: String?)
 
-data class SessionUiModel(
-    val id: String,
-    val deviceName: String,
-    val createdAt: String,
-    val isCurrent: Boolean,
-)
+data class SessionUiModel(val id: String, val deviceName: String, val createdAt: String, val isCurrent: Boolean)
 
 fun io.mikoshift.natsu.core.model.User.toUiModel(): UserUiModel = UserUiModel(
     displayName = name,

@@ -4,11 +4,7 @@ sealed interface Block {
     val id: String
 }
 
-data class ParagraphBlock(
-    override val id: String,
-    val text: String,
-    val marks: List<Mark> = emptyList(),
-) : Block
+data class ParagraphBlock(override val id: String, val text: String, val marks: List<Mark> = emptyList()) : Block
 
 data class HeadingBlock(
     override val id: String,
@@ -17,17 +13,9 @@ data class HeadingBlock(
     val marks: List<Mark> = emptyList(),
 ) : Block
 
-data class ImageBlock(
-    override val id: String,
-    val assetId: String,
-    val alt: String? = null,
-) : Block
+data class ImageBlock(override val id: String, val assetId: String, val alt: String? = null) : Block
 
-data class BlockquoteBlock(
-    override val id: String,
-    val text: String,
-    val marks: List<Mark> = emptyList(),
-) : Block
+data class BlockquoteBlock(override val id: String, val text: String, val marks: List<Mark> = emptyList()) : Block
 
 data class ListItemBlock(
     override val id: String,
@@ -37,9 +25,7 @@ data class ListItemBlock(
     val marks: List<Mark> = emptyList(),
 ) : Block
 
-data class DividerBlock(
-    override val id: String,
-) : Block
+data class DividerBlock(override val id: String) : Block
 
 fun Block.plainText(): String = when (this) {
     is ParagraphBlock -> text

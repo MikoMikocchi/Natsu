@@ -26,7 +26,6 @@ import retrofit2.http.Path
  * throwing on non-2xx responses.
  */
 interface AuthApi {
-
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
 

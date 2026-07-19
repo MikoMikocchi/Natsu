@@ -8,9 +8,11 @@ import io.mikoshift.natsu.data.sync.SyncScheduler
 import javax.inject.Inject
 
 @HiltAndroidApp
-class NatsuApplication : Application(), Configuration.Provider {
-
+class NatsuApplication :
+    Application(),
+    Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
+
     @Inject lateinit var syncScheduler: SyncScheduler
 
     override fun onCreate() {
@@ -20,7 +22,9 @@ class NatsuApplication : Application(), Configuration.Provider {
     }
 
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .build()
+        get() =
+            Configuration
+                .Builder()
+                .setWorkerFactory(workerFactory)
+                .build()
 }

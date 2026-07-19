@@ -5,19 +5,35 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class SourceFormat {
-    @SerialName("EPUB") EPUB,
-    @SerialName("MARKDOWN") MARKDOWN,
-    @SerialName("PLAIN_TEXT") PLAIN_TEXT,
-    @SerialName("FB2") FB2,
-    @SerialName("DOCX") DOCX,
-    @SerialName("RTF") RTF,
+    @SerialName("EPUB")
+    EPUB,
+
+    @SerialName("MARKDOWN")
+    MARKDOWN,
+
+    @SerialName("PLAIN_TEXT")
+    PLAIN_TEXT,
+
+    @SerialName("FB2")
+    FB2,
+
+    @SerialName("DOCX")
+    DOCX,
+
+    @SerialName("RTF")
+    RTF,
 }
 
 @Serializable
 enum class DocumentStatus {
-    @SerialName("PENDING") PENDING,
-    @SerialName("READY") READY,
-    @SerialName("FAILED") FAILED,
+    @SerialName("PENDING")
+    PENDING,
+
+    @SerialName("READY")
+    READY,
+
+    @SerialName("FAILED")
+    FAILED,
 }
 
 @Serializable
@@ -47,10 +63,7 @@ data class DocumentIndexResponse(
 )
 
 @Serializable
-data class DocumentShowResponse(
-    val document: DocumentResponse,
-    @SerialName("server_time_ms") val serverTimeMs: Long,
-)
+data class DocumentShowResponse(val document: DocumentResponse, @SerialName("server_time_ms") val serverTimeMs: Long)
 
 @Serializable
 data class DocumentSyncItemRequest(
@@ -69,22 +82,13 @@ data class DocumentSyncItemRequest(
 )
 
 @Serializable
-data class DocumentSyncRequest(
-    val documents: List<DocumentSyncItemRequest>,
-)
+data class DocumentSyncRequest(val documents: List<DocumentSyncItemRequest>)
 
 @Serializable
-data class DocumentSearchMatch(
-    @SerialName("char_offset") val charOffset: Int,
-    val snippet: String,
-)
+data class DocumentSearchMatch(@SerialName("char_offset") val charOffset: Int, val snippet: String)
 
 @Serializable
-data class DocumentSearchResult(
-    val id: String,
-    val title: String,
-    val matches: List<DocumentSearchMatch>,
-)
+data class DocumentSearchResult(val id: String, val title: String, val matches: List<DocumentSearchMatch>)
 
 @Serializable
 data class DocumentSearchResponse(

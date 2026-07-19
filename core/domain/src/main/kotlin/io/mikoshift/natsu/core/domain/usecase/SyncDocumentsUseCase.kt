@@ -7,7 +7,9 @@ import io.mikoshift.natsu.core.domain.repository.SyncStatusRepository
 import io.mikoshift.natsu.core.model.DocumentError
 import javax.inject.Inject
 
-class SyncDocumentsUseCase @Inject constructor(
+class SyncDocumentsUseCase
+@Inject
+constructor(
     private val authRepository: AuthRepository,
     private val documentRepository: DocumentRepository,
     private val syncStatusRepository: SyncStatusRepository,

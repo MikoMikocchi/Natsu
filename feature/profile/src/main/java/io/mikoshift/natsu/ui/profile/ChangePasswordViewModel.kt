@@ -8,19 +8,20 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.ChangePasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.profile.R
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class ChangePasswordViewModel @Inject constructor(
+class ChangePasswordViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val changePassword: ChangePasswordUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ChangePasswordUiState())
     val uiState: StateFlow<ChangePasswordUiState> = _uiState.asStateFlow()
 
@@ -41,21 +42,24 @@ class ChangePasswordViewModel @Inject constructor(
     fun submit() {
         val state = _uiState.value
 
-        val currentPasswordError = if (state.currentPassword.isBlank()) {
-            context.getString(R.string.error_current_password_required)
-        } else {
-            null
-        }
-        val passwordError = if (state.password.length < 8) {
-            context.getString(R.string.error_password_min_length)
-        } else {
-            null
-        }
-        val passwordConfirmationError = if (state.passwordConfirmation != state.password) {
-            context.getString(R.string.error_passwords_do_not_match)
-        } else {
-            null
-        }
+        val currentPasswordError =
+            if (state.currentPassword.isBlank()) {
+                context.getString(R.string.error_current_password_required)
+            } else {
+                null
+            }
+        val passwordError =
+            if (state.password.length < 8) {
+                context.getString(R.string.error_password_min_length)
+            } else {
+                null
+            }
+        val passwordConfirmationError =
+            if (state.passwordConfirmation != state.password) {
+                context.getString(R.string.error_passwords_do_not_match)
+            } else {
+                null
+            }
 
         if (currentPasswordError != null || passwordError != null || passwordConfirmationError != null) {
             _uiState.update {
@@ -126,7 +130,8 @@ class ChangePasswordViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        generalError = (error as? AuthError.Unknown)?.errorMessage
+                        generalError =
+                        (error as? AuthError.Unknown)?.errorMessage
                             ?: context.getString(R.string.error_generic),
                     )
                 }

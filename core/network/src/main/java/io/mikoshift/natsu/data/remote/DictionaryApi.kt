@@ -9,7 +9,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface DictionaryApi {
-
     @GET("dictionaries")
     suspend fun index(
         @Query("page") page: Int = 1,

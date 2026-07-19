@@ -3,10 +3,7 @@ package io.mikoshift.natsu.data.repository
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.core.model.AuthSession
 import io.mikoshift.natsu.data.local.TokenStore
-import io.mikoshift.natsu.data.remote.AuthApi
 import io.mikoshift.natsu.data.remote.NetworkFactory
-import io.mikoshift.natsu.data.remote.OAuthApi
-import io.mikoshift.natsu.data.remote.UserInfoApi
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -21,7 +18,6 @@ import org.junit.Before
 import org.junit.Test
 
 class AuthRepositoryImplTest {
-
     private lateinit var mockWebServer: MockWebServer
     private lateinit var tokenStore: TokenStore
     private lateinit var authRepository: AuthRepositoryImpl
@@ -35,31 +31,36 @@ class AuthRepositoryImplTest {
         every { tokenStore.sessionFlow } returns MutableStateFlow(null)
         coEvery { tokenStore.saveSession(any()) } returns Unit
 
-        val networkFactory = NetworkFactory(
-            baseUrl = mockWebServer.url("/v1/").toString(),
-            rootBaseUrl = mockWebServer.url("/").toString(),
-            isDebugBuild = false,
-        )
+        val networkFactory =
+            NetworkFactory(
+                baseUrl = mockWebServer.url("/v1/").toString(),
+                rootBaseUrl = mockWebServer.url("/").toString(),
+                isDebugBuild = false,
+            )
         val unauthenticatedClient = networkFactory.createUnauthenticatedOkHttpClient()
-        val api = networkFactory.createAuthApi(
-            networkFactory.createRetrofit(unauthenticatedClient),
-        )
-        val oauthApi = networkFactory.createOAuthApi(
-            networkFactory.createRootRetrofit(unauthenticatedClient),
-        )
-        val userInfoApi = networkFactory.createUserInfoApi(
-            networkFactory.createRootRetrofit(unauthenticatedClient),
-        )
+        val api =
+            networkFactory.createAuthApi(
+                networkFactory.createRetrofit(unauthenticatedClient),
+            )
+        val oauthApi =
+            networkFactory.createOAuthApi(
+                networkFactory.createRootRetrofit(unauthenticatedClient),
+            )
+        val userInfoApi =
+            networkFactory.createUserInfoApi(
+                networkFactory.createRootRetrofit(unauthenticatedClient),
+            )
 
-        authRepository = AuthRepositoryImpl(
-            unauthenticatedApi = api,
-            authenticatedApi = api,
-            oauthApi = oauthApi,
-            userInfoApi = userInfoApi,
-            tokenStore = tokenStore,
-            networkFactory = networkFactory,
-            clientId = "natsu-mobile",
-        )
+        authRepository =
+            AuthRepositoryImpl(
+                unauthenticatedApi = api,
+                authenticatedApi = api,
+                oauthApi = oauthApi,
+                userInfoApi = userInfoApi,
+                tokenStore = tokenStore,
+                networkFactory = networkFactory,
+                clientId = "natsu-mobile",
+            )
     }
 
     @After
@@ -73,28 +74,26 @@ class AuthRepositoryImplTest {
             MockResponse()
                 .setBody(
                     """
-                    {
-                      "access_token": "access-token",
-                      "refresh_token": "refresh-token",
-                      "token_type": "Bearer",
-                      "expires_in": 3600
-                    }
+                        {
+                          "access_token": "access-token",
+                          "refresh_token": "refresh-token",
+                          "token_type": "Bearer",
+                          "expires_in": 3600
+                        }
                     """.trimIndent(),
-                )
-                .addHeader("Content-Type", "application/json"),
+                ).addHeader("Content-Type", "application/json"),
         )
         mockWebServer.enqueue(
             MockResponse()
                 .setBody(
                     """
-                    {
-                      "sub": "1",
-                      "email": "test@example.com",
-                      "name": "Test User"
-                    }
+                        {
+                          "sub": "1",
+                          "email": "test@example.com",
+                          "name": "Test User"
+                        }
                     """.trimIndent(),
-                )
-                .addHeader("Content-Type", "application/json"),
+                ).addHeader("Content-Type", "application/json"),
         )
 
         val result = authRepository.login(email = "test@example.com", password = "password")
@@ -120,26 +119,26 @@ class AuthRepositoryImplTest {
                 .setResponseCode(201)
                 .setBody(
                     """
-                    {
-                      "user": {
-                        "id": 1,
-                        "name": "Test User",
-                        "email": "test@example.com",
-                        "created_at": "2026-01-01T00:00:00Z"
-                      },
-                      "server_time_ms": 1000
-                    }
+                        {
+                          "user": {
+                            "id": 1,
+                            "name": "Test User",
+                            "email": "test@example.com",
+                            "created_at": "2026-01-01T00:00:00Z"
+                          },
+                          "server_time_ms": 1000
+                        }
                     """.trimIndent(),
-                )
-                .addHeader("Content-Type", "application/json"),
+                ).addHeader("Content-Type", "application/json"),
         )
 
-        val result = authRepository.register(
-            name = "Test User",
-            email = "test@example.com",
-            password = "password",
-            passwordConfirmation = "password",
-        )
+        val result =
+            authRepository.register(
+                name = "Test User",
+                email = "test@example.com",
+                password = "password",
+                passwordConfirmation = "password",
+            )
 
         assertTrue(result.isSuccess)
         coVerify(exactly = 0) { tokenStore.saveSession(any()) }

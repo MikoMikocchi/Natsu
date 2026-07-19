@@ -27,10 +27,7 @@ import io.mikoshift.natsu.feature.auth.R
 import io.mikoshift.natsu.ui.theme.NatsuTheme
 
 @Composable
-fun ForgotPasswordScreen(
-    viewModel: ForgotPasswordViewModel,
-    onNavigateToLogin: () -> Unit,
-) {
+fun ForgotPasswordScreen(viewModel: ForgotPasswordViewModel, onNavigateToLogin: () -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     ForgotPasswordScreenContent(
         uiState = uiState,
