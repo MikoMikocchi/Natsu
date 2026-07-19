@@ -36,7 +36,7 @@ abstract class NatsuDatabase : RoomDatabase() {
                 NatsuDatabase::class.java,
                 "natsu.db",
             )
-                .fallbackToDestructiveMigration(dropAllTables = true)
+                .addMigrations(*NatsuDatabaseMigrations.ALL)
                 .build()
     }
 }
