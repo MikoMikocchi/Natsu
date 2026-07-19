@@ -55,6 +55,7 @@ data class DocumentShowResponse(
 @Serializable
 data class DocumentSyncItemRequest(
     val id: String,
+    @SerialName("idempotency_key") val idempotencyKey: String,
     val title: String? = null,
     @SerialName("source_format") val sourceFormat: SourceFormat,
     @SerialName("imported_at") val importedAt: Long,

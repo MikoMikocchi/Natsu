@@ -18,6 +18,7 @@ import io.mikoshift.natsu.data.remote.DocumentApi
 import io.mikoshift.natsu.data.remote.dto.DocumentIndexResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
 import java.io.IOException
+import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 import retrofit2.Response
@@ -133,15 +134,17 @@ class DocumentSyncEngine @Inject constructor(
                 return@mapNotNull null
             }
             val progress = readingProgressDao.getByDocumentId(documentId)
-            document.toSyncItemRequest(progress)
+            val itemIdempotencyKey = itemIdempotencyKey(batchEntries, documentId)
+            document.toSyncItemRequest(progress, itemIdempotencyKey)
         }
 
         if (syncItems.isEmpty()) return
 
         val request = DocumentSyncRequest(documents = syncItems)
+        val batchIdempotencyKey = batchIdempotencyKey(batchEntries)
 
         try {
-            val response = documentApi.syncDocuments(request)
+            val response = documentApi.syncDocuments(batchIdempotencyKey, request)
             val body = requireSuccess(response)
             applySyncResponse(body)
             batchEntries.forEach { entry ->
@@ -213,5 +216,29 @@ class DocumentSyncEngine @Inject constructor(
 
     private companion object {
         const val MAX_SYNC_BATCH = 100
+        const val MAX_IDEMPOTENCY_KEY_LENGTH = 255
+
+        fun itemIdempotencyKey(entries: List<SyncOutboxEntity>, documentId: String): String {
+            val keys = entries.filter { it.entityId == documentId }.map { it.idempotencyKey }.sorted()
+            require(keys.isNotEmpty()) { "Missing outbox idempotency key for document $documentId" }
+            return when {
+                keys.size == 1 -> keys.single()
+                else -> sha256Hex(keys.joinToString("|"))
+            }
+        }
+
+        fun batchIdempotencyKey(entries: List<SyncOutboxEntity>): String {
+            val composite = entries.map { it.idempotencyKey }.sorted().joinToString("|")
+            return if (composite.length <= MAX_IDEMPOTENCY_KEY_LENGTH) {
+                composite
+            } else {
+                sha256Hex(composite)
+            }
+        }
+
+        private fun sha256Hex(value: String): String {
+            val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray())
+            return digest.joinToString("") { byte -> "%02x".format(byte) }
+        }
     }
 }

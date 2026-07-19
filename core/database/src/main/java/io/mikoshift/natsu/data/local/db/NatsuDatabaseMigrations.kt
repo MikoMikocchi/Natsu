@@ -237,5 +237,23 @@ object NatsuDatabaseMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                ALTER TABLE `sync_outbox`
+                ADD COLUMN `idempotencyKey` TEXT NOT NULL DEFAULT ''
+                """.trimIndent(),
+            )
+            db.execSQL(
+                """
+                UPDATE `sync_outbox`
+                SET `idempotencyKey` = `id` || ':' || CAST(`createdAtMs` AS TEXT)
+                WHERE `idempotencyKey` = ''
+                """.trimIndent(),
+            )
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 }

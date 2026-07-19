@@ -94,7 +94,10 @@ fun DocumentResponse.toDomain(
     cache = cache,
 )
 
-fun DocumentEntity.toSyncItemRequest(progress: ReadingProgressEntity?): DocumentSyncItemRequest {
+fun DocumentEntity.toSyncItemRequest(
+    progress: ReadingProgressEntity?,
+    idempotencyKey: String,
+): DocumentSyncItemRequest {
     val progressEntity = progress ?: ReadingProgressEntity(
         documentId = id,
         lastReadCharOffset = 0,
@@ -106,6 +109,7 @@ fun DocumentEntity.toSyncItemRequest(progress: ReadingProgressEntity?): Document
     )
     return DocumentSyncItemRequest(
         id = id,
+        idempotencyKey = idempotencyKey,
         title = title,
         sourceFormat = sourceFormat.toDto(),
         importedAt = importedAt,

@@ -6,6 +6,7 @@ import io.mikoshift.natsu.data.remote.dto.DocumentShowResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentSearchResponse
 import io.mikoshift.natsu.data.remote.dto.DocumentStatus
 import io.mikoshift.natsu.data.remote.dto.DocumentSyncRequest
+import java.security.MessageDigest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -18,6 +19,7 @@ class FakeDocumentApi {
 
     private val documents = linkedMapOf<String, DocumentResponse>()
     private val packages = mutableMapOf<String, ByteArray>()
+    private val idempotencyCache = mutableMapOf<String, CachedIdempotentResponse>()
 
     var syncDocumentsCallCount: Int = 0
         private set
@@ -54,10 +56,19 @@ class FakeDocumentApi {
         }
 
         override suspend fun syncDocuments(
+            idempotencyKey: String,
             request: DocumentSyncRequest,
         ): Response<DocumentIndexResponse> {
             syncDocumentsCallCount++
             syncDocumentsFailure?.let { throw it }
+
+            val requestHash = hashRequest(request)
+            idempotencyCache[idempotencyKey]?.let { cached ->
+                require(cached.requestHash == requestHash) {
+                    "Idempotency key was already used with a different request body"
+                }
+                return Response.success(cached.response)
+            }
 
             val syncedDocuments = request.documents.map { item ->
                 val existing = documents[item.id]
@@ -87,12 +98,12 @@ class FakeDocumentApi {
                 merged
             }
 
-            return Response.success(
-                DocumentIndexResponse(
-                    documents = syncedDocuments,
-                    serverTimeMs = serverTimeMs,
-                ),
+            val response = DocumentIndexResponse(
+                documents = syncedDocuments,
+                serverTimeMs = serverTimeMs,
             )
+            idempotencyCache[idempotencyKey] = CachedIdempotentResponse(requestHash, response)
+            return Response.success(response)
         }
 
         override suspend fun search(query: String): Response<DocumentSearchResponse> =
@@ -110,5 +121,31 @@ class FakeDocumentApi {
                 ?: return Response.error(404, "missing".toResponseBody("text/plain".toMediaType()))
             return Response.success(content.toResponseBody("application/zip".toMediaType()))
         }
+    }
+
+    private data class CachedIdempotentResponse(
+        val requestHash: String,
+        val response: DocumentIndexResponse,
+    )
+
+    private fun hashRequest(request: DocumentSyncRequest): String {
+        val canonical = request.documents.joinToString("|") { item ->
+            listOf(
+                item.id,
+                item.idempotencyKey,
+                item.title,
+                item.sourceFormat.name,
+                item.importedAt,
+                item.charCount,
+                item.lastReadCharOffset,
+                item.lastReadSectionId,
+                item.lastReadBlockIndex,
+                item.lastReadBlockCharOffset,
+                item.updatedAtMs,
+                item.deleted,
+            ).joinToString(",")
+        }
+        val digest = MessageDigest.getInstance("SHA-256").digest(canonical.toByteArray())
+        return digest.joinToString("") { byte -> "%02x".format(byte) }
     }
 }

@@ -25,6 +25,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import io.mockk.slot
 import java.io.IOException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -109,7 +110,7 @@ class DocumentSyncEngineTest {
             metadataOutboxEntry(entityId = "doc-local"),
         )
         coEvery { documentDao.getById("doc-local") } returns sampleLocalDocument(id = "doc-local")
-        coEvery { documentApi.syncDocuments(any()) } throws IOException("network down")
+        coEvery { documentApi.syncDocuments(any(), any()) } throws IOException("network down")
 
         val result = engine.sync()
 
@@ -161,7 +162,7 @@ class DocumentSyncEngineTest {
 
         assertTrue(result.isSuccess)
         coVerify { syncOutboxStore.clearEntity(SyncEntityType.METADATA, "missing-doc") }
-        coVerify(exactly = 0) { documentApi.syncDocuments(any()) }
+        coVerify(exactly = 0) { documentApi.syncDocuments(any(), any()) }
     }
 
     private fun stubEmptyPull() {
@@ -180,9 +181,25 @@ class DocumentSyncEngineTest {
         coEvery { packageDownloadService.downloadMissingPackages() } returns Unit
     }
 
+    @Test
+    fun pushDocuments_passesStableIdempotencyKeys() = runTest {
+        val entry = metadataOutboxEntry(entityId = "doc-1")
+        coEvery { syncOutboxDao.getPending() } returns listOf(entry)
+        coEvery { documentDao.getById("doc-1") } returns sampleLocalDocument(id = "doc-1")
+        val batchKeySlot = slot<String>()
+        coEvery { documentApi.syncDocuments(capture(batchKeySlot), any()) } coAnswers {
+            successfulDocumentResponse(secondArg())
+        }
+
+        val result = engine.sync()
+
+        assertTrue(result.isSuccess)
+        assertEquals("key-doc-1", batchKeySlot.captured)
+    }
+
     private fun stubSuccessfulDocumentSync() {
-        coEvery { documentApi.syncDocuments(any()) } coAnswers {
-            successfulDocumentResponse(firstArg())
+        coEvery { documentApi.syncDocuments(any(), any()) } coAnswers {
+            successfulDocumentResponse(secondArg())
         }
     }
 
@@ -219,6 +236,7 @@ class DocumentSyncEngineTest {
         entityType = SyncEntityType.METADATA,
         entityId = entityId,
         createdAtMs = 1L,
+        idempotencyKey = "key-$entityId",
         status = status,
         attempts = attempts,
     )

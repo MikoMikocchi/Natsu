@@ -29,6 +29,7 @@ data class SyncOutboxEntity(
     val entityType: SyncEntityType,
     val entityId: String,
     val createdAtMs: Long,
+    val idempotencyKey: String,
     val status: SyncOutboxStatus = SyncOutboxStatus.PENDING,
     val attempts: Int = 0,
     val lastError: String? = null,

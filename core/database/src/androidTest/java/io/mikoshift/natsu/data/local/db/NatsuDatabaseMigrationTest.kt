@@ -94,6 +94,38 @@ class NatsuDatabaseMigrationTest {
     }
 
     @Test
+    fun migrate3To4_addsIdempotencyKeyToOutbox() {
+        helper.createDatabase(TEST_DB, 3).apply {
+            execSQL(
+                """
+                INSERT INTO sync_outbox (
+                    id, entityType, entityId, createdAtMs, status, attempts, lastError
+                ) VALUES (
+                    'METADATA:doc-1', 'METADATA', 'doc-1', 500, 'PENDING', 0, NULL
+                )
+                """.trimIndent(),
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            4,
+            true,
+            NatsuDatabaseMigrations.MIGRATION_3_4,
+        )
+
+        db.query(
+            "SELECT idempotencyKey FROM sync_outbox WHERE id = 'METADATA:doc-1'",
+        ).use { cursor ->
+            assertEquals(true, cursor.moveToFirst())
+            assertEquals("METADATA:doc-1:500", cursor.getString(0))
+        }
+
+        db.close()
+    }
+
+    @Test
     fun migrate1To2_splitsEmbeddedDocumentFieldsIntoDedicatedTables() {
         helper.createDatabase(TEST_DB, 1).apply {
             execSQL(

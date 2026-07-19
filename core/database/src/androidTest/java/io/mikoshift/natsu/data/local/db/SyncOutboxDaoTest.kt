@@ -75,6 +75,7 @@ class SyncOutboxDaoTest {
         entityType = SyncEntityType.METADATA,
         entityId = "doc-$id",
         createdAtMs = 1L,
+        idempotencyKey = "key-$id",
         status = status,
         attempts = attempts,
         lastError = lastError,

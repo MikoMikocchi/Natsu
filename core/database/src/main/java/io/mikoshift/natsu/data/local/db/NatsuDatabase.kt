@@ -17,7 +17,7 @@ import io.mikoshift.natsu.core.model.SourceFormat
         SyncOutboxEntity::class,
         SyncStateEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(NatsuTypeConverters::class)

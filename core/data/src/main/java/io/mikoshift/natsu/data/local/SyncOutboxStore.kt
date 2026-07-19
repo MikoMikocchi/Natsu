@@ -4,6 +4,7 @@ import io.mikoshift.natsu.data.local.db.SyncEntityType
 import io.mikoshift.natsu.data.local.db.SyncOutboxDao
 import io.mikoshift.natsu.data.local.db.SyncOutboxEntity
 import io.mikoshift.natsu.data.local.db.SyncOutboxStatus
+import java.util.UUID
 
 class SyncOutboxStore(
     private val syncOutboxDao: SyncOutboxDao,
@@ -16,6 +17,7 @@ class SyncOutboxStore(
                 entityType = SyncEntityType.METADATA,
                 entityId = documentId,
                 createdAtMs = nowMs,
+                idempotencyKey = newIdempotencyKey(),
                 status = SyncOutboxStatus.PENDING,
             ),
         )
@@ -28,6 +30,7 @@ class SyncOutboxStore(
                 entityType = SyncEntityType.PROGRESS,
                 entityId = documentId,
                 createdAtMs = nowMs,
+                idempotencyKey = newIdempotencyKey(),
                 status = SyncOutboxStatus.PENDING,
             ),
         )
@@ -49,4 +52,6 @@ class SyncOutboxStore(
 
     private fun outboxId(entityType: SyncEntityType, entityId: String): String =
         "${entityType.name}:$entityId"
+
+    private fun newIdempotencyKey(): String = UUID.randomUUID().toString()
 }
