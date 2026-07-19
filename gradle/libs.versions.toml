@@ -79,6 +79,7 @@ okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver" 
 androidx-test-runner = { group = "androidx.test", name = "runner", version = "1.7.0" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+detekt-ktlint = { group = "dev.detekt", name = "detekt-rules-ktlint-wrapper", version.ref = "detekt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

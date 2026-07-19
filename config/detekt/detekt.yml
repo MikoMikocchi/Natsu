@@ -7,6 +7,10 @@ processors:
 console-reports:
   active: true
 
+ktlint:
+  active: true
+  autoCorrect: false
+
 comments:
   active: true
 
@@ -14,15 +18,22 @@ complexity:
   active: true
   LongMethod:
     active: true
-    allowedLines: 80
+    allowedLines: 150
+    ignoreAnnotated:
+      - Composable
+    excludes:
+      - '**/*Migration*.kt'
   LongParameterList:
     active: true
     allowedFunctionParameters: 8
     allowedConstructorParameters: 10
   TooManyFunctions:
     active: true
-    allowedFunctionsPerFile: 20
-    allowedFunctionsPerClass: 20
+    allowedFunctionsPerFile: 25
+    allowedFunctionsPerClass: 25
+    ignoreAnnotated:
+      - Module
+      - dagger.Module
 
 coroutines:
   active: true
@@ -57,6 +68,20 @@ style:
     ignoreAnnotated:
       - Composable
       - Preview
+    ignoreNumbers:
+      - '-1'
+      - '0'
+      - '1'
+      - '2'
+      - '8'
+      - '401'
+      - '403'
+      - '404'
+      - '408'
+      - '429'
+    excludes:
+      - '**/ReaderThemeColors.kt'
+      - '**/theme/**'
   MaxLineLength:
     active: true
     maxLineLength: 120

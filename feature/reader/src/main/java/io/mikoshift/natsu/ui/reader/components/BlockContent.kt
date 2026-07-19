@@ -85,7 +85,10 @@ fun BlockContent(
 }
 
 @Composable
-private fun headingStyle(level: Int, bodyStyle: androidx.compose.ui.text.TextStyle): androidx.compose.ui.text.TextStyle =
+private fun headingStyle(
+    level: Int,
+    bodyStyle: androidx.compose.ui.text.TextStyle,
+): androidx.compose.ui.text.TextStyle =
     when (level) {
         1 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.6f)
         2 -> bodyStyle.copy(fontSize = bodyStyle.fontSize * 1.4f)

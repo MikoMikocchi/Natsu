@@ -46,7 +46,12 @@ fun NatsuNavHost(
             sessionHost.onSessionCleared()
         }
 
-        when (resolveSessionRedirect(hasSession = session != null, destination = navController.currentBackStackEntry?.destination)) {
+        when (
+            resolveSessionRedirect(
+                hasSession = session != null,
+                destination = navController.currentBackStackEntry?.destination,
+            )
+        ) {
             SessionRedirect.ToLogin -> {
                 navController.navigate(LoginRoute) {
                     popUpTo(HomeRoute) { inclusive = true }
