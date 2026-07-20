@@ -35,6 +35,7 @@ data class ReaderUiState(
     val lookupLoading: Boolean = false,
     val lookupResults: List<io.mikoshift.natsu.core.model.DictionaryLookupResult> = emptyList(),
     val lookupErrorMessage: String? = null,
+    val lookupSuggestEnableDictionary: Boolean = false,
     val selectedWord: SelectedWord? = null,
     val errorMessage: String? = null,
 )

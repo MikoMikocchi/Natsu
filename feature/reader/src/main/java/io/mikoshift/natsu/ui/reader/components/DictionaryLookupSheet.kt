@@ -24,6 +24,7 @@ fun DictionaryLookupSheet(
     isLoading: Boolean,
     results: List<DictionaryLookupResult>,
     errorMessage: String?,
+    suggestEnableDictionary: Boolean,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -49,7 +50,18 @@ fun DictionaryLookupSheet(
                     text = errorMessage,
                     color = MaterialTheme.colorScheme.error,
                 )
-                results.isEmpty() -> Text(text = stringResource(R.string.dictionary_lookup_empty))
+                results.isEmpty() ->
+                    Text(
+                        text = stringResource(
+                            if (suggestEnableDictionary) {
+                                R.string.dictionary_lookup_no_dictionaries
+                            } else {
+                                R.string.dictionary_lookup_empty
+                            },
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 else -> results.forEach { result ->
                     DictionaryLookupResultItem(result)
                 }

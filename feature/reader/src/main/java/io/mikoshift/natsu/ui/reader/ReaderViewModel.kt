@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.repository.DocumentPackageRepository
 import io.mikoshift.natsu.core.domain.usecase.EnsurePackageDownloadedUseCase
+import io.mikoshift.natsu.core.domain.usecase.ListDictionariesUseCase
 import io.mikoshift.natsu.core.domain.usecase.LookupWordUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveDocumentUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveReaderSettingsUseCase
@@ -47,6 +48,7 @@ constructor(
     private val observeReaderSettings: ObserveReaderSettingsUseCase,
     private val updateReaderSettings: UpdateReaderSettingsUseCase,
     private val lookupWord: LookupWordUseCase,
+    private val listDictionaries: ListDictionariesUseCase,
     private val documentPackageRepository: DocumentPackageRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -125,15 +127,19 @@ constructor(
                 lookupLoading = true,
                 lookupResults = emptyList(),
                 lookupErrorMessage = null,
+                lookupSuggestEnableDictionary = false,
             )
         }
         viewModelScope.launch {
             lookupWord(query).fold(
                 onSuccess = { results ->
+                    val suggestEnableDictionary =
+                        results.isEmpty() && shouldSuggestEnableDictionary()
                     _uiState.update {
                         it.copy(
                             lookupLoading = false,
                             lookupResults = results,
+                            lookupSuggestEnableDictionary = suggestEnableDictionary,
                         )
                     }
                 },
@@ -142,11 +148,17 @@ constructor(
                         it.copy(
                             lookupLoading = false,
                             lookupErrorMessage = throwable.message ?: context.getString(R.string.error_generic),
+                            lookupSuggestEnableDictionary = false,
                         )
                     }
                 },
             )
         }
+    }
+
+    private suspend fun shouldSuggestEnableDictionary(): Boolean {
+        val page = listDictionaries().getOrNull() ?: return false
+        return page.dictionaries.isEmpty() || page.dictionaries.none { it.enabled }
     }
 
     fun dismissLookup() {
@@ -156,6 +168,7 @@ constructor(
                 lookupLoading = false,
                 lookupResults = emptyList(),
                 lookupErrorMessage = null,
+                lookupSuggestEnableDictionary = false,
                 selectedWord = null,
             )
         }

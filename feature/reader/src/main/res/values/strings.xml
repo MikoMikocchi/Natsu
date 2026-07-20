@@ -22,5 +22,6 @@
     <string name="reader_theme_sepia">Sepia</string>
     <string name="reader_furigana">Furigana</string>
     <string name="dictionary_lookup_title">Lookup: %1$s</string>
-    <string name="dictionary_lookup_empty">No definitions found</string>
+    <string name="dictionary_lookup_empty">No definition found.</string>
+    <string name="dictionary_lookup_no_dictionaries">No dictionaries are available. Import a dictionary on the server or enable one in Profile.</string>
 </resources>

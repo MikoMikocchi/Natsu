@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import io.mikoshift.natsu.core.domain.repository.DocumentPackageRepository
 import io.mikoshift.natsu.core.domain.usecase.EnsurePackageDownloadedUseCase
+import io.mikoshift.natsu.core.domain.usecase.ListDictionariesUseCase
 import io.mikoshift.natsu.core.domain.usecase.LookupWordUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveDocumentUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveReaderSettingsUseCase
@@ -48,6 +49,7 @@ class ReaderViewModelTest {
     private lateinit var observeReaderSettings: ObserveReaderSettingsUseCase
     private lateinit var updateReaderSettings: UpdateReaderSettingsUseCase
     private lateinit var lookupWord: LookupWordUseCase
+    private lateinit var listDictionaries: ListDictionariesUseCase
     private lateinit var documentPackageRepository: DocumentPackageRepository
 
     private val defaultReaderSettings =
@@ -70,9 +72,16 @@ class ReaderViewModelTest {
         observeReaderSettings = mockk()
         updateReaderSettings = mockk()
         lookupWord = mockk()
+        listDictionaries = mockk()
         documentPackageRepository = mockk(relaxed = true)
         every { observeReaderSettings() } returns flowOf(defaultReaderSettings)
         coEvery { observeReaderSettings.refresh() } returns Result.success(defaultReaderSettings)
+        coEvery { listDictionaries() } returns Result.success(
+            io.mikoshift.natsu.core.model.DictionaryPage(
+                dictionaries = emptyList(),
+                pagination = io.mikoshift.natsu.core.model.DictionaryPagination(1, 50, 0, 0),
+            ),
+        )
     }
 
     @After
@@ -141,6 +150,7 @@ class ReaderViewModelTest {
             observeReaderSettings = observeReaderSettings,
             updateReaderSettings = updateReaderSettings,
             lookupWord = lookupWord,
+            listDictionaries = listDictionaries,
             documentPackageRepository = documentPackageRepository,
             savedStateHandle = savedStateHandle,
         )

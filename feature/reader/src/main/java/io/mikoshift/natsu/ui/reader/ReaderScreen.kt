@@ -126,6 +126,7 @@ internal fun ReaderScreenContent(
             isLoading = uiState.lookupLoading,
             results = uiState.lookupResults,
             errorMessage = uiState.lookupErrorMessage,
+            suggestEnableDictionary = uiState.lookupSuggestEnableDictionary,
             onDismiss = onDismissLookup,
         )
     }
