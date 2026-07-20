@@ -53,11 +53,12 @@ constructor(
                         zip.getEntry(section.path)
                             ?: throw DocumentError.Unknown("Missing section file ${section.path}")
                     val sectionBytes = zip.getInputStream(entry).use { it.readBytes() }
+                    val blocksJson = SectionBlocksJson.normalize(sectionBytes.decodeToString(), networkFactory.json)
                     val blocks =
                         networkFactory.json
                             .decodeFromString(
                                 ListSerializer(BlockDto.serializer()),
-                                sectionBytes.decodeToString(),
+                                blocksJson,
                             ).map { it.toDomain() }
                     section.id to blocks
                 }

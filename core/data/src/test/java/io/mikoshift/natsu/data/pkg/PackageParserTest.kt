@@ -30,6 +30,30 @@ class PackageParserTest {
     }
 
     @Test
+    fun parseZip_acceptsSectionBlocksWithoutTypeDiscriminator() {
+        val zipFile = File.createTempFile("package-blocks-no-type", ".zip")
+        zipFile.writeBytes(PackageTestFixtures.sampleZipBytesWithUntypedBlocks())
+
+        val documentPackage = parser.parseZip(zipFile)
+
+        val blocks = documentPackage.sections["section-0"].orEmpty()
+        assertTrue(blocks[0] is HeadingBlock)
+        assertEquals("Оглавление", (blocks[0] as HeadingBlock).text)
+    }
+
+    @Test
+    fun parseZip_acceptsTocNodesWithNullSectionId() {
+        val zipFile = File.createTempFile("package-toc-null", ".zip")
+        zipFile.writeBytes(PackageTestFixtures.sampleZipBytesWithNullTocSectionId())
+
+        val documentPackage = parser.parseZip(zipFile)
+
+        assertEquals(1, documentPackage.manifest.toc.size)
+        assertEquals("1. Введение", documentPackage.manifest.toc.first().title)
+        assertEquals(null, documentPackage.manifest.toc.first().sectionId)
+    }
+
+    @Test
     fun parseZip_readsManifestSectionsAndBlocks() {
         val zipFile = File.createTempFile("package", ".zip")
         zipFile.writeBytes(PackageTestFixtures.sampleZipBytes())

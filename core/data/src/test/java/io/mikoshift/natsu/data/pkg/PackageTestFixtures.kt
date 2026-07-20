@@ -61,6 +61,88 @@ object PackageTestFixtures {
         return buffer.toByteArray()
     }
 
+    fun sampleZipBytesWithNullTocSectionId(): ByteArray {
+        val sectionBytes =
+            """
+            [
+              {"type":"paragraph","id":"section-0-b0","text":"Hello world.","marks":[]}
+            ]
+            """.trimIndent().toByteArray(StandardCharsets.UTF_8)
+        val checksum = sha256Hex(sectionBytes)
+        val manifestBytes =
+            """
+            {
+              "schema_version": 2,
+              "title": "My Book",
+              "authors": ["Jane Author"],
+              "language": "en",
+              "cover_asset_id": null,
+              "source_format": "EPUB",
+              "toc": [
+                {
+                  "title": "1. Введение",
+                  "section_id": null,
+                  "children": []
+                }
+              ],
+              "sections": [
+                {
+                  "id": "section-0",
+                  "title": "Chapter One",
+                  "path": "sections/section-0.json",
+                  "word_count": 2,
+                  "checksum": "$checksum"
+                }
+              ]
+            }
+            """.trimIndent().toByteArray(StandardCharsets.UTF_8)
+
+        val buffer = ByteArrayOutputStream()
+        ZipOutputStream(buffer, StandardCharsets.UTF_8).use { zip ->
+            writeEntry(zip, "sections/section-0.json", sectionBytes)
+            writeEntry(zip, "manifest.json", manifestBytes)
+        }
+        return buffer.toByteArray()
+    }
+
+    fun sampleZipBytesWithUntypedBlocks(): ByteArray {
+        val sectionBytes =
+            """
+            [
+              {"id":"section-0-b0","level":1,"text":"Оглавление","marks":[]}
+            ]
+            """.trimIndent().toByteArray(StandardCharsets.UTF_8)
+        val checksum = sha256Hex(sectionBytes)
+        val manifestBytes =
+            """
+            {
+              "schema_version": 2,
+              "title": "My Book",
+              "authors": [],
+              "language": "ja",
+              "cover_asset_id": null,
+              "source_format": "EPUB",
+              "toc": [],
+              "sections": [
+                {
+                  "id": "section-0",
+                  "title": "Chapter One",
+                  "path": "sections/section-0.json",
+                  "word_count": 1,
+                  "checksum": "$checksum"
+                }
+              ]
+            }
+            """.trimIndent().toByteArray(StandardCharsets.UTF_8)
+
+        val buffer = ByteArrayOutputStream()
+        ZipOutputStream(buffer, StandardCharsets.UTF_8).use { zip ->
+            writeEntry(zip, "sections/section-0.json", sectionBytes)
+            writeEntry(zip, "manifest.json", manifestBytes)
+        }
+        return buffer.toByteArray()
+    }
+
     private fun writeEntry(zip: ZipOutputStream, path: String, content: ByteArray) {
         zip.putNextEntry(ZipEntry(path))
         zip.write(content)

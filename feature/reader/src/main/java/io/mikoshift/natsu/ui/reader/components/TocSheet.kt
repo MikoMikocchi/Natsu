@@ -30,14 +30,18 @@ fun TocSheet(toc: List<TocNode>, onDismiss: () -> Unit, onSectionSelected: (Stri
             )
             LazyColumn {
                 items(flattenToc(toc)) { node ->
+                    val itemModifier = Modifier.padding(start = (node.depth * 16).dp)
                     ListItem(
                         headlineContent = { Text(node.title) },
-                        modifier = Modifier
-                            .clickable {
+                        modifier =
+                        if (node.sectionId != null) {
+                            itemModifier.clickable {
                                 onSectionSelected(node.sectionId)
                                 onDismiss()
                             }
-                            .padding(start = (node.depth * 16).dp),
+                        } else {
+                            itemModifier
+                        },
                     )
                 }
             }
@@ -45,11 +49,13 @@ fun TocSheet(toc: List<TocNode>, onDismiss: () -> Unit, onSectionSelected: (Stri
     }
 }
 
-private data class FlatTocNode(val title: String, val sectionId: String, val depth: Int)
+private data class FlatTocNode(val title: String, val sectionId: String?, val depth: Int)
 
 private fun flattenToc(nodes: List<TocNode>, depth: Int = 0): List<FlatTocNode> = buildList {
     nodes.forEach { node ->
-        add(FlatTocNode(title = node.title, sectionId = node.sectionId, depth = depth))
+        if (node.title != null || node.sectionId != null) {
+            add(FlatTocNode(title = node.title.orEmpty(), sectionId = node.sectionId, depth = depth))
+        }
         addAll(flattenToc(node.children, depth + 1))
     }
 }

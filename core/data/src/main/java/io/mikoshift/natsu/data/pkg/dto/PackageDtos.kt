@@ -19,8 +19,8 @@ data class PackageManifestDto(
 
 @Serializable
 data class TocNodeDto(
-    val title: String,
-    @SerialName("section_id") val sectionId: String,
+    val title: String? = null,
+    @SerialName("section_id") val sectionId: String? = null,
     val children: List<TocNodeDto> = emptyList(),
 )
 
