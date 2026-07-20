@@ -72,7 +72,7 @@ fun ReaderScreen(viewModel: ReaderViewModel, onNavigateBack: () -> Unit) {
         onLineSpacingChange = viewModel::onLineSpacingChange,
         onThemeChange = viewModel::onThemeChange,
         onFuriganaModeChange = viewModel::onFuriganaModeChange,
-        onLookupText = viewModel::lookupText,
+        onLookupWordAt = viewModel::lookupWordAt,
         onDismissLookup = viewModel::dismissLookup,
         onSectionSelected = { sectionId ->
             viewModel.scrollTargetForSection(sectionId)
@@ -96,7 +96,7 @@ internal fun ReaderScreenContent(
     onLineSpacingChange: (Double) -> Unit,
     onThemeChange: (io.mikoshift.natsu.core.model.ReaderTheme) -> Unit,
     onFuriganaModeChange: (io.mikoshift.natsu.core.model.FuriganaMode) -> Unit,
-    onLookupText: (String) -> Unit,
+    onLookupWordAt: (String, String, Int) -> Unit,
     onDismissLookup: () -> Unit,
     onSectionSelected: (String) -> Int,
     onVisibleBlockChanged: (String, Int, Int) -> Unit,
@@ -239,7 +239,8 @@ internal fun ReaderScreenContent(
                     BlockContent(
                         item = block,
                         bodyStyle = bodyStyle,
-                        onLongPressText = onLookupText,
+                        selectedWord = uiState.selectedWord,
+                        onWordTap = onLookupWordAt,
                     )
                 }
             }
@@ -317,7 +318,7 @@ private fun ReaderReadyPreview() {
             onLineSpacingChange = {},
             onThemeChange = {},
             onFuriganaModeChange = {},
-            onLookupText = {},
+            onLookupWordAt = { _, _, _ -> },
             onDismissLookup = {},
             onSectionSelected = { 0 },
             onVisibleBlockChanged = { _, _, _ -> },

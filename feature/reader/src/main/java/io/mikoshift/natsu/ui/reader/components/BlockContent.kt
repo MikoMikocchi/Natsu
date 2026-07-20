@@ -1,6 +1,5 @@
 package io.mikoshift.natsu.ui.reader.components
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -14,51 +13,55 @@ import io.mikoshift.natsu.core.model.content.ImageBlock
 import io.mikoshift.natsu.core.model.content.ListItemBlock
 import io.mikoshift.natsu.core.model.content.ParagraphBlock
 import io.mikoshift.natsu.ui.reader.ReaderBlockItem
+import io.mikoshift.natsu.ui.reader.SelectedWord
 
 @Composable
 fun BlockContent(
     item: ReaderBlockItem,
     modifier: Modifier = Modifier,
     bodyStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyLarge,
-    onLongPressText: ((String) -> Unit)? = null,
+    selectedWord: SelectedWord? = null,
+    onWordTap: ((String, String, Int) -> Unit)? = null,
 ) {
-    val longPressModifier = if (onLongPressText != null) {
-        modifier.combinedClickable(
-            onClick = {},
-            onLongClick = {
-                when (val block = item.block) {
-                    is ParagraphBlock -> onLongPressText(block.text)
-                    is HeadingBlock -> onLongPressText(block.text)
-                    is BlockquoteBlock -> onLongPressText(block.text)
-                    is ListItemBlock -> onLongPressText(block.text)
-                    else -> Unit
-                }
-            },
-        )
-    } else {
-        modifier
+    val isSelected = selectedWord?.blockId == item.id
+    val wordTapHandler = onWordTap?.let { handler ->
+        { charOffset: Int ->
+            when (val block = item.block) {
+                is ParagraphBlock -> handler(item.id, block.text, charOffset)
+                is HeadingBlock -> handler(item.id, block.text, charOffset)
+                is BlockquoteBlock -> handler(item.id, block.text, charOffset)
+                is ListItemBlock -> handler(item.id, block.text, charOffset)
+                else -> Unit
+            }
+        }
     }
 
     when (val block = item.block) {
         is ParagraphBlock -> MarkedText(
             text = block.text,
             marks = block.marks,
-            modifier = longPressModifier.padding(vertical = 4.dp),
+            modifier = modifier.padding(vertical = 4.dp),
             style = bodyStyle,
+            selectedRange = if (isSelected) selectedWord.range else null,
+            onWordTap = wordTapHandler,
         )
         is HeadingBlock -> MarkedText(
             text = block.text,
             marks = block.marks,
-            modifier = longPressModifier.padding(vertical = 8.dp),
+            modifier = modifier.padding(vertical = 8.dp),
             style = headingStyle(block.level, bodyStyle),
+            selectedRange = if (isSelected) selectedWord.range else null,
+            onWordTap = wordTapHandler,
         )
         is BlockquoteBlock -> MarkedText(
             text = block.text,
             marks = block.marks,
-            modifier = longPressModifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
+            modifier = modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp),
             style = bodyStyle.copy(
                 color = bodyStyle.color.copy(alpha = 0.75f),
             ),
+            selectedRange = if (isSelected) selectedWord.range else null,
+            onWordTap = wordTapHandler,
         )
         is ListItemBlock -> {
             val prefix = if (block.ordered) "${block.level + 1}. " else "• "
@@ -70,8 +73,10 @@ fun BlockContent(
                         end = mark.end + prefix.length,
                     )
                 },
-                modifier = longPressModifier.padding(start = (block.level * 16).dp, top = 2.dp, bottom = 2.dp),
+                modifier = modifier.padding(start = (block.level * 16).dp, top = 2.dp, bottom = 2.dp),
                 style = bodyStyle,
+                selectedRange = if (isSelected) selectedWord.range else null,
+                onWordTap = wordTapHandler,
             )
         }
         is ImageBlock -> PackageImage(

@@ -115,10 +115,12 @@ constructor(
         updateSetting(furiganaMode = mode)
     }
 
-    fun lookupText(text: String) {
-        val query = extractLookupQuery(text) ?: return
+    fun lookupWordAt(blockId: String, text: String, charOffset: Int) {
+        val range = extractWordAtOffset(text, charOffset) ?: return
+        val query = extractLookupQuery(text.substring(range)) ?: return
         _uiState.update {
             it.copy(
+                selectedWord = SelectedWord(blockId = blockId, range = range),
                 lookupQuery = query,
                 lookupLoading = true,
                 lookupResults = emptyList(),
@@ -154,6 +156,7 @@ constructor(
                 lookupLoading = false,
                 lookupResults = emptyList(),
                 lookupErrorMessage = null,
+                selectedWord = null,
             )
         }
     }
