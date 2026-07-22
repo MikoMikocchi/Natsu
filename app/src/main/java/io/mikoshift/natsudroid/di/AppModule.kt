@@ -15,11 +15,11 @@ import io.mikoshift.natsudroid.core.common.di.RootBaseUrl
 object AppModule {
     @Provides
     @BaseUrl
-    fun provideBaseUrl(): String = BuildConfig.BASE_URL
+    fun provideBaseUrl(): String = DevApiUrl.resolve(BuildConfig.BASE_URL, BuildConfig.DEBUG)
 
     @Provides
     @RootBaseUrl
-    fun provideRootBaseUrl(): String = BuildConfig.ROOT_BASE_URL
+    fun provideRootBaseUrl(): String = DevApiUrl.resolve(BuildConfig.ROOT_BASE_URL, BuildConfig.DEBUG)
 
     @Provides
     @OAuthClientId

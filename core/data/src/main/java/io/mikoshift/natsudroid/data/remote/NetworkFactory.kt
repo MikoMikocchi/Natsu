@@ -9,6 +9,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,6 +25,8 @@ constructor(
 
     fun createUnauthenticatedOkHttpClient(): OkHttpClient = OkHttpClient
         .Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
         .addInterceptor(loggingInterceptor())
         .build()
 
@@ -60,6 +63,8 @@ constructor(
         tokenAuthenticator: TokenAuthenticator,
     ): OkHttpClient = OkHttpClient
         .Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
         .addInterceptor(loggingInterceptor())
         .addInterceptor(authInterceptor)
         .authenticator(tokenAuthenticator)

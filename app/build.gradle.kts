@@ -9,15 +9,15 @@ android {
         applicationId = "io.mikoshift.natsudroid"
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "OAUTH_CLIENT_ID", "\"natsudroid-mobile\"")
+        buildConfigField("String", "OAUTH_CLIENT_ID", "\"natsu-mobile\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/v1/\"")
-            buildConfigField("String", "ROOT_BASE_URL", "\"http://10.0.2.2:3000/\"")
+            buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:3000/v1/\"")
+            buildConfigField("String", "ROOT_BASE_URL", "\"http://127.0.0.1:3000/\"")
         }
         release {
             isMinifyEnabled = true

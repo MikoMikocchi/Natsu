@@ -59,7 +59,7 @@ class AuthRepositoryImplTest {
                 userInfoApi = userInfoApi,
                 tokenStore = tokenStore,
                 networkFactory = networkFactory,
-                clientId = "natsudroid-mobile",
+                clientId = "natsu-mobile",
             )
     }
 

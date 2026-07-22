@@ -30,7 +30,7 @@ spotless {
     }
 }
 
-fun org.gradle.api.Project.hasUnitTestSources(): Boolean {
+fun Project.hasUnitTestSources(): Boolean {
     if (path == ":app") {
         return false
     }

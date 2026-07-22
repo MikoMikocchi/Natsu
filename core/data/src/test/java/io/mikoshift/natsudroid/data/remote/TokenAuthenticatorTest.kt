@@ -146,7 +146,7 @@ class TokenAuthenticatorTest {
     }
 
     private companion object {
-        const val CLIENT_ID = "natsudroid-mobile"
+        const val CLIENT_ID = "natsu-mobile"
         const val REFRESH_TOKEN = "refresh-token"
         const val NEW_ACCESS_TOKEN = "new-access-token"
         const val PARALLEL_CALLS = 8
