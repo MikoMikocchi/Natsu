@@ -14,7 +14,7 @@ class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
             applyKoverIfEnabled()
 
             extensions.configure<KotlinJvmProjectExtension> {
-                jvmToolchain(21)
+                jvmToolchain(26)
             }
         }
     }
