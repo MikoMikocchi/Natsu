@@ -1,8 +1,8 @@
 package io.mikoshift.natsu.feature.auth
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -21,18 +21,27 @@ import io.mikoshift.natsu.ui.auth.RegisterViewModel
 import io.mikoshift.natsu.ui.auth.ResetPasswordScreen
 import io.mikoshift.natsu.ui.auth.ResetPasswordViewModel
 
-fun NavGraphBuilder.authGraph(navController: NavHostController) {
+class AuthViewModelProviders(
+    val login: @Composable () -> LoginViewModel,
+    val register: @Composable () -> RegisterViewModel,
+    val forgotPassword: @Composable () -> ForgotPasswordViewModel,
+    val resetPassword: @Composable () -> ResetPasswordViewModel,
+)
+
+fun NavGraphBuilder.authGraph(
+    navController: NavHostController,
+    viewModels: AuthViewModelProviders,
+) {
     composable<LoginRoute> {
-        val viewModel: LoginViewModel = hiltViewModel()
         LoginScreen(
-            viewModel = viewModel,
+            viewModel = viewModels.login(),
             onNavigateToRegister = { navController.navigate(RegisterRoute) },
             onNavigateToForgotPassword = { navController.navigate(ForgotPasswordRoute) },
         )
     }
 
     composable<RegisterRoute> {
-        val viewModel: RegisterViewModel = hiltViewModel()
+        val viewModel = viewModels.register()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         LaunchedEffect(uiState.registrationSucceeded) {
             if (uiState.registrationSucceeded) {
@@ -48,9 +57,8 @@ fun NavGraphBuilder.authGraph(navController: NavHostController) {
     }
 
     composable<ForgotPasswordRoute> {
-        val viewModel: ForgotPasswordViewModel = hiltViewModel()
         ForgotPasswordScreen(
-            viewModel = viewModel,
+            viewModel = viewModels.forgotPassword(),
             onNavigateToLogin = { navController.navigate(LoginRoute) },
         )
     }
@@ -66,9 +74,8 @@ fun NavGraphBuilder.authGraph(navController: NavHostController) {
             ),
         ),
     ) {
-        val viewModel: ResetPasswordViewModel = hiltViewModel()
         ResetPasswordScreen(
-            viewModel = viewModel,
+            viewModel = viewModels.resetPassword(),
             onNavigateToLogin = {
                 navController.navigate(LoginRoute) {
                     popUpTo(ForgotPasswordRoute) { inclusive = true }

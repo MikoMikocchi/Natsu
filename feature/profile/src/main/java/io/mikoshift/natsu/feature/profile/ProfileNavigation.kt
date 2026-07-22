@@ -1,6 +1,6 @@
 package io.mikoshift.natsu.feature.profile
 
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -11,20 +11,26 @@ import io.mikoshift.natsu.ui.profile.ChangePasswordViewModel
 import io.mikoshift.natsu.ui.profile.ProfileScreen
 import io.mikoshift.natsu.ui.profile.ProfileViewModel
 
-fun NavGraphBuilder.profileGraph(navController: NavHostController) {
+class ProfileViewModelProviders(
+    val profile: @Composable () -> ProfileViewModel,
+    val changePassword: @Composable () -> ChangePasswordViewModel,
+)
+
+fun NavGraphBuilder.profileGraph(
+    navController: NavHostController,
+    viewModels: ProfileViewModelProviders,
+) {
     composable<ProfileRoute> {
-        val viewModel: ProfileViewModel = hiltViewModel()
         ProfileScreen(
-            viewModel = viewModel,
+            viewModel = viewModels.profile(),
             onNavigateBack = { navController.popBackStack() },
             onNavigateToChangePassword = { navController.navigate(ChangePasswordRoute) },
         )
     }
 
     composable<ChangePasswordRoute> {
-        val viewModel: ChangePasswordViewModel = hiltViewModel()
         ChangePasswordScreen(
-            viewModel = viewModel,
+            viewModel = viewModels.changePassword(),
             onNavigateBack = { navController.popBackStack() },
         )
     }

@@ -7,7 +7,6 @@ android {
     namespace = "io.mikoshift.natsu"
     defaultConfig {
         applicationId = "io.mikoshift.natsu"
-        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "OAUTH_CLIENT_ID", "\"natsu-mobile\"")
@@ -48,6 +47,20 @@ android {
         compose = true
         buildConfig = true
     }
+}
+
+// Debug builds use dev only; staging/prod are release-only (avoids 3× KSP/compile in CI).
+androidComponents {
+    beforeVariants(
+        selector()
+            .withBuildType("debug")
+            .withFlavor("environment" to "staging"),
+    ) { it.enable = false }
+    beforeVariants(
+        selector()
+            .withBuildType("debug")
+            .withFlavor("environment" to "prod"),
+    ) { it.enable = false }
 }
 
 moduleGraphAssert {

@@ -9,9 +9,10 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 internal object NatsuAndroidDefaults {
     const val COMPILE_SDK = 37
+    const val TARGET_SDK = 37
     const val MIN_SDK = 26
     const val JAVA_TOOLCHAIN = 21
-    val JAVA_VERSION: JavaVersion = JavaVersion.VERSION_17
+    val JAVA_VERSION: JavaVersion = JavaVersion.VERSION_21
 }
 
 internal fun LibraryExtension.configureNatsuDefaults() {
@@ -25,6 +26,10 @@ internal fun LibraryExtension.configureNatsuDefaults() {
         sourceCompatibility = NatsuAndroidDefaults.JAVA_VERSION
         targetCompatibility = NatsuAndroidDefaults.JAVA_VERSION
     }
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+    }
 }
 
 internal fun ApplicationExtension.configureNatsuDefaults() {
@@ -33,10 +38,15 @@ internal fun ApplicationExtension.configureNatsuDefaults() {
     }
     defaultConfig {
         minSdk = NatsuAndroidDefaults.MIN_SDK
+        targetSdk = NatsuAndroidDefaults.TARGET_SDK
     }
     compileOptions {
         sourceCompatibility = NatsuAndroidDefaults.JAVA_VERSION
         targetCompatibility = NatsuAndroidDefaults.JAVA_VERSION
+    }
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
     }
 }
 
@@ -49,8 +59,11 @@ internal fun Project.applyKotlinAndroidIfNeeded() {
 }
 
 internal fun Project.configureKotlinJvmTarget() {
-    extensions.findByType(KotlinAndroidProjectExtension::class.java)?.compilerOptions {
-        jvmTarget.set(JvmTarget.fromTarget(NatsuAndroidDefaults.JAVA_VERSION.toString()))
+    extensions.findByType(KotlinAndroidProjectExtension::class.java)?.apply {
+        jvmToolchain(NatsuAndroidDefaults.JAVA_TOOLCHAIN)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(NatsuAndroidDefaults.JAVA_VERSION.toString()))
+        }
     }
 }
 

@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.repository.DocumentPackageRepository
 import io.mikoshift.natsu.core.domain.usecase.EnsurePackageDownloadedUseCase
 import io.mikoshift.natsu.core.domain.usecase.ListDictionariesUseCase
@@ -34,13 +32,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ReaderViewModel
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
+open class ReaderViewModel(
+    private val context: Context,
     private val observeDocument: ObserveDocumentUseCase,
     private val ensurePackageDownloaded: EnsurePackageDownloadedUseCase,
     private val openDocumentPackage: OpenDocumentPackageUseCase,

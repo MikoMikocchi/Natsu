@@ -3,8 +3,6 @@ package io.mikoshift.natsu.ui.profile
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.DeleteAccountUseCase
 import io.mikoshift.natsu.core.domain.usecase.ListDictionariesUseCase
 import io.mikoshift.natsu.core.domain.usecase.LogoutUseCase
@@ -21,13 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ProfileViewModel
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
+open class ProfileViewModel(
+    private val context: Context,
     private val observeUserProfile: ObserveUserProfileUseCase,
     private val observeSessions: ObserveSessionsUseCase,
     private val logoutUseCase: LogoutUseCase,

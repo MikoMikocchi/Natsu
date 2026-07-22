@@ -3,8 +3,6 @@ package io.mikoshift.natsu.ui.profile
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.ChangePasswordUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.profile.R
@@ -13,13 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ChangePasswordViewModel
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
+open class ChangePasswordViewModel(
+    private val context: Context,
     private val changePassword: ChangePasswordUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ChangePasswordUiState())

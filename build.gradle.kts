@@ -14,9 +14,7 @@ plugins {
 
 val spotlessRatchetFrom = findProperty("spotlessRatchetFrom") as String? ?: "main"
 
-val enableKover =
-    (findProperty("enableKover") as String?)?.toBooleanStrictOrNull()
-        ?: System.getenv("CI")?.isNotEmpty() == true
+val enableKover = (findProperty("enableKover") as String?)?.toBooleanStrictOrNull() == true
 
 fun pathToModule(path: String): String? =
     when {
@@ -26,7 +24,7 @@ fun pathToModule(path: String): String? =
         else -> null
     }
 
-fun requiresFullVerification(changedFiles: List<String>): Boolean =
+fun requiresFullCi(changedFiles: List<String>): Boolean =
     changedFiles.any { path ->
         path.startsWith("build-logic/") ||
             path.startsWith("gradle/") ||
@@ -44,38 +42,53 @@ fun requiresArchitectureTest(changedFiles: List<String>): Boolean =
             !path.startsWith("core/architecture-test/")
     }
 
-fun resolveAffectedModules(changedFiles: List<String>): Set<String> =
-    changedFiles.mapNotNull { pathToModule(it) }.toSet()
-
 fun org.gradle.api.Project.unitTestTaskPath(): String? =
     listOf("testDevDebugUnitTest", "testDebugUnitTest", "test")
         .firstNotNullOfOrNull { taskName -> tasks.findByName(taskName)?.path }
+
+fun org.gradle.api.Project.detektTaskPath(): String? =
+    tasks.findByName("detekt")?.path
+
+fun requiresDetekt(
+    changedFiles: List<String>,
+    modulePath: String,
+): Boolean =
+    changedFiles.any { path ->
+        pathToModule(path) == modulePath && path.endsWith(".kt")
+    }
 
 fun org.gradle.api.Project.hasUnitTestSources(): Boolean {
     if (path == ":app") {
         return false
     }
-    return sequenceOf("src/test/kotlin", "src/test/java")
-        .map { file(it) }
-        .filter { it.isDirectory }
-        .flatMap { dir ->
-            dir.walkTopDown().maxDepth(3).filter { it.isFile && it.extension == "kt" }
-        }.any()
+    return file("src/test").exists()
 }
 
-fun resolveVerificationTaskPaths(
+fun resolveAffectedTaskPaths(
     changedFiles: List<String>,
     root: org.gradle.api.Project,
 ): List<String> {
     if (changedFiles.isEmpty()) {
         return emptyList()
     }
-    if (requiresFullVerification(changedFiles)) {
-        return listOf(":quickCheck")
+    if (requiresFullCi(changedFiles)) {
+        return listOf(":ciCheck")
     }
 
-    val taskPaths = linkedSetOf<String>()
-    val affectedModules = resolveAffectedModules(changedFiles)
+    val taskPaths =
+        linkedSetOf(
+            "spotlessKotlinCheck",
+            "spotlessKotlinGradleCheck",
+            ":app:assertModuleGraph",
+        )
+
+    val affectedModules = changedFiles.mapNotNull { pathToModule(it) }.toSet()
+
+    affectedModules
+        .filter { modulePath -> requiresDetekt(changedFiles, modulePath) }
+        .forEach { modulePath ->
+            root.project(modulePath).detektTaskPath()?.let { taskPaths += it }
+        }
 
     affectedModules
         .mapNotNull { modulePath -> root.project(modulePath).takeIf { it.hasUnitTestSources() } }
@@ -146,26 +159,7 @@ kover {
     }
 }
 
-tasks.register("staticAnalysisCheck") {
-    group = "verification"
-    description = "Formatting, module graph, and detekt."
-    dependsOn(
-        "spotlessKotlinCheck",
-        "spotlessKotlinGradleCheck",
-        ":app:assertModuleGraph",
-    )
-}
-
-tasks.register("quickCheck") {
-    group = "verification"
-    description = "Fast verification: unit tests (modules with tests, single variant) and architecture tests."
-    dependsOn(
-        ":app:assertModuleGraph",
-        ":core:architecture-test:testDebugUnitTest",
-    )
-}
-
-val gitBaseRefProvider = providers.gradleProperty("gitBaseRef").orElse("HEAD")
+val gitBaseRefProvider = providers.gradleProperty("gitBaseRef").orElse("main")
 
 val changedFilesProvider =
     providers
@@ -182,33 +176,51 @@ val changedFilesProvider =
             output.lines().filter { it.isNotBlank() }
         }
 
+tasks.register("detektCheck") {
+    group = "verification"
+    description = "Runs detekt on all modules."
+}
+
+tasks.register("ciCheck") {
+    group = "verification"
+    description = "CI: formatting, detekt, app lint, module graph, unit tests, architecture tests."
+    dependsOn(
+        "spotlessKotlinCheck",
+        "spotlessKotlinGradleCheck",
+        "detektCheck",
+        ":app:assertModuleGraph",
+        ":app:lintDevDebug",
+        ":core:architecture-test:testDebugUnitTest",
+    )
+    if (enableKover) {
+        dependsOn("koverXmlReport", "koverVerify")
+    }
+}
+
 tasks.register("affectedCheck") {
     group = "verification"
     description =
-        "Runs verification for modules changed since gitBaseRef (default: HEAD). " +
-        "Use -PgitBaseRef=main to compare against main, or --cached for staged changes."
+        "Fast local/PR check for changes since gitBaseRef (default: main). " +
+        "Use -PgitBaseRef=--cached for staged changes."
     dependsOn(
         changedFilesProvider.map { changedFiles ->
-            resolveVerificationTaskPaths(changedFiles, project).map { taskPath ->
+            resolveAffectedTaskPaths(changedFiles, project).map { taskPath ->
                 tasks.named(taskPath)
             }
         },
     )
 }
 
-tasks.register("ciCheck") {
-    group = "verification"
-    description = "Full CI verification: static analysis, unit tests, architecture tests, and coverage."
-    dependsOn("staticAnalysisCheck", "quickCheck")
-    if (enableKover) {
-        dependsOn("koverXmlReport", "koverVerify")
-    }
+tasks.register("dev") {
+    group = "application"
+    description = "Assemble dev debug APK for local development."
+    dependsOn(":app:assembleDevDebug")
 }
 
 subprojects {
     afterEvaluate {
         tasks.findByName("detekt")?.let { detektTask ->
-            rootProject.tasks.named("staticAnalysisCheck").configure {
+            rootProject.tasks.named("detektCheck").configure {
                 dependsOn(detektTask)
             }
         }
@@ -218,7 +230,7 @@ subprojects {
         }
 
         unitTestTaskPath()?.let { testTaskPath ->
-            rootProject.tasks.named("quickCheck").configure {
+            rootProject.tasks.named("ciCheck").configure {
                 dependsOn(testTaskPath)
             }
         }

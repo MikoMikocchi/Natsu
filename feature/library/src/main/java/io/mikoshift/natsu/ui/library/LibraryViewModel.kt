@@ -4,8 +4,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.ImportDocumentUseCase
 import io.mikoshift.natsu.core.domain.usecase.MarkDocumentDeletedUseCase
 import io.mikoshift.natsu.core.domain.usecase.ObserveLibraryUseCase
@@ -25,13 +23,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class LibraryViewModel
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
+open class LibraryViewModel(
+    private val context: Context,
     private val observeLibrary: ObserveLibraryUseCase,
     private val observeSyncStatus: ObserveSyncStatusUseCase,
     private val syncDocuments: SyncDocumentsUseCase,

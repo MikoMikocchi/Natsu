@@ -15,7 +15,7 @@ jobs:
   verify:
     name: Verify
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +35,16 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run CI checks
-        run: ./gradlew ciCheck -PenableKover=true --build-cache
+      - name: Run checks
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            ./gradlew affectedCheck -PgitBaseRef=origin/${{ github.base_ref }} --build-cache
+          else
+            ./gradlew ciCheck -PenableKover=true --build-cache
+          fi
 
       - name: Upload coverage artifact
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: kover-xml-report

@@ -14,8 +14,6 @@ class NatsuAndroidFeatureConventionPlugin : Plugin<Project> {
             pluginManager.apply("natsu.android.library")
             pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
             pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
-            pluginManager.apply("com.google.devtools.ksp")
-            pluginManager.apply("com.google.dagger.hilt.android")
 
             extensions.configure<LibraryExtension> {
                 buildFeatures {
@@ -41,9 +39,6 @@ class NatsuAndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("androidx-navigation-compose").get())
                 add("implementation", libs.findLibrary("kotlinx-coroutines-android").get())
 
-                add("implementation", libs.findLibrary("hilt-android").get())
-                add("ksp", libs.findLibrary("hilt-compiler").get())
-                add("implementation", libs.findLibrary("hilt-navigation-compose").get())
                 add("debugImplementation", libs.findLibrary("androidx-compose-ui-tooling").get())
 
                 add("testImplementation", libs.findLibrary("junit").get())

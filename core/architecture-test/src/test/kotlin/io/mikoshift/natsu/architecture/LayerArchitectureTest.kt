@@ -105,6 +105,20 @@ class LayerArchitectureTest {
     }
 
     @Test
+    fun featuresShouldNotDependOnHilt() {
+        noClasses()
+            .that()
+            .resideInAnyPackage("..ui..", "..feature..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(
+                "dagger.hilt..",
+                "javax.inject..",
+            )
+            .check(productionClasses)
+    }
+
+    @Test
     fun viewModelsShouldNotUseRetrofitOrRoom() {
         noClasses()
             .that()

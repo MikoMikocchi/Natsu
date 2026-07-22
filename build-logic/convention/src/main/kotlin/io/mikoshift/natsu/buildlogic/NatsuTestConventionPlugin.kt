@@ -19,17 +19,7 @@ class NatsuTestConventionPlugin : Plugin<Project> {
                 javaLauncher.set(testLauncher)
                 maxParallelForks =
                     (Runtime.getRuntime().availableProcessors() / 2)
-                        .coerceIn(1, 4)
-            }
-
-            if (path == ":app") {
-                tasks.withType<Test>().configureEach {
-                    if (name.contains("Staging", ignoreCase = true) ||
-                        name.contains("Prod", ignoreCase = true)
-                    ) {
-                        enabled = false
-                    }
-                }
+                        .coerceIn(1, 8)
             }
         }
     }

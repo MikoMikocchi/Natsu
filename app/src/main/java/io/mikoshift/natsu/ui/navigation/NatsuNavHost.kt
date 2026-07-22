@@ -10,10 +10,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import io.mikoshift.natsu.feature.auth.authGraph
-import io.mikoshift.natsu.feature.library.libraryGraph
-import io.mikoshift.natsu.feature.profile.profileGraph
-import io.mikoshift.natsu.feature.reader.readerGraph
 import io.mikoshift.natsu.navigation.HomeRoute
 import io.mikoshift.natsu.navigation.LoginRoute
 import io.mikoshift.natsu.navigation.SessionRedirect
@@ -25,10 +21,7 @@ fun NatsuNavHost(
     deepLinkTrigger: Int = 0,
     sessionHost: SessionHost = hiltViewModel<RootViewModel>(),
     navGraphBuilder: NavGraphBuilder.(NavHostController) -> Unit = { navController ->
-        authGraph(navController)
-        libraryGraph(navController)
-        profileGraph(navController)
-        readerGraph(navController)
+        natsuFeatureGraphs(navController)
     },
 ) {
     val navController: NavHostController = rememberNavController()

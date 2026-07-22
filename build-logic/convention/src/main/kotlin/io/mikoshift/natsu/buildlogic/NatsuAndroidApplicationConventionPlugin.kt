@@ -41,6 +41,7 @@ class NatsuAndroidApplicationConventionPlugin : Plugin<Project> {
                 add("implementation", libs.findLibrary("androidx-hilt-work").get())
                 add("implementation", libs.findLibrary("hilt-android").get())
                 add("ksp", libs.findLibrary("hilt-compiler").get())
+                add("ksp", libs.findLibrary("kotlin-metadata-jvm").get())
                 add("ksp", libs.findLibrary("androidx-hilt-compiler").get())
                 add("implementation", libs.findLibrary("hilt-navigation-compose").get())
 

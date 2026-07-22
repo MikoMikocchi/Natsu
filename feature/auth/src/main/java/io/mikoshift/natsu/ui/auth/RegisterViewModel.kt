@@ -4,8 +4,6 @@ import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsu.core.domain.usecase.RegisterUseCase
 import io.mikoshift.natsu.core.model.AuthError
 import io.mikoshift.natsu.feature.auth.R
@@ -14,13 +12,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class RegisterViewModel
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
+open class RegisterViewModel(
+    private val context: Context,
     private val register: RegisterUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
