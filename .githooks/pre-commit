@@ -6,6 +6,29 @@ cd "$repo_root"
 
 echo "Running pre-commit checks..."
 
-./gradlew spotlessCheck :app:assertModuleGraph :core:architecture-test:test --no-daemon --quiet
+max_lines=500
+violations=()
+while IFS= read -r -d '' file; do
+  line_count=$(wc -l <"$file" | tr -d ' ')
+  if (( line_count > max_lines )); then
+    violations+=("${file#"$repo_root"/}: ${line_count} lines (max ${max_lines})")
+  fi
+done < <(
+  git diff --cached --name-only --diff-filter=ACMR -z |
+    grep -zE '\.(kt|kts)$' |
+    while IFS= read -r -d '' path; do
+      [[ "$path" == */src/main/* ]] || continue
+      [[ -f "$path" ]] || continue
+      printf '%s\0' "$path"
+    done
+)
+
+if ((${#violations[@]} > 0)); then
+  echo "Source files exceed ${max_lines} lines:" >&2
+  printf '%s\n' "${violations[@]}" >&2
+  exit 1
+fi
+
+./gradlew preCommitCheck -PspotlessRatchetFrom=HEAD --quiet
 
 echo "Pre-commit checks passed."

@@ -1,20 +1,23 @@
 package io.mikoshift.natsu.architecture
 
-import com.tngtech.archunit.core.domain.JavaClasses
-import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.core.importer.ImportOption
+import com.tngtech.archunit.junit.AnalyzeClasses
+import com.tngtech.archunit.junit.ArchTest
+import com.tngtech.archunit.junit.ArchUnitRunner
+import com.tngtech.archunit.lang.ArchRule
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
-import org.junit.Test
+import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+import org.junit.runner.RunWith
 
+@RunWith(ArchUnitRunner::class)
+@AnalyzeClasses(
+    packages = ["io.mikoshift.natsu"],
+    importOptions = [ImportOption.DoNotIncludeTests::class],
+)
 class LayerArchitectureTest {
-    private val productionClasses: JavaClasses =
-        ClassFileImporter()
-            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-            .importPackages("io.mikoshift.natsu")
-
-    @Test
-    fun domainShouldNotDependOnOuterLayers() {
+    @ArchTest
+    val domainShouldNotDependOnOuterLayers: ArchRule =
         noClasses()
             .that()
             .resideInAnyPackage("..core.domain..")
@@ -27,11 +30,10 @@ class LayerArchitectureTest {
                 "..ui..",
                 "..feature..",
                 "..navigation..",
-            ).check(productionClasses)
-    }
+            )
 
-    @Test
-    fun domainShouldNotUseAndroidFrameworks() {
+    @ArchTest
+    val domainShouldNotUseAndroidFrameworks: ArchRule =
         noClasses()
             .that()
             .resideInAnyPackage("..core.domain..")
@@ -41,11 +43,10 @@ class LayerArchitectureTest {
                 "retrofit2..",
                 "okhttp3..",
                 "androidx.room..",
-            ).check(productionClasses)
-    }
+            )
 
-    @Test
-    fun modelShouldNotDependOnOtherLayers() {
+    @ArchTest
+    val modelShouldNotDependOnOtherLayers: ArchRule =
         noClasses()
             .that()
             .resideInAnyPackage("..core.model..")
@@ -58,11 +59,10 @@ class LayerArchitectureTest {
                 "..feature..",
                 "android..",
                 "androidx..",
-            ).check(productionClasses)
-    }
+            )
 
-    @Test
-    fun commonShouldNotDependOnOtherLayers() {
+    @ArchTest
+    val commonShouldNotDependOnOtherLayers: ArchRule =
         noClasses()
             .that()
             .resideInAnyPackage("..core.common..")
@@ -76,90 +76,39 @@ class LayerArchitectureTest {
                 "..feature..",
                 "android..",
                 "androidx..",
-            ).check(productionClasses)
-    }
+            )
 
-    @Test
-    fun featuresShouldNotDependOnDataLayer() {
+    @ArchTest
+    val featuresShouldNotDependOnDataLayer: ArchRule =
         noClasses()
             .that()
             .resideInAnyPackage("..ui..", "..feature..")
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage("..data..")
-            .check(productionClasses)
-    }
 
-    @Test
-    fun authFeatureShouldNotDependOnOtherFeatures() {
+    @ArchTest
+    val featuresShouldNotDependOnEachOther: ArchRule =
+        slices()
+            .matching("io.mikoshift.natsu.ui.(auth|library|profile|reader)..")
+            .should()
+            .notDependOnEachOther()
+
+    @ArchTest
+    val viewModelsShouldNotUseRetrofitOrRoom: ArchRule =
         noClasses()
             .that()
-            .resideInAnyPackage("..ui.auth..", "..feature.auth..")
+            .haveSimpleNameEndingWith("ViewModel")
             .should()
             .dependOnClassesThat()
             .resideInAnyPackage(
-                "..ui.library..",
-                "..ui.profile..",
-                "..ui.reader..",
-                "..feature.library..",
-                "..feature.profile..",
-                "..feature.reader..",
-            ).check(productionClasses)
-    }
+                "retrofit2..",
+                "okhttp3..",
+                "androidx.room..",
+            )
 
-    @Test
-    fun libraryFeatureShouldNotDependOnOtherFeatures() {
-        noClasses()
-            .that()
-            .resideInAnyPackage("..ui.library..", "..feature.library..")
-            .should()
-            .dependOnClassesThat()
-            .resideInAnyPackage(
-                "..ui.auth..",
-                "..ui.profile..",
-                "..ui.reader..",
-                "..feature.auth..",
-                "..feature.profile..",
-                "..feature.reader..",
-            ).check(productionClasses)
-    }
-
-    @Test
-    fun profileFeatureShouldNotDependOnOtherFeatures() {
-        noClasses()
-            .that()
-            .resideInAnyPackage("..ui.profile..", "..feature.profile..")
-            .should()
-            .dependOnClassesThat()
-            .resideInAnyPackage(
-                "..ui.auth..",
-                "..ui.library..",
-                "..ui.reader..",
-                "..feature.auth..",
-                "..feature.library..",
-                "..feature.reader..",
-            ).check(productionClasses)
-    }
-
-    @Test
-    fun readerFeatureShouldNotDependOnOtherFeatures() {
-        noClasses()
-            .that()
-            .resideInAnyPackage("..ui.reader..", "..feature.reader..")
-            .should()
-            .dependOnClassesThat()
-            .resideInAnyPackage(
-                "..ui.auth..",
-                "..ui.library..",
-                "..ui.profile..",
-                "..feature.auth..",
-                "..feature.library..",
-                "..feature.profile..",
-            ).check(productionClasses)
-    }
-
-    @Test
-    fun domainRepositoriesShouldBeInterfaces() {
+    @ArchTest
+    val domainRepositoriesShouldBeInterfaces: ArchRule =
         classes()
             .that()
             .resideInAnyPackage("..core.domain.repository..")
@@ -167,16 +116,12 @@ class LayerArchitectureTest {
             .haveSimpleNameNotEndingWith("DefaultImpls")
             .should()
             .beInterfaces()
-            .check(productionClasses)
-    }
 
-    @Test
-    fun repositoryImplementationsShouldResideInDataLayer() {
+    @ArchTest
+    val repositoryImplementationsShouldResideInDataLayer: ArchRule =
         classes()
             .that()
             .haveSimpleNameEndingWith("RepositoryImpl")
             .should()
             .resideInAnyPackage("..data.repository..")
-            .check(productionClasses)
-    }
 }

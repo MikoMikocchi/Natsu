@@ -7,8 +7,11 @@ class NatsuAndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply("com.android.library")
+            pluginManager.apply("natsu.test")
             pluginManager.apply("natsu.detekt")
-            pluginManager.apply("natsu.kover")
+            if (isKoverEnabled()) {
+                pluginManager.apply("natsu.kover")
+            }
         }
     }
 }

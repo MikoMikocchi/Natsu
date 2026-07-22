@@ -1,19 +1,9 @@
 plugins {
-    id("natsu.android.library")
+    id("natsu.architecture.test")
 }
 
 android {
-    namespace = "io.mikoshift.natsu.architecture.test"
-    compileSdk {
-        version = release(37)
-    }
-    defaultConfig {
-        minSdk = 26
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
+    namespace = "io.mikoshift.natsu.architecture"
 }
 
 dependencies {
@@ -28,8 +18,7 @@ dependencies {
     testImplementation(project(":core:data"))
     testImplementation(project(":core:ui"))
     testImplementation(project(":core:navigation"))
-    testImplementation(project(":feature:auth"))
-    testImplementation(project(":feature:library"))
-    testImplementation(project(":feature:profile"))
-    testImplementation(project(":feature:reader"))
+    rootProject.subprojects
+        .filter { it.path.startsWith(":feature:") }
+        .forEach { testImplementation(project(it.path)) }
 }

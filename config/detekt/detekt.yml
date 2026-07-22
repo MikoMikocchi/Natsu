@@ -7,12 +7,6 @@ processors:
 console-reports:
   active: true
 
-ktlint:
-  active: true
-  autoCorrect: false
-  BlankLineBetweenWhenConditions:
-    active: false
-
 comments:
   active: true
 
@@ -25,6 +19,9 @@ complexity:
   ComplexCondition:
     active: true
     allowedConditions: 4
+  LargeClass:
+    active: true
+    allowedLines: 500
   LongMethod:
     active: true
     allowedLines: 150

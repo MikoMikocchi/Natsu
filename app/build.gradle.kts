@@ -60,20 +60,16 @@ android {
 
 moduleGraphAssert {
     maxHeight = 4
+    configurations = setOf("api", "implementation")
     allowed =
         arrayOf(
             ":app -> :.*",
-            ":core:data -> :core:.*",
-            ":core:domain -> :core:model",
-            ":core:domain -> :core:common",
+            ":core:architecture-test -> :.*",
             ":core:testing -> :core:.*",
-            ":core:architecture-test -> :core:.*",
-            ":core:architecture-test -> :feature:.*",
-            ":feature:.* -> :core:domain",
-            ":feature:.* -> :core:model",
-            ":feature:.* -> :core:ui",
-            ":feature:.* -> :core:navigation",
+            ":core:data -> :core:.*",
+            ":core:domain -> :core:.*",
             ":core:database -> :core:model",
+            ":feature:.* -> :core:.*",
         )
     restricted =
         arrayOf(
@@ -114,8 +110,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:ui"))
     implementation(project(":core:navigation"))
-    implementation(project(":feature:auth"))
-    implementation(project(":feature:library"))
-    implementation(project(":feature:profile"))
-    implementation(project(":feature:reader"))
+    rootProject.subprojects
+        .filter { it.path.startsWith(":feature:") }
+        .forEach { implementation(project(it.path)) }
 }

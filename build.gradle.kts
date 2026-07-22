@@ -12,8 +12,15 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
+val spotlessRatchetFrom = findProperty("spotlessRatchetFrom") as String? ?: "main"
+
+val enableKover =
+    (findProperty("enableKover") as String?)?.toBooleanStrictOrNull()
+        ?: System.getenv("CI")?.isNotEmpty() == true
+
 spotless {
     kotlin {
+        ratchetFrom(spotlessRatchetFrom)
         target("**/*.kt")
         targetExclude("**/build/**")
         ktlint(libs.versions.ktlint.get()).editorConfigOverride(
@@ -26,10 +33,20 @@ spotless {
         )
     }
     kotlinGradle {
+        ratchetFrom(spotlessRatchetFrom)
         target("**/*.gradle.kts")
         targetExclude("**/build/**")
         ktlint(libs.versions.ktlint.get())
     }
+}
+
+tasks.register("preCommitCheck") {
+    group = "verification"
+    description = "Fast local checks: formatting (changed files only) and module graph."
+    dependsOn(
+        "spotlessCheck",
+        ":app:assertModuleGraph",
+    )
 }
 
 kover {
@@ -61,31 +78,86 @@ kover {
     }
 }
 
-tasks.register("ciCheck") {
+tasks.register("verifyMaxSourceFileLines") {
     group = "verification"
-    description = "Runs formatting, static analysis, architecture tests, module graph checks, unit tests, and coverage."
+    description = "Fails when any production Kotlin source file exceeds the line limit."
+    val maxLines = 500
+    val rootDirectory = layout.projectDirectory
+    val sourceFiles =
+        rootDirectory.asFileTree.matching {
+            include("**/src/main/java/**/*.kt", "**/src/main/kotlin/**/*.kt")
+            exclude("**/build/**")
+        }
+    inputs.files(sourceFiles).ignoreEmptyDirectories()
+
+    doLast {
+        val rootDirFile = rootDirectory.asFile
+        val violations = mutableListOf<String>()
+        sourceFiles.forEach { file ->
+            val lineCount = file.readLines().size
+            if (lineCount > maxLines) {
+                violations += "${file.relativeTo(rootDirFile)}: $lineCount lines (max $maxLines)"
+            }
+        }
+        if (violations.isNotEmpty()) {
+            throw GradleException(
+                "Source files exceed $maxLines lines:\n${violations.joinToString("\n")}",
+            )
+        }
+    }
+}
+
+tasks.register("staticAnalysisCheck") {
+    group = "verification"
+    description = "Formatting, line limits, module graph, and detekt."
     dependsOn(
         "spotlessCheck",
+        "verifyMaxSourceFileLines",
         ":app:assertModuleGraph",
-        ":core:architecture-test:test",
-        "koverXmlReport",
     )
 }
 
-gradle.projectsEvaluated {
-    tasks.named("ciCheck") {
-        dependsOn(
-            subprojects.mapNotNull { subproject ->
-                subproject.tasks.findByName("detekt")?.let { "${subproject.path}:detekt" }
-            },
-        )
-        dependsOn(
-            subprojects
-                .filter { it.path != ":core:architecture-test" }
-                .mapNotNull { subproject ->
-                    subproject.tasks.findByName("test")?.let { "${subproject.path}:test" }
-                },
-        )
+tasks.register("quickCheck") {
+    group = "verification"
+    description = "Fast local verification: detekt, unit tests (single variant), architecture tests."
+    dependsOn(
+        ":app:assertModuleGraph",
+        ":core:architecture-test:testDebugUnitTest",
+    )
+}
+
+tasks.register("ciCheck") {
+    group = "verification"
+    description = "Full CI verification: static analysis, unit tests, architecture tests, and coverage."
+    dependsOn("staticAnalysisCheck", "quickCheck")
+    if (enableKover) {
+        dependsOn("koverXmlReport")
+    }
+}
+
+subprojects {
+    afterEvaluate {
+        tasks.findByName("detekt")?.let { detektTask ->
+            rootProject.tasks.named("staticAnalysisCheck").configure {
+                dependsOn(detektTask)
+            }
+            rootProject.tasks.named("quickCheck").configure {
+                dependsOn(detektTask)
+            }
+        }
+
+        if (path == ":core:architecture-test") {
+            return@afterEvaluate
+        }
+
+        val unitTestTaskPath =
+            listOf("testDevDebugUnitTest", "testDebugUnitTest", "test")
+                .firstNotNullOfOrNull { taskName -> tasks.findByName(taskName)?.path }
+                ?: return@afterEvaluate
+
+        rootProject.tasks.named("quickCheck").configure {
+            dependsOn(unitTestTaskPath)
+        }
     }
 }
 

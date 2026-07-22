@@ -14,8 +14,12 @@ class NatsuAndroidApplicationConventionPlugin : Plugin<Project> {
             pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
             pluginManager.apply("com.google.devtools.ksp")
             pluginManager.apply("com.google.dagger.hilt.android")
+            pluginManager.apply("com.google.dagger.hilt.android")
             pluginManager.apply("natsu.detekt")
-            pluginManager.apply("natsu.kover")
+            pluginManager.apply("natsu.test")
+            if (isKoverEnabled()) {
+                pluginManager.apply("natsu.kover")
+            }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 

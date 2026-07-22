@@ -10,7 +10,10 @@ class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("org.jetbrains.kotlin.jvm")
             pluginManager.apply("natsu.detekt")
-            pluginManager.apply("natsu.kover")
+            pluginManager.apply("natsu.test")
+            if (isKoverEnabled()) {
+                pluginManager.apply("natsu.kover")
+            }
 
             extensions.configure<KotlinJvmProjectExtension> {
                 jvmToolchain(11)

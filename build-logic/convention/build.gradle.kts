@@ -42,6 +42,14 @@ gradlePlugin {
             id = "natsu.android.application"
             implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidApplicationConventionPlugin"
         }
+        register("test") {
+            id = "natsu.test"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuTestConventionPlugin"
+        }
+        register("architectureTest") {
+            id = "natsu.architecture.test"
+            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuArchitectureTestConventionPlugin"
+        }
         register("detekt") {
             id = "natsu.detekt"
             implementationClass = "io.mikoshift.natsu.buildlogic.NatsuDetektConventionPlugin"
