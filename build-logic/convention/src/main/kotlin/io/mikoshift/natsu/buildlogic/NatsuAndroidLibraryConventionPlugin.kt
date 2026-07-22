@@ -10,14 +10,12 @@ class NatsuAndroidLibraryConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("com.android.library")
             applyKotlinAndroidIfNeeded()
-            pluginManager.apply("natsu.test")
-            pluginManager.apply("natsu.detekt")
-            applyKoverIfEnabled()
 
             extensions.configure<LibraryExtension> {
                 configureNatsuDefaults()
             }
             configureKotlinJvmTarget()
+            configureNatsuTests()
         }
     }
 }

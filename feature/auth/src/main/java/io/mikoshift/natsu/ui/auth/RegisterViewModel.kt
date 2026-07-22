@@ -13,10 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-open class RegisterViewModel(
-    private val context: Context,
-    private val register: RegisterUseCase,
-) : ViewModel() {
+open class RegisterViewModel(private val context: Context, private val register: RegisterUseCase) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 

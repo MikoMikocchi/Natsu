@@ -25,7 +25,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Natsu"
 include(":app")
-include(":core:architecture-test")
 include(":core:model")
 include(":core:common")
 include(":core:domain")

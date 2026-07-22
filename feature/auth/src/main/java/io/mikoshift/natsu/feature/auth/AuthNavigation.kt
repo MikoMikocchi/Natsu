@@ -28,10 +28,7 @@ class AuthViewModelProviders(
     val resetPassword: @Composable () -> ResetPasswordViewModel,
 )
 
-fun NavGraphBuilder.authGraph(
-    navController: NavHostController,
-    viewModels: AuthViewModelProviders,
-) {
+fun NavGraphBuilder.authGraph(navController: NavHostController, viewModels: AuthViewModelProviders) {
     composable<LoginRoute> {
         LoginScreen(
             viewModel = viewModels.login(),

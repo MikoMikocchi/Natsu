@@ -12,10 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-open class ChangePasswordViewModel(
-    private val context: Context,
-    private val changePassword: ChangePasswordUseCase,
-) : ViewModel() {
+open class ChangePasswordViewModel(private val context: Context, private val changePassword: ChangePasswordUseCase) :
+    ViewModel() {
     private val _uiState = MutableStateFlow(ChangePasswordUiState())
     val uiState: StateFlow<ChangePasswordUiState> = _uiState.asStateFlow()
 

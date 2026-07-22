@@ -43,18 +43,14 @@ import javax.inject.Inject
 @HiltViewModel
 class HiltLoginViewModel
 @Inject
-constructor(
-    @ApplicationContext context: Context,
-    login: LoginUseCase,
-) : LoginViewModel(context, login)
+constructor(@ApplicationContext context: Context, login: LoginUseCase) :
+    LoginViewModel(context, login)
 
 @HiltViewModel
 class HiltRegisterViewModel
 @Inject
-constructor(
-    @ApplicationContext context: Context,
-    register: RegisterUseCase,
-) : RegisterViewModel(context, register)
+constructor(@ApplicationContext context: Context, register: RegisterUseCase) :
+    RegisterViewModel(context, register)
 
 @HiltViewModel
 class HiltForgotPasswordViewModel

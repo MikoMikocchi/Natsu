@@ -10,9 +10,6 @@ class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply("org.jetbrains.kotlin.jvm")
-            pluginManager.apply("natsu.detekt")
-            pluginManager.apply("natsu.test")
-            applyKoverIfEnabled()
 
             extensions.configure<KotlinJvmProjectExtension> {
                 jvmToolchain(NatsuAndroidDefaults.JAVA_TOOLCHAIN)
@@ -20,6 +17,7 @@ class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
                     jvmTarget.set(JvmTarget.fromTarget(NatsuAndroidDefaults.JAVA_TOOLCHAIN.toString()))
                 }
             }
+            configureNatsuTests()
         }
     }
 }

@@ -16,10 +16,7 @@ class ProfileViewModelProviders(
     val changePassword: @Composable () -> ChangePasswordViewModel,
 )
 
-fun NavGraphBuilder.profileGraph(
-    navController: NavHostController,
-    viewModels: ProfileViewModelProviders,
-) {
+fun NavGraphBuilder.profileGraph(navController: NavHostController, viewModels: ProfileViewModelProviders) {
     composable<ProfileRoute> {
         ProfileScreen(
             viewModel = viewModels.profile(),

@@ -4,6 +4,10 @@ import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
@@ -67,8 +71,16 @@ internal fun Project.configureKotlinJvmTarget() {
     }
 }
 
-internal fun org.gradle.api.Project.applyKoverIfEnabled() {
-    if (isKoverEnabled()) {
-        pluginManager.apply("org.jetbrains.kotlinx.kover")
+internal fun Project.configureNatsuTests() {
+    val testLauncher =
+        extensions.getByType(JavaToolchainService::class.java).launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(NatsuAndroidDefaults.JAVA_TOOLCHAIN))
+        }
+
+    tasks.withType<Test>().configureEach {
+        javaLauncher.set(testLauncher)
+        maxParallelForks =
+            (Runtime.getRuntime().availableProcessors() / 2)
+                .coerceIn(1, 8)
     }
 }

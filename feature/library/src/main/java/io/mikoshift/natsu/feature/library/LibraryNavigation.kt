@@ -10,14 +10,9 @@ import io.mikoshift.natsu.navigation.ReaderRoute
 import io.mikoshift.natsu.ui.library.LibraryScreen
 import io.mikoshift.natsu.ui.library.LibraryViewModel
 
-class LibraryViewModelProviders(
-    val library: @Composable () -> LibraryViewModel,
-)
+class LibraryViewModelProviders(val library: @Composable () -> LibraryViewModel)
 
-fun NavGraphBuilder.libraryGraph(
-    navController: NavHostController,
-    viewModels: LibraryViewModelProviders,
-) {
+fun NavGraphBuilder.libraryGraph(navController: NavHostController, viewModels: LibraryViewModelProviders) {
     composable<HomeRoute> {
         LibraryScreen(
             viewModel = viewModels.library(),

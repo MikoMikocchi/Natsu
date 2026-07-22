@@ -14,29 +14,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    flavorDimensions += "environment"
-    productFlavors {
-        create("dev") {
-            dimension = "environment"
+    buildTypes {
+        debug {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:3000/v1/\"")
             buildConfigField("String", "ROOT_BASE_URL", "\"http://10.0.2.2:3000/\"")
         }
-        create("staging") {
-            dimension = "environment"
-            buildConfigField("String", "BASE_URL", "\"https://staging-api.natsu.mikoshift.io/v1/\"")
-            buildConfigField("String", "ROOT_BASE_URL", "\"https://staging-api.natsu.mikoshift.io/\"")
-        }
-        create("prod") {
-            dimension = "environment"
-            buildConfigField("String", "BASE_URL", "\"https://api.natsu.mikoshift.io/v1/\"")
-            buildConfigField("String", "ROOT_BASE_URL", "\"https://api.natsu.mikoshift.io/\"")
-        }
-    }
-
-    buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            buildConfigField("String", "BASE_URL", "\"https://api.natsu.mikoshift.io/v1/\"")
+            buildConfigField("String", "ROOT_BASE_URL", "\"https://api.natsu.mikoshift.io/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -49,27 +36,12 @@ android {
     }
 }
 
-// Debug builds use dev only; staging/prod are release-only (avoids 3× KSP/compile in CI).
-androidComponents {
-    beforeVariants(
-        selector()
-            .withBuildType("debug")
-            .withFlavor("environment" to "staging"),
-    ) { it.enable = false }
-    beforeVariants(
-        selector()
-            .withBuildType("debug")
-            .withFlavor("environment" to "prod"),
-    ) { it.enable = false }
-}
-
 moduleGraphAssert {
     maxHeight = 4
     configurations = setOf("api", "implementation")
     allowed =
         arrayOf(
             ":app -> :.*",
-            ":core:architecture-test -> :.*",
             ":core:testing -> :core:.*",
             ":core:data -> :core:.*",
             ":core:domain -> :core:.*",
