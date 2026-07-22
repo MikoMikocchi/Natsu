@@ -18,6 +18,66 @@ val enableKover =
     (findProperty("enableKover") as String?)?.toBooleanStrictOrNull()
         ?: System.getenv("CI")?.isNotEmpty() == true
 
+val isCi = System.getenv("CI")?.isNotEmpty() == true
+
+val modulesWithUnitTests =
+    setOf(
+        ":core:data",
+        ":core:domain",
+        ":core:model",
+        ":core:navigation",
+        ":feature:auth",
+        ":feature:library",
+        ":feature:profile",
+        ":feature:reader",
+    )
+
+fun gitChangedFiles(baseRef: String): List<String> {
+    val process =
+        ProcessBuilder("git", "diff", "--name-only", baseRef)
+            .directory(rootDir)
+            .redirectErrorStream(true)
+            .start()
+    process.waitFor()
+    if (process.exitValue() != 0) {
+        return emptyList()
+    }
+    return process.inputStream.bufferedReader().readLines().filter { it.isNotBlank() }
+}
+
+fun pathToModule(path: String): String? =
+    when {
+        path.startsWith("app/") -> ":app"
+        path.startsWith("core/") -> ":core:${path.substringAfter("core/").substringBefore("/")}"
+        path.startsWith("feature/") -> ":feature:${path.substringAfter("feature/").substringBefore("/")}"
+        else -> null
+    }
+
+fun requiresFullVerification(changedFiles: List<String>): Boolean =
+    changedFiles.any { path ->
+        path.startsWith("build-logic/") ||
+            path.startsWith("gradle/") ||
+            path.endsWith("libs.versions.toml") ||
+            path == "build.gradle.kts" ||
+            path == "settings.gradle.kts" ||
+            path.startsWith("config/detekt/") ||
+            path.startsWith(".github/")
+    }
+
+fun requiresArchitectureTest(changedFiles: List<String>): Boolean =
+    changedFiles.any { path ->
+        (path.endsWith(".kt") || path.endsWith(".kts")) &&
+            path.contains("/src/main/") &&
+            !path.startsWith("core/architecture-test/")
+    }
+
+fun resolveAffectedModules(changedFiles: List<String>): Set<String> =
+    changedFiles.mapNotNull { pathToModule(it) }.toSet()
+
+fun org.gradle.api.Project.unitTestTaskPath(): String? =
+    listOf("testDevDebugUnitTest", "testDebugUnitTest", "test")
+        .firstNotNullOfOrNull { taskName -> tasks.findByName(taskName)?.path }
+
 spotless {
     kotlin {
         ratchetFrom(spotlessRatchetFrom)
@@ -38,15 +98,6 @@ spotless {
         targetExclude("**/build/**")
         ktlint(libs.versions.ktlint.get())
     }
-}
-
-tasks.register("preCommitCheck") {
-    group = "verification"
-    description = "Fast local checks: formatting (changed files only) and module graph."
-    dependsOn(
-        "spotlessCheck",
-        ":app:assertModuleGraph",
-    )
 }
 
 kover {
@@ -109,21 +160,87 @@ tasks.register("verifyMaxSourceFileLines") {
 
 tasks.register("staticAnalysisCheck") {
     group = "verification"
-    description = "Formatting, line limits, module graph, and detekt."
+    description = "Formatting (.kt), line limits, module graph, and detekt."
     dependsOn(
-        "spotlessCheck",
+        "spotlessKotlinCheck",
         "verifyMaxSourceFileLines",
         ":app:assertModuleGraph",
     )
 }
 
+if (isCi) {
+    tasks.named("staticAnalysisCheck").configure {
+        dependsOn("spotlessKotlinGradleCheck")
+    }
+}
+
 tasks.register("quickCheck") {
     group = "verification"
-    description = "Fast local verification: detekt, unit tests (single variant), architecture tests."
+    description = "Fast verification: unit tests (modules with tests, single variant) and architecture tests."
     dependsOn(
         ":app:assertModuleGraph",
         ":core:architecture-test:testDebugUnitTest",
     )
+}
+
+tasks.register("affectedCheck") {
+    group = "verification"
+    description =
+        "Runs unit tests for modules changed since gitBaseRef (default: HEAD). " +
+        "Use -PgitBaseRef=main to compare against main."
+    notCompatibleWithConfigurationCache("Resolves changed modules via git at execution time.")
+
+    val baseRef = findProperty("gitBaseRef") as String? ?: "HEAD"
+
+    doLast {
+        val changedFiles = gitChangedFiles(baseRef)
+        if (changedFiles.isEmpty()) {
+            logger.lifecycle("No changes since $baseRef.")
+            return@doLast
+        }
+
+        val taskPaths = linkedSetOf<String>()
+
+        if (requiresFullVerification(changedFiles)) {
+            logger.lifecycle("Build configuration changed — running quickCheck.")
+            taskPaths += ":quickCheck"
+        } else {
+            val affectedModules = resolveAffectedModules(changedFiles)
+            val testModules = affectedModules.intersect(modulesWithUnitTests)
+
+            if (testModules.isEmpty()) {
+                logger.lifecycle("No unit-test modules affected (changed: ${affectedModules.joinToString()}).")
+            } else {
+                logger.lifecycle("Affected test modules: ${testModules.joinToString()}")
+                testModules.forEach { modulePath ->
+                    project(modulePath).unitTestTaskPath()?.let { taskPaths += it }
+                }
+            }
+
+            if (requiresArchitectureTest(changedFiles)) {
+                taskPaths += ":core:architecture-test:testDebugUnitTest"
+            }
+        }
+
+        if (taskPaths.isEmpty()) {
+            logger.lifecycle("No verification tasks to run.")
+            return@doLast
+        }
+
+        logger.lifecycle("Running: ${taskPaths.joinToString(" ")}")
+        val process =
+            ProcessBuilder(
+                rootDir.resolve("gradlew").absolutePath,
+                *taskPaths.toTypedArray(),
+                "--build-cache",
+            )
+                .directory(rootDir)
+                .inheritIO()
+                .start()
+        if (process.waitFor() != 0) {
+            throw GradleException("Affected verification failed.")
+        }
+    }
 }
 
 tasks.register("ciCheck") {
@@ -141,39 +258,16 @@ subprojects {
             rootProject.tasks.named("staticAnalysisCheck").configure {
                 dependsOn(detektTask)
             }
-            rootProject.tasks.named("quickCheck").configure {
-                dependsOn(detektTask)
-            }
         }
 
-        if (path == ":core:architecture-test") {
+        if (path !in modulesWithUnitTests) {
             return@afterEvaluate
         }
 
-        val unitTestTaskPath =
-            listOf("testDevDebugUnitTest", "testDebugUnitTest", "test")
-                .firstNotNullOfOrNull { taskName -> tasks.findByName(taskName)?.path }
-                ?: return@afterEvaluate
-
-        rootProject.tasks.named("quickCheck").configure {
-            dependsOn(unitTestTaskPath)
-        }
-    }
-}
-
-tasks.register("installGitHooks") {
-    group = "setup"
-    description = "Installs git hooks from .githooks/ into .git/hooks/."
-    doLast {
-        val hooksDir = rootProject.file(".githooks")
-        val gitHooksDir = rootProject.file(".git/hooks")
-        if (!gitHooksDir.exists()) {
-            throw GradleException("Not a git repository: ${gitHooksDir.path}")
-        }
-        hooksDir.listFiles()?.filter { it.isFile }?.forEach { hook ->
-            val target = gitHooksDir.resolve(hook.name)
-            hook.copyTo(target, overwrite = true)
-            target.setExecutable(true)
+        unitTestTaskPath()?.let { testTaskPath ->
+            rootProject.tasks.named("quickCheck").configure {
+                dependsOn(testTaskPath)
+            }
         }
     }
 }
