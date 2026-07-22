@@ -11,12 +11,10 @@ class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
             pluginManager.apply("org.jetbrains.kotlin.jvm")
             pluginManager.apply("natsu.detekt")
             pluginManager.apply("natsu.test")
-            if (isKoverEnabled()) {
-                pluginManager.apply("natsu.kover")
-            }
+            applyKoverIfEnabled()
 
             extensions.configure<KotlinJvmProjectExtension> {
-                jvmToolchain(11)
+                jvmToolchain(21)
             }
         }
     }

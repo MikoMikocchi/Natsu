@@ -1,8 +1,10 @@
 package io.mikoshift.natsu.buildlogic
 
+import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.getByType
 
@@ -10,14 +12,17 @@ class NatsuAndroidApplicationConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             pluginManager.apply("com.android.application")
+            applyKotlinAndroidIfNeeded()
             pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
             pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
             pluginManager.apply("com.google.devtools.ksp")
             pluginManager.apply("com.google.dagger.hilt.android")
             pluginManager.apply("natsu.detekt")
             pluginManager.apply("natsu.test")
-            if (isKoverEnabled()) {
-                pluginManager.apply("natsu.kover")
+            applyKoverIfEnabled()
+
+            extensions.configure<ApplicationExtension> {
+                configureNatsuDefaults()
             }
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")

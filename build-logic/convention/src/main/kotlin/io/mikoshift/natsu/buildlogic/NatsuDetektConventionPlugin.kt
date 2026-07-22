@@ -1,6 +1,7 @@
 package io.mikoshift.natsu.buildlogic
 
-import dev.detekt.gradle.extensions.DetektExtension
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -9,17 +10,17 @@ import org.gradle.kotlin.dsl.withType
 class NatsuDetektConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            pluginManager.apply("dev.detekt")
+            pluginManager.apply("io.gitlab.arturbosch.detekt")
 
             extensions.configure<DetektExtension> {
-                buildUponDefaultConfig.set(true)
-                allRules.set(false)
+                buildUponDefaultConfig = true
+                allRules = false
                 config.setFrom(rootProject.files("config/detekt/detekt.yml"))
-                parallel.set(true)
+                parallel = true
                 source.from("src/main/java", "src/main/kotlin")
             }
 
-            tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+            tasks.withType<Detekt>().configureEach {
                 val mainSources =
                     listOf("src/main/java", "src/main/kotlin")
                         .map { path -> file(path) }

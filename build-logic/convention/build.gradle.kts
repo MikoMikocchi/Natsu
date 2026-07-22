@@ -54,9 +54,5 @@ gradlePlugin {
             id = "natsu.detekt"
             implementationClass = "io.mikoshift.natsu.buildlogic.NatsuDetektConventionPlugin"
         }
-        register("kover") {
-            id = "natsu.kover"
-            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuKoverConventionPlugin"
-        }
     }
 }

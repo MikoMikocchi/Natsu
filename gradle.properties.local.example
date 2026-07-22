@@ -1,0 +1,5 @@
+# Copy these lines to ~/.gradle/gradle.properties (recommended) or merge into gradle.properties.local
+# and pass via: export GRADLE_USER_HOME=... — Gradle does NOT auto-load gradle.properties.local.
+#
+# Points Gradle to Android Studio JBR (Java 21) — avoids slow JDK auto-download:
+org.gradle.java.home=/Applications/Android Studio.app/Contents/jbr/Contents/Home

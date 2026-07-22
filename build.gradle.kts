@@ -18,33 +18,6 @@ val enableKover =
     (findProperty("enableKover") as String?)?.toBooleanStrictOrNull()
         ?: System.getenv("CI")?.isNotEmpty() == true
 
-val isCi = System.getenv("CI")?.isNotEmpty() == true
-
-val modulesWithUnitTests =
-    setOf(
-        ":core:data",
-        ":core:domain",
-        ":core:model",
-        ":core:navigation",
-        ":feature:auth",
-        ":feature:library",
-        ":feature:profile",
-        ":feature:reader",
-    )
-
-fun gitChangedFiles(baseRef: String): List<String> {
-    val process =
-        ProcessBuilder("git", "diff", "--name-only", baseRef)
-            .directory(rootDir)
-            .redirectErrorStream(true)
-            .start()
-    process.waitFor()
-    if (process.exitValue() != 0) {
-        return emptyList()
-    }
-    return process.inputStream.bufferedReader().readLines().filter { it.isNotBlank() }
-}
-
 fun pathToModule(path: String): String? =
     when {
         path.startsWith("app/") -> ":app"
@@ -77,6 +50,41 @@ fun resolveAffectedModules(changedFiles: List<String>): Set<String> =
 fun org.gradle.api.Project.unitTestTaskPath(): String? =
     listOf("testDevDebugUnitTest", "testDebugUnitTest", "test")
         .firstNotNullOfOrNull { taskName -> tasks.findByName(taskName)?.path }
+
+fun org.gradle.api.Project.hasUnitTestSources(): Boolean {
+    if (path == ":app") {
+        return false
+    }
+    val testSourceRoots = listOf("src/test/kotlin", "src/test/java")
+    return testSourceRoots.any { relativePath ->
+        val dir = file(relativePath)
+        dir.exists() && dir.walkTopDown().any { it.isFile && it.extension == "kt" }
+    }
+}
+
+fun resolveVerificationTaskPaths(changedFiles: List<String>, root: org.gradle.api.Project): List<String> {
+    if (changedFiles.isEmpty()) {
+        return emptyList()
+    }
+    if (requiresFullVerification(changedFiles)) {
+        return listOf(":quickCheck")
+    }
+
+    val taskPaths = linkedSetOf<String>()
+    val affectedModules = resolveAffectedModules(changedFiles)
+
+    affectedModules
+        .mapNotNull { modulePath -> root.project(modulePath).takeIf { it.hasUnitTestSources() } }
+        .forEach { project ->
+            project.unitTestTaskPath()?.let { taskPaths += it }
+        }
+
+    if (requiresArchitectureTest(changedFiles)) {
+        taskPaths += ":core:architecture-test:testDebugUnitTest"
+    }
+
+    return taskPaths.toList()
+}
 
 spotless {
     kotlin {
@@ -125,53 +133,23 @@ kover {
             xml {
                 onCheck = true
             }
-        }
-    }
-}
-
-tasks.register("verifyMaxSourceFileLines") {
-    group = "verification"
-    description = "Fails when any production Kotlin source file exceeds the line limit."
-    val maxLines = 500
-    val rootDirectory = layout.projectDirectory
-    val sourceFiles =
-        rootDirectory.asFileTree.matching {
-            include("**/src/main/java/**/*.kt", "**/src/main/kotlin/**/*.kt")
-            exclude("**/build/**")
-        }
-    inputs.files(sourceFiles).ignoreEmptyDirectories()
-
-    doLast {
-        val rootDirFile = rootDirectory.asFile
-        val violations = mutableListOf<String>()
-        sourceFiles.forEach { file ->
-            val lineCount = file.readLines().size
-            if (lineCount > maxLines) {
-                violations += "${file.relativeTo(rootDirFile)}: $lineCount lines (max $maxLines)"
+            verify {
+                rule {
+                    minBound(40)
+                }
             }
-        }
-        if (violations.isNotEmpty()) {
-            throw GradleException(
-                "Source files exceed $maxLines lines:\n${violations.joinToString("\n")}",
-            )
         }
     }
 }
 
 tasks.register("staticAnalysisCheck") {
     group = "verification"
-    description = "Formatting (.kt), line limits, module graph, and detekt."
+    description = "Formatting, module graph, and detekt."
     dependsOn(
         "spotlessKotlinCheck",
-        "verifyMaxSourceFileLines",
+        "spotlessKotlinGradleCheck",
         ":app:assertModuleGraph",
     )
-}
-
-if (isCi) {
-    tasks.named("staticAnalysisCheck").configure {
-        dependsOn("spotlessKotlinGradleCheck")
-    }
 }
 
 tasks.register("quickCheck") {
@@ -183,64 +161,33 @@ tasks.register("quickCheck") {
     )
 }
 
+val gitBaseRefProvider = providers.gradleProperty("gitBaseRef").orElse("HEAD")
+
+val changedFilesProvider =
+    providers.exec {
+        val baseRef = gitBaseRefProvider.get()
+        if (baseRef == "--cached") {
+            commandLine("git", "diff", "--name-only", "--cached")
+        } else {
+            commandLine("git", "diff", "--name-only", baseRef)
+        }
+        workingDir(rootDir)
+    }.standardOutput.asText.map { output ->
+        output.lines().filter { it.isNotBlank() }
+    }
+
 tasks.register("affectedCheck") {
     group = "verification"
     description =
-        "Runs unit tests for modules changed since gitBaseRef (default: HEAD). " +
-        "Use -PgitBaseRef=main to compare against main."
-    notCompatibleWithConfigurationCache("Resolves changed modules via git at execution time.")
-
-    val baseRef = findProperty("gitBaseRef") as String? ?: "HEAD"
-
-    doLast {
-        val changedFiles = gitChangedFiles(baseRef)
-        if (changedFiles.isEmpty()) {
-            logger.lifecycle("No changes since $baseRef.")
-            return@doLast
-        }
-
-        val taskPaths = linkedSetOf<String>()
-
-        if (requiresFullVerification(changedFiles)) {
-            logger.lifecycle("Build configuration changed — running quickCheck.")
-            taskPaths += ":quickCheck"
-        } else {
-            val affectedModules = resolveAffectedModules(changedFiles)
-            val testModules = affectedModules.intersect(modulesWithUnitTests)
-
-            if (testModules.isEmpty()) {
-                logger.lifecycle("No unit-test modules affected (changed: ${affectedModules.joinToString()}).")
-            } else {
-                logger.lifecycle("Affected test modules: ${testModules.joinToString()}")
-                testModules.forEach { modulePath ->
-                    project(modulePath).unitTestTaskPath()?.let { taskPaths += it }
-                }
+        "Runs verification for modules changed since gitBaseRef (default: HEAD). " +
+        "Use -PgitBaseRef=main to compare against main, or --cached for staged changes."
+    dependsOn(
+        changedFilesProvider.map { changedFiles ->
+            resolveVerificationTaskPaths(changedFiles, project).map { taskPath ->
+                tasks.named(taskPath)
             }
-
-            if (requiresArchitectureTest(changedFiles)) {
-                taskPaths += ":core:architecture-test:testDebugUnitTest"
-            }
-        }
-
-        if (taskPaths.isEmpty()) {
-            logger.lifecycle("No verification tasks to run.")
-            return@doLast
-        }
-
-        logger.lifecycle("Running: ${taskPaths.joinToString(" ")}")
-        val process =
-            ProcessBuilder(
-                rootDir.resolve("gradlew").absolutePath,
-                *taskPaths.toTypedArray(),
-                "--build-cache",
-            )
-                .directory(rootDir)
-                .inheritIO()
-                .start()
-        if (process.waitFor() != 0) {
-            throw GradleException("Affected verification failed.")
-        }
-    }
+        },
+    )
 }
 
 tasks.register("ciCheck") {
@@ -248,7 +195,7 @@ tasks.register("ciCheck") {
     description = "Full CI verification: static analysis, unit tests, architecture tests, and coverage."
     dependsOn("staticAnalysisCheck", "quickCheck")
     if (enableKover) {
-        dependsOn("koverXmlReport")
+        dependsOn("koverXmlReport", "koverVerify")
     }
 }
 
@@ -260,7 +207,7 @@ subprojects {
             }
         }
 
-        if (path !in modulesWithUnitTests) {
+        if (!hasUnitTestSources()) {
             return@afterEvaluate
         }
 

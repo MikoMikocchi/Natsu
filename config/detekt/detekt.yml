@@ -18,25 +18,25 @@ complexity:
       - Composable
   ComplexCondition:
     active: true
-    allowedConditions: 4
+    threshold: 4
   LargeClass:
     active: true
-    allowedLines: 500
+    threshold: 500
   LongMethod:
     active: true
-    allowedLines: 150
+    threshold: 150
     ignoreAnnotated:
       - Composable
     excludes:
       - '**/*Migration*.kt'
   LongParameterList:
     active: true
-    allowedFunctionParameters: 8
-    allowedConstructorParameters: 10
+    functionThreshold: 8
+    constructorThreshold: 10
   TooManyFunctions:
     active: true
-    allowedFunctionsPerFile: 25
-    allowedFunctionsPerClass: 25
+    thresholdInFiles: 25
+    thresholdInClasses: 25
     ignoreAnnotated:
       - Module
       - dagger.Module

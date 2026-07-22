@@ -7,8 +7,9 @@ android {
 }
 
 dependencies {
-    testImplementation(libs.archunit.junit4)
-    testImplementation(libs.junit)
+    testImplementation(libs.archunit.junit5)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 
     testImplementation(project(":core:model"))
     testImplementation(project(":core:common"))

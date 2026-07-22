@@ -1,7 +1,6 @@
 package io.mikoshift.natsu.buildlogic
 
 import com.android.build.api.dsl.LibraryExtension
-import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -19,16 +18,6 @@ class NatsuAndroidFeatureConventionPlugin : Plugin<Project> {
             pluginManager.apply("com.google.dagger.hilt.android")
 
             extensions.configure<LibraryExtension> {
-                compileSdk {
-                    version = release(37)
-                }
-                defaultConfig {
-                    minSdk = 26
-                }
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_11
-                    targetCompatibility = JavaVersion.VERSION_11
-                }
                 buildFeatures {
                     compose = true
                 }

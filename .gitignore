@@ -13,6 +13,7 @@ build/
 .externalNativeBuild
 .cxx
 local.properties
+gradle.properties.local
 .idea/
 .claude/
 docs/

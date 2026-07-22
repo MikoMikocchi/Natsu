@@ -28,11 +28,13 @@ turbine = "1.2.0"
 workManager = "2.10.0"
 hiltWork = "1.2.0"
 coil = "3.3.0"
-detekt = "2.0.0-alpha.2"
+detekt = "1.23.8"
 kover = "0.9.1"
 moduleGraphAssert = "2.9.1"
 spotless = "7.0.4"
 archunit = "1.4.0"
+junitJupiter = "5.11.4"
+junitPlatform = "1.11.4"
 ktlint = "1.5.0"
 
 [libraries]
@@ -82,12 +84,13 @@ okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver" 
 androidx-test-runner = { group = "androidx.test", name = "runner", version = "1.7.0" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
-detekt-ktlint = { group = "dev.detekt", name = "detekt-rules-ktlint-wrapper", version.ref = "detekt" }
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
-detekt-gradlePlugin = { group = "dev.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
+detekt-gradlePlugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 kover-gradlePlugin = { group = "org.jetbrains.kotlinx", name = "kover-gradle-plugin", version.ref = "kover" }
-archunit-junit4 = { group = "com.tngtech.archunit", name = "archunit-junit4", version.ref = "archunit" }
+archunit-junit5 = { group = "com.tngtech.archunit", name = "archunit-junit5", version.ref = "archunit" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -98,7 +101,7 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-detekt = { id = "dev.detekt", version.ref = "detekt" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 module-graph-assert = { id = "com.jraska.module.graph.assertion", version.ref = "moduleGraphAssert" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
