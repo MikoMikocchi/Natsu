@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package io.mikoshift.natsudroid.data.pkg.dto
 
 import io.mikoshift.natsudroid.data.remote.dto.SourceFormat

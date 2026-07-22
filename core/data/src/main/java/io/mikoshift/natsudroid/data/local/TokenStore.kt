@@ -2,8 +2,6 @@ package io.mikoshift.natsudroid.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.mikoshift.natsudroid.core.model.AuthSession
 import kotlinx.coroutines.Dispatchers
@@ -18,20 +16,8 @@ import javax.inject.Singleton
 class TokenStore
 @Inject
 constructor(@ApplicationContext context: Context) {
-    private val masterKey =
-        MasterKey
-            .Builder(context)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-
     private val prefs: SharedPreferences =
-        EncryptedSharedPreferences.create(
-            context,
-            PREFS_FILE_NAME,
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        )
+        EncryptedPrefsFactory.create(context, PREFS_FILE_NAME)
 
     private val _sessionFlow = MutableStateFlow(readSession())
     val sessionFlow: StateFlow<AuthSession?> = _sessionFlow.asStateFlow()
