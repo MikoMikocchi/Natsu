@@ -1,15 +1,15 @@
 plugins {
-    id("natsu.android.application")
+    id("natsudroid.android.application")
     alias(libs.plugins.module.graph.assert)
 }
 
 android {
-    namespace = "io.mikoshift.natsu"
+    namespace = "io.mikoshift.natsudroid"
     defaultConfig {
-        applicationId = "io.mikoshift.natsu"
+        applicationId = "io.mikoshift.natsudroid"
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "OAUTH_CLIENT_ID", "\"natsu-mobile\"")
+        buildConfigField("String", "OAUTH_CLIENT_ID", "\"natsudroid-mobile\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

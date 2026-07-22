@@ -1,10 +1,10 @@
 plugins {
-    id("natsu.android.library")
+    id("natsudroid.android.library")
     alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "io.mikoshift.natsu.core.database"
+    namespace = "io.mikoshift.natsudroid.core.database"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

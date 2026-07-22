@@ -1,10 +1,10 @@
 plugins {
-    id("natsu.android.library")
+    id("natsudroid.android.library")
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "io.mikoshift.natsu.core.network"
+    namespace = "io.mikoshift.natsudroid.core.network"
 }
 
 dependencies {

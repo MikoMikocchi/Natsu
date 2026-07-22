@@ -1,12 +1,12 @@
 plugins {
-    id("natsu.android.library")
+    id("natsudroid.android.library")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
 
 android {
-    namespace = "io.mikoshift.natsu.core.data"
+    namespace = "io.mikoshift.natsudroid.core.data"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

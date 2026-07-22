@@ -13,10 +13,10 @@
 # kotlinx.serialization
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.**
--keepclassmembers class io.mikoshift.natsu.** {
+-keepclassmembers class io.mikoshift.natsudroid.** {
     *** Companion;
 }
--keepclasseswithmembers class io.mikoshift.natsu.** {
+-keepclasseswithmembers class io.mikoshift.natsudroid.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 

@@ -4,7 +4,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "io.mikoshift.natsu.buildlogic"
+group = "io.mikoshift.natsudroid.buildlogic"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -25,20 +25,20 @@ dependencies {
 gradlePlugin {
     plugins {
         register("jvmLibrary") {
-            id = "natsu.jvm.library"
-            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuJvmLibraryConventionPlugin"
+            id = "natsudroid.jvm.library"
+            implementationClass = "io.mikoshift.natsudroid.buildlogic.NatsudroidJvmLibraryConventionPlugin"
         }
         register("androidLibrary") {
-            id = "natsu.android.library"
-            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidLibraryConventionPlugin"
+            id = "natsudroid.android.library"
+            implementationClass = "io.mikoshift.natsudroid.buildlogic.NatsudroidAndroidLibraryConventionPlugin"
         }
         register("androidFeature") {
-            id = "natsu.android.feature"
-            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidFeatureConventionPlugin"
+            id = "natsudroid.android.feature"
+            implementationClass = "io.mikoshift.natsudroid.buildlogic.NatsudroidAndroidFeatureConventionPlugin"
         }
         register("androidApplication") {
-            id = "natsu.android.application"
-            implementationClass = "io.mikoshift.natsu.buildlogic.NatsuAndroidApplicationConventionPlugin"
+            id = "natsudroid.android.application"
+            implementationClass = "io.mikoshift.natsudroid.buildlogic.NatsudroidAndroidApplicationConventionPlugin"
         }
     }
 }

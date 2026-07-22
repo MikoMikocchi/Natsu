@@ -23,7 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Natsu"
+rootProject.name = "Natsudroid"
 include(":app")
 include(":core:model")
 include(":core:common")

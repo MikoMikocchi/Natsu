@@ -1,7 +1,7 @@
 plugins {
-    id("natsu.android.feature")
+    id("natsudroid.android.feature")
 }
 
 android {
-    namespace = "io.mikoshift.natsu.feature.profile"
+    namespace = "io.mikoshift.natsudroid.feature.profile"
 }

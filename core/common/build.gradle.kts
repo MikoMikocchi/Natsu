@@ -1,5 +1,5 @@
 plugins {
-    id("natsu.jvm.library")
+    id("natsudroid.jvm.library")
 }
 
 dependencies {

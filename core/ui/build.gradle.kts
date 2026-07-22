@@ -1,10 +1,10 @@
 plugins {
-    id("natsu.android.library")
+    id("natsudroid.android.library")
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "io.mikoshift.natsu.core.ui"
+    namespace = "io.mikoshift.natsudroid.core.ui"
     buildFeatures {
         compose = true
     }

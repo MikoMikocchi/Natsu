@@ -1,10 +1,10 @@
 plugins {
-    id("natsu.android.library")
+    id("natsudroid.android.library")
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "io.mikoshift.natsu.navigation"
+    namespace = "io.mikoshift.natsudroid.navigation"
 }
 
 dependencies {

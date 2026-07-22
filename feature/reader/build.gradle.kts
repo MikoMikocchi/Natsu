@@ -1,9 +1,9 @@
 plugins {
-    id("natsu.android.feature")
+    id("natsudroid.android.feature")
 }
 
 android {
-    namespace = "io.mikoshift.natsu.feature.reader"
+    namespace = "io.mikoshift.natsudroid.feature.reader"
 }
 
 dependencies {
