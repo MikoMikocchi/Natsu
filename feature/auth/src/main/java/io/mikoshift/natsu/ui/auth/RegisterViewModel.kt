@@ -72,7 +72,7 @@ constructor(
                 null
             }
 
-        if (nameError != null || emailError != null || passwordError != null || passwordConfirmationError != null) {
+        if (listOf(nameError, emailError, passwordError, passwordConfirmationError).any { it != null }) {
             _uiState.update {
                 it.copy(
                     isLoading = false,

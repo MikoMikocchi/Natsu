@@ -17,6 +17,7 @@ class NatsuAndroidLibraryConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryExtension> {
                 configureNatsuDefaults()
             }
+            configureKotlinJvmTarget()
         }
     }
 }

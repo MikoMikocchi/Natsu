@@ -24,6 +24,7 @@ class NatsuAndroidApplicationConventionPlugin : Plugin<Project> {
             extensions.configure<ApplicationExtension> {
                 configureNatsuDefaults()
             }
+            configureKotlinJvmTarget()
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 

@@ -33,6 +33,9 @@ complexity:
     active: true
     functionThreshold: 8
     constructorThreshold: 10
+    ignoreAnnotated:
+      - Inject
+      - Composable
   TooManyFunctions:
     active: true
     thresholdInFiles: 25
@@ -103,6 +106,10 @@ style:
     maxLineLength: 120
     excludePackageStatements: true
     excludeImportStatements: true
+  UnusedPrivateMember:
+    active: true
+    ignoreAnnotated:
+      - Preview
   WildcardImport:
     active: true
     excludeImports:

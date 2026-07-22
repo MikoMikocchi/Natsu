@@ -3,6 +3,7 @@ package io.mikoshift.natsu.buildlogic
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
@@ -14,7 +15,10 @@ class NatsuJvmLibraryConventionPlugin : Plugin<Project> {
             applyKoverIfEnabled()
 
             extensions.configure<KotlinJvmProjectExtension> {
-                jvmToolchain(26)
+                jvmToolchain(NatsuAndroidDefaults.JAVA_TOOLCHAIN)
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.fromTarget(NatsuAndroidDefaults.JAVA_TOOLCHAIN.toString()))
+                }
             }
         }
     }

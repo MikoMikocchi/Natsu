@@ -55,14 +55,18 @@ fun org.gradle.api.Project.hasUnitTestSources(): Boolean {
     if (path == ":app") {
         return false
     }
-    val testSourceRoots = listOf("src/test/kotlin", "src/test/java")
-    return testSourceRoots.any { relativePath ->
-        val dir = file(relativePath)
-        dir.exists() && dir.walkTopDown().any { it.isFile && it.extension == "kt" }
-    }
+    return sequenceOf("src/test/kotlin", "src/test/java")
+        .map { file(it) }
+        .filter { it.isDirectory }
+        .flatMap { dir ->
+            dir.walkTopDown().maxDepth(3).filter { it.isFile && it.extension == "kt" }
+        }.any()
 }
 
-fun resolveVerificationTaskPaths(changedFiles: List<String>, root: org.gradle.api.Project): List<String> {
+fun resolveVerificationTaskPaths(
+    changedFiles: List<String>,
+    root: org.gradle.api.Project,
+): List<String> {
     if (changedFiles.isEmpty()) {
         return emptyList()
     }
@@ -164,17 +168,19 @@ tasks.register("quickCheck") {
 val gitBaseRefProvider = providers.gradleProperty("gitBaseRef").orElse("HEAD")
 
 val changedFilesProvider =
-    providers.exec {
-        val baseRef = gitBaseRefProvider.get()
-        if (baseRef == "--cached") {
-            commandLine("git", "diff", "--name-only", "--cached")
-        } else {
-            commandLine("git", "diff", "--name-only", baseRef)
+    providers
+        .exec {
+            val baseRef = gitBaseRefProvider.get()
+            if (baseRef == "--cached") {
+                commandLine("git", "diff", "--name-only", "--cached")
+            } else {
+                commandLine("git", "diff", "--name-only", baseRef)
+            }
+            workingDir(rootDir)
+        }.standardOutput.asText
+        .map { output ->
+            output.lines().filter { it.isNotBlank() }
         }
-        workingDir(rootDir)
-    }.standardOutput.asText.map { output ->
-        output.lines().filter { it.isNotBlank() }
-    }
 
 tasks.register("affectedCheck") {
     group = "verification"

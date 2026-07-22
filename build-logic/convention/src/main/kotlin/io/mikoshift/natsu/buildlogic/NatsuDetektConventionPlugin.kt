@@ -21,6 +21,7 @@ class NatsuDetektConventionPlugin : Plugin<Project> {
             }
 
             tasks.withType<Detekt>().configureEach {
+                jvmTarget = NatsuAndroidDefaults.JAVA_VERSION.toString()
                 val mainSources =
                     listOf("src/main/java", "src/main/kotlin")
                         .map { path -> file(path) }

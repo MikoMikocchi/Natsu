@@ -33,13 +33,17 @@ abstract class NatsuDatabase : RoomDatabase() {
     abstract fun syncStateDao(): SyncStateDao
 
     companion object {
-        fun create(context: Context): NatsuDatabase = Room
-            .databaseBuilder(
-                context.applicationContext,
-                NatsuDatabase::class.java,
-                "natsu.db",
-            ).addMigrations(*NatsuDatabaseMigrations.ALL)
-            .build()
+        fun create(context: Context): NatsuDatabase {
+            val builder =
+                Room.databaseBuilder(
+                    context.applicationContext,
+                    NatsuDatabase::class.java,
+                    "natsu.db",
+                )
+            return NatsuDatabaseMigrations.ALL.fold(builder) { current, migration ->
+                current.addMigrations(migration)
+            }.build()
+        }
     }
 }
 
