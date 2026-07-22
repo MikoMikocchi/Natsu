@@ -14,7 +14,6 @@ class NatsuAndroidApplicationConventionPlugin : Plugin<Project> {
             pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
             pluginManager.apply("com.google.devtools.ksp")
             pluginManager.apply("com.google.dagger.hilt.android")
-            pluginManager.apply("com.google.dagger.hilt.android")
             pluginManager.apply("natsu.detekt")
             pluginManager.apply("natsu.test")
             if (isKoverEnabled()) {
